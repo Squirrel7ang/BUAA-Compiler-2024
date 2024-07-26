@@ -8,8 +8,8 @@
 
 ## RoadMap
 
-[ ] 熟悉 LLVM-IR 语法及其特性。
-[ ] 熟悉 C++/Rust 的其中一门语言
+[x] 熟悉 LLVM-IR 语法及其特性。
+[ ] 熟悉 C++√/Rust× 的其中一门语言
 [ ] 熟悉 CMake
 [ ] Lab 1: main 与注释
 [ ] Lab 2：常量表达式
