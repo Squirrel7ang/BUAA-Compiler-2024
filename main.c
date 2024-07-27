@@ -7,7 +7,7 @@ int sub(int a, int b) {
 }
 
 int equal(int a, int b) {
-	return !(a-b);
+	return a==b;
 }
 
 int main() {
@@ -30,6 +30,40 @@ int main() {
 	if (a == b) {
 		equal(a, b);
 	}
+
+	// while loop
+	int i = 0;
+	int len = 10;
+	while (i < 10) {
+		i++;	
+	}
+
+	// for loop
+	i = 0;
+	for (int i = 0; i < 20; i += 2) {
+		i -= 1;
+	}
+
+	// 1d array
+	int arr1[5];
+	for (int i = 0; i < 5; i++) {
+		// write arr;
+		arr1[i] = i;
+	}
+
+	for (int j = 0; j < 5; j++) {
+		// read arr
+		int k = arr1[i] + 1;
+	}
+
+	// 2d array
+	int arr2[2][3];
+	for (int i = 0; i < 2; i++) {
+		for (int j = 0; j < 3; j++) {
+			arr2[i][j] = i*10 + j;
+		}
+	}
+
 
 	return 0;
 }
