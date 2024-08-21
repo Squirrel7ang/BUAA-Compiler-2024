@@ -2,48 +2,53 @@
 #define _NODE_H
 
 #include <vector>
+#include "token.h"
 
 namespace node {
+    class Node {
+        Node& parent;
 
-class Node {
-    Node& parent;
+    public:
+        explicit Node(Node & parent) :
+            parent(parent) {}
+    };
 
-public:
-    explicit Node(Node & parent) :
-        parent(parent) {}
-};
+    class SentenceNode: Node {
+        std::vector<TermNode&> terms;
+        std::vector<token::token_type> ops;
 
-class PolyNode: Node {
-    std::vector<TermNode&> terms;
+    public:
+        explicit SentenceNode(Node& parent, TermNode& term);
+        explicit SentenceNode(TermNode& term);
+        void push_term(TermNode& term, token::token_type op);
+        int get_val();
+    };
 
-public:
-    explicit PolyNode(Node& parent) :
-        Node(parent) {}
-    void add_term(TermNode& term);
-};
+    class TermNode : Node {
+        std::vector<FactorNode&> factors;
+        std::vector<token::token_type> ops;
 
-class TermNode : Node {
-    std::vector<FactorNode&> factors;
+    public:
+        explicit TermNode(Node& parent, FactorNode& factor);
+        void push_factor(FactorNode& factor, token::token_type op);
+        int get_val();
+    };
 
-};
+    class FactorNode : Node {
+        std::vector<NumberNode&> numbers;
+    public:
+        explicit FactorNode(Node& parent, NumberNode& number);
+        void push_number(int number);
+        int get_val();
+    };
 
-class FactorNode : Node {
-public:
-    explicit FactorNode(Node& parent) :
-        Node(parent) {}
-};
+    class NumberNode : Node {
+        int num;
 
-class NumberNode : FactorNode {
-    int num;
-
-public:
-    explicit NumberNode(Node& parent) :
-        FactorNode(parent) {}
-    explicit NumberNode(Node& parent, int n) :
-        FactorNode(parent),
-        num(n) {}
-    int get_num();
-};
+    public:
+        explicit NumberNode(Node& parent, int num);
+        int get_val();
+    };
 
 } // namespace node
 

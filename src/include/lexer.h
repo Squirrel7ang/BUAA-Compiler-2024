@@ -10,26 +10,26 @@
 
 namespace lexer {
 
-class Lexer {
-    std::string_view current_ptr;
-    token::Token& token_ptr;
-    int lin;
-    int col;
-    
-public:
-    [[nodiscard]]token::Token& now();
-    void move();
-    explicit Lexer(std::string_view& str);
+    class Lexer {
+        std::string_view current_ptr;
+        token::Token& token_ptr;
+        int lin;
+        int col;
+        
+    public:
+        [[nodiscard]]token::Token& now();
+        void move();
+        explicit Lexer(std::string_view& str);
 
-private:
-    void skip_blank();
-    token::Token& next_token();
-    token::Token& next_number();
-    token::Token& next_hexadecimal();
-    token::Token& next_octal();
-    token::Token& next_decimal();
-    token::Token& next_symbol();
-};
+    private:
+        void skip_blank();
+        token::Token& next_token();
+        token::Token& next_number();
+        token::Token& next_hexadecimal();
+        token::Token& next_octal();
+        token::Token& next_decimal();
+        token::Token& next_symbol();
+    };
 
 }
 

@@ -7,7 +7,7 @@ Lexer::Lexer(std::string_view& str) :
     current_ptr(str),
     token_ptr(* new token::NumberToken(0, 0, 0)) { }
 
-bool
+inline bool
 is_symbol(char ch) {
     return  ch == '+' || 
             ch == '-' || 
@@ -17,7 +17,7 @@ is_symbol(char ch) {
             ch == '=';
 }
 
-token::Token &
+inline token::Token &
 Lexer::now() {
     return this->token_ptr;
 }
