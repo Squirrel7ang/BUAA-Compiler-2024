@@ -1,9 +1,0 @@
-[submodule "racoon"]
-	path = racoon
-	url = https://github.com/roife/racoon.git
-[submodule "chibicc"]
-	path = chibicc
-	url = https://github.com/rui314/chibicc.git
-[submodule "SysY-Compiler-2023"]
-	path = SysY-Compiler-2023
-	url = https://github.com/Toby-Shi-cloud/SysY-Compiler-2023.git
