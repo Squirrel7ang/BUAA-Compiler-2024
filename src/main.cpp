@@ -6,7 +6,8 @@
 #include <string>
 #include <iostream>
 
-using namespace std;
+#include "expr.hpp"
+
 using namespace expr;
 
 int main() {
@@ -18,7 +19,7 @@ int main() {
             exit(0);
         }
 
-        Expr e;
+        Expr e = Expr(s);
         std::cout << "value of this expression is " << e.get_value() << " " << std::endl;
     }
 }
