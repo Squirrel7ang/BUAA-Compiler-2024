@@ -113,7 +113,7 @@ namespace tang {
                 col++;
             }
             input.unget();
-            Token(content, filename, lin, col - content.size(), TK_INTTK);
+            return Token(content, filename, lin, col - content.size(), TK_INTTK);
         }
         else if (std::isalpha(ch) || ch == '_') {
             // identifier
