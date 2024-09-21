@@ -175,11 +175,11 @@ namespace tang {
             col++;
             content.append(1, ch);
             return Token(content, filename, lin, col - content.size(), TK_MOD);
-        case '&':
+        case '&': // TODO
             col++;
             content.append(1, ch);
             return Token(content, filename, lin, col - content.size(), TK_AND);
-        case '|':
+        case '|': // TODO
             col++;
             content.append(1, ch);
             return Token(content, filename, lin, col - content.size(), TK_OR);
