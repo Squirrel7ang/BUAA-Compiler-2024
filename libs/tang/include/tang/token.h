@@ -22,11 +22,12 @@ namespace tang {
         TK_GETINTTK, TK_GETCHARTK, TK_PRINTFTK, // built-in function
         TK_LSS, TK_LEQ, TK_GRE, TK_GEQ, TK_EQL, TK_NEQ, // compare
         TK_ASSIGN, // =
-        TK_SEMICN, TK_COMMA, // TK_; ,
+        TK_SEMICN, TK_COMMA, // ; ,
         TK_LPARENT, TK_RPARENT, TK_LBRACK, TK_RBRACK, TK_LBRACE, TK_RBRACE, // braces
+        TK_EOF, // end of file
     };
 
-    const std::unordered_map<std::string, TokenType> reserveToken {
+    const std::unordered_map<std::string, TokenType> reservedTokens {
         {"main", TK_MAINTK},
         {"const", TK_CONSTTK},
         {"int", TK_INTTK},
@@ -44,24 +45,24 @@ namespace tang {
     };
 
     class Token {
-    private:
-        std::string_view content;
-        std::string_view _filename;
-        const unsigned int _lin;
+        std::string content;
+        std::string _filename;
+        unsigned int _lin;
         unsigned int _col;
         TokenType type;
     public:
-        explicit Token(const std::string_view& str,
-            const std::string_view& filename,
+        explicit Token(const std::string& str,
+            const std::string& filename,
             unsigned int lin,
             unsigned int col,
             TokenType tokenType);
-        [[nodiscard]] std::string_view getContent() const;
-        [[nodiscard]] std::string_view getFilename() const;
+        [[nodiscard]] std::string getContent() const;
+        [[nodiscard]] std::string getFilename() const;
         [[nodiscard]] unsigned int getCol() const;
         [[nodiscard]] unsigned int getLin() const;
         [[nodiscard]] TokenType getType() const;
-
+        [[nodiscard]] bool isEOF() const;
+        [[nodiscard]] bool isUnknown() const;
     }; // class Token
 } // namespace tang
 
