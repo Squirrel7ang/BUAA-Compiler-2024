@@ -8,7 +8,7 @@
 #include <istream>
 #include <vector>
 
-#include "token.h"
+#include "token.hpp"
 
 namespace tang {
     // one Lexer for one Compile Unit
@@ -21,8 +21,6 @@ namespace tang {
         std::string& filename;
         unsigned int lin;
         unsigned int col;
-
-        void skipblank();
 
     public:
         explicit Lexer(std::istream& input, std::string& filename);

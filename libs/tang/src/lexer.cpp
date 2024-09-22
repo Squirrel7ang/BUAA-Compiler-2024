@@ -1,8 +1,8 @@
-#include "tang/lexer.h"
+#include "tang/lexer.hpp"
 
 #include <iostream>
 
-#include "tang/token.h"
+#include "tang/token.hpp"
 #include <istream>
 
 namespace tang {
@@ -178,11 +178,31 @@ namespace tang {
         case '&': // TODO
             col++;
             content.append(1, ch);
-            return Token(content, filename, lin, col - content.size(), TK_AND);
+            ch = input.get();
+            if (ch == '&') {
+                col++;
+                content.append(1, ch);
+                return Token(content, filename, lin, col - content.size(), TK_AND);
+            }
+            else {
+                input.unget();
+                return Token("&", filename, lin, col - content.size(), TK_UNKNOWN);
+                break;
+            }
         case '|': // TODO
             col++;
             content.append(1, ch);
-            return Token(content, filename, lin, col - content.size(), TK_OR);
+            ch = input.get();
+            if (ch == '|') {
+                col++;
+                content.append(1, ch);
+                return Token(content, filename, lin, col - content.size(), TK_AND);
+            }
+            else {
+                input.unget();
+                return Token("&", filename, lin, col - content.size(), TK_UNKNOWN);
+                break;
+            }
         case ',':
             col++;
             content.append(1, ch);
@@ -249,11 +269,12 @@ namespace tang {
             if (ch == '\'') {
                 col++;
                 content.append(1, ch);
+                return Token(content, filename, lin, col - content.size(), TK_CHARTK);
             }
             else {
                 perror("CHARTK not close");
+                break;
             }
-            return Token(content, filename, lin, col - content.size(), TK_CHARTK);
         case '\"':
             col++;
             content.append(1, ch);
@@ -263,11 +284,12 @@ namespace tang {
             if (ch == '\"') {
                 col++;
                 content.append(1, ch);
+                return Token(content, filename, lin, col - content.size(), TK_STRCON);
             }
             else {
                 perror("STRCONTK not close");
+                break;
             }
-            return Token(content, filename, lin, col - content.size(), TK_STRCON);
         case EOF:
             return Token(content, filename, lin, col - content.size(), TK_EOF);
         default:

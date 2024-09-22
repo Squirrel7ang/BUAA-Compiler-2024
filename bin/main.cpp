@@ -1,12 +1,19 @@
 #include <fstream>
+#include <iostream>
 
-#include "tang/lexer.h"
-#include "tang/token.h"
+#include "tang/lexer.hpp"
+#include "tang/token.hpp"
 #include <string>
 using namespace tang;
 
 int main(int argc, char *argv[]) {
-    std::string input = "testfile.txt";
+    std::string input;
+    if (argc > 1) {
+        input = std::string(argv[1]);
+    }
+    else {
+        input = "testfile.txt";
+    }
     std::string corout = "lexer.txt";
     std::string errout = "error.txt";
 
@@ -25,10 +32,12 @@ int main(int argc, char *argv[]) {
         else if (token.isUnknown()) {
             unsigned line = token.getLin();
             erroutFile << line << ' ' << 'a' << std::endl;
+            // std::cout << line << ' ' << 'a' << std::endl;
             break;
         }
         else {
-            coroutFile << token.getType() << ' ' << token.getContent() << std::endl;
+            coroutFile << token.toString() << ' ' << token.getContent() << std::endl;
+            // std::cout << token.toString() << ' ' << token.getContent() << std::endl;
         }
     }
 

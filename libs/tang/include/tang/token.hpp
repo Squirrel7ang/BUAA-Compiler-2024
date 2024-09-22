@@ -63,6 +63,7 @@ namespace tang {
         [[nodiscard]] TokenType getType() const;
         [[nodiscard]] bool isEOF() const;
         [[nodiscard]] bool isUnknown() const;
+        std::string toString() const;
     }; // class Token
 } // namespace tang
 
