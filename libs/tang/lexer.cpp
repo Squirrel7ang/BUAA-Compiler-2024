@@ -1,8 +1,8 @@
-#include "tang/lexer.hpp"
+#include "lexer.hpp"
 
 #include <iostream>
 
-#include "tang/token.hpp"
+#include "token.hpp"
 #include <istream>
 
 namespace tang {

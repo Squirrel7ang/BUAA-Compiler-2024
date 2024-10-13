@@ -6,6 +6,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
-add_subdirectory(bin)
-
 add_subdirectory(libs)
+
+add_subdirectory(bin)

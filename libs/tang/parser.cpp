@@ -4,7 +4,8 @@
 
 #include <memory>
 
-#include "tang/parser.hpp"
+#include "parser.hpp"
+#include "ast.hpp"
 
 namespace tang {
     std::unique_ptr<CompUnit> Parser::parse() {

@@ -3,7 +3,7 @@
 //
 
 #include <string>
-#include "tang/token.hpp"
+#include "token.hpp"
 
 namespace tang {
     Token::Token(const std::string &str,

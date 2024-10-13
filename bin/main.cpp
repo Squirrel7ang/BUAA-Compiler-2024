@@ -1,8 +1,8 @@
 #include <fstream>
 #include <iostream>
 
-#include "tang/lexer.hpp"
-#include "tang/token.hpp"
+#include "libs/tang/lexer.hpp"
+#include "libs/tang/token.hpp"
 #include <string>
 using namespace tang;
 
@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     auto lexer = Lexer(infile, input);
 
     while (1) {
-        Token token = lexer._readNextToken();
+        Token token = lexer.nextToken();
         if (token.isEOF())
             break;
         else if (token.getType() == TK_COMMENT) {
