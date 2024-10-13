@@ -19,7 +19,7 @@ namespace tang {
         std::unique_ptr<CompUnit> parse();
 
     private:
-        std::unique_ptr<CompUnit> _parseCompUnit();
+        std::unique_ptr<CompUnit> _tryCompUnit();
         std::unique_ptr<Decl> _parseDecl();
         std::unique_ptr<FuncDef> _parseFuncDef();
     };

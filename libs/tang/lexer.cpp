@@ -9,9 +9,11 @@ namespace tang {
     Lexer::Lexer(std::istream& input, std::string& filename)
         : _input(input), filename(filename) {
         tokenNum = 0;
-        curPtr = -1;
+        curPtr = 0;
+        lexPtr = 0;
         lin = 1;
         col = 1;
+        _lexOneToken();
     }
 
     char Lexer::getCh() {
@@ -34,7 +36,7 @@ namespace tang {
         return _input.peek();
     }
 
-    int Lexer::readASCII(std::string& content) {
+    int Lexer::_readASCII(std::string& content) {
         char ch = peekCh();
         if (ch == '\'' || ch == '\"') {
             return 0;
@@ -121,21 +123,26 @@ namespace tang {
             if (ch == '/') {
                 consumeCh();
                 ch = getCh();
+                content += "//";
+                content += ch;
                 while (ch != '\n' && ch != EOF) {
                     ch = getCh();
                     content += ch;
                 }
-                return Token(content, filename, lin, col, TK_COMMENT);
+                return Token(content, lin, col, TK_COMMENT);
             }
             else if (ch == '*') {
-                // else ch == '*'
                 char ch1 = '/';
+                content += ch1;
                 while (ch1 != '*' || ch != '/') {
                     content += ch;
                     ch1 = ch;
                     ch = getCh();
+                    if (ch == EOF)
+                        break;
                 }
-                return Token(content, filename, lin, col, TK_COMMENT);
+                content += ch;
+                return Token(content, lin, col, TK_COMMENT);
             }
             else {
                 ch = '/';
@@ -152,7 +159,7 @@ namespace tang {
                 content.append(1, ch);
                 consumeCh();
             }
-            return Token(content, filename, lin, col - content.size(), TK_INTCON);
+            return Token(content, lin, col - content.size(), TK_INTCON);
         }
         else if (std::isalpha(ch) || ch == '_') {
             // identifier
@@ -165,52 +172,52 @@ namespace tang {
             }
             auto it = reservedTokens.find(content);
             TokenType type = it == reservedTokens.end() ? TK_IDENFR : it->second;
-            return Token(content, filename, lin, col - content.size(), type);
+            return Token(content, lin, col - content.size(), type);
         }
         else switch (ch) {
         case '(':
             content.append(1, ch);
-            return Token(content, filename, lin, col - content.size(), TK_LPARENT);
+            return Token(content, lin, col - content.size(), TK_LPARENT);
         case ')':
             content.append(1, ch);
-            return Token(content, filename, lin, col - content.size(), TK_RPARENT);
+            return Token(content, lin, col - content.size(), TK_RPARENT);
         case '[':
             content.append(1, ch);
-            return Token(content, filename, lin, col - content.size(), TK_LBRACK);
+            return Token(content, lin, col - content.size(), TK_LBRACK);
         case ']':
             content.append(1, ch);
-            return Token(content, filename, lin, col - content.size(), TK_RBRACK);
+            return Token(content, lin, col - content.size(), TK_RBRACK);
         case '{':
             content.append(1, ch);
-            return Token(content, filename, lin, col - content.size(), TK_LBRACE);
+            return Token(content, lin, col - content.size(), TK_LBRACE);
         case '}':
             content.append(1, ch);
-            return Token(content, filename, lin, col - content.size(), TK_RBRACE);
+            return Token(content, lin, col - content.size(), TK_RBRACE);
         case '+':
             content.append(1, ch);
-            return Token(content, filename, lin, col - content.size(), TK_PLUS);
+            return Token(content, lin, col - content.size(), TK_PLUS);
         case '-':
             content.append(1, ch);
-            return Token(content, filename, lin, col - content.size(), TK_MINU);
+            return Token(content, lin, col - content.size(), TK_MINU);
         case '*':
             content.append(1, ch);
-            return Token(content, filename, lin, col - content.size(), TK_MULT);
+            return Token(content, lin, col - content.size(), TK_MULT);
         case '/':
             content.append(1, ch);
-            return Token(content, filename, lin, col - content.size(), TK_DIV);
+            return Token(content, lin, col - content.size(), TK_DIV);
         case '%':
             content.append(1, ch);
-            return Token(content, filename, lin, col - content.size(), TK_MOD);
+            return Token(content, lin, col - content.size(), TK_MOD);
         case '&': // TODO
             content.append(1, ch);
             ch = peekCh();
             if (ch == '&') {
                 consumeCh();
                 content.append(1, ch);
-                return Token(content, filename, lin, col - content.size(), TK_AND);
+                return Token(content, lin, col - content.size(), TK_AND);
             }
             else {
-                return Token("&", filename, lin, col - content.size(), TK_UNKNOWN);
+                return Token("&", lin, col - content.size(), TK_UNKNOWN);
             }
         case '|': // TODO
             content.append(1, ch);
@@ -218,27 +225,27 @@ namespace tang {
             if (ch == '|') {
                 consumeCh();
                 content.append(1, ch);
-                return Token(content, filename, lin, col - content.size(), TK_OR);
+                return Token(content, lin, col - content.size(), TK_OR);
             }
             else {
-                return Token("&", filename, lin, col - content.size(), TK_UNKNOWN);
+                return Token("&", lin, col - content.size(), TK_UNKNOWN);
             }
         case ',':
             content.append(1, ch);
-            return Token(content, filename, lin, col - content.size(), TK_COMMA);
+            return Token(content, lin, col - content.size(), TK_COMMA);
         case ';':
             content.append(1, ch);
-            return Token(content, filename, lin, col - content.size(), TK_SEMICN);
+            return Token(content, lin, col - content.size(), TK_SEMICN);
         case '!':
             content.append(1, ch);
             ch = peekCh();
             if (ch == '=') {
                 consumeCh();
                 content.append(1, ch);
-                return Token(content, filename, lin, col - content.size(), TK_NEQ);
+                return Token(content, lin, col - content.size(), TK_NEQ);
             }
             else {
-                return Token(content, filename, lin, col - content.size(), TK_NOT);
+                return Token(content, lin, col - content.size(), TK_NOT);
             }
         case '=':
             content.append(1, ch);
@@ -246,10 +253,10 @@ namespace tang {
             if (ch == '=') {
                 consumeCh();
                 content.append(1, ch);
-                return Token(content, filename, lin, col - content.size(), TK_EQL);
+                return Token(content, lin, col - content.size(), TK_EQL);
             }
             else {
-                return Token(content, filename, lin, col - content.size(), TK_ASSIGN);
+                return Token(content, lin, col - content.size(), TK_ASSIGN);
             }
         case '<':
             content.append(1, ch);
@@ -257,10 +264,10 @@ namespace tang {
             if (ch == '=') {
                 consumeCh();
                 content.append(1, ch);
-                return Token(content, filename, lin, col - content.size(), TK_LEQ);
+                return Token(content, lin, col - content.size(), TK_LEQ);
             }
             else {
-                return Token(content, filename, lin, col - content.size(), TK_LSS);
+                return Token(content, lin, col - content.size(), TK_LSS);
             }
         case '>':
             content.append(1, ch);
@@ -268,18 +275,18 @@ namespace tang {
             if (ch == '=') {
                 consumeCh();
                 content.append(1, ch);
-                return Token(content, filename, lin, col - content.size(), TK_GEQ);
+                return Token(content, lin, col - content.size(), TK_GEQ);
             }
             else {
-                return Token(content, filename, lin, col - content.size(), TK_GRE);
+                return Token(content, lin, col - content.size(), TK_GRE);
             }
         case '\'':
             content.append(1, ch);
-            readASCII(content);
+            _readASCII(content);
             ch = getCh();
             if (ch == '\'') {
                 content.append(1, ch);
-                return Token(content, filename, lin, col - content.size(), TK_CHRCON);
+                return Token(content, lin, col - content.size(), TK_CHRCON);
             }
             else {
                 perror("CHRCON not close");
@@ -287,19 +294,19 @@ namespace tang {
             }
         case '\"':
             content.append(1, ch);
-            while (readASCII(content) == 1)
+            while (_readASCII(content) == 1)
                 ;
             ch = getCh();
             if (ch == '\"') {
                 content.append(1, ch);
-                return Token(content, filename, lin, col - content.size(), TK_STRCON);
+                return Token(content, lin, col - content.size(), TK_STRCON);
             }
             else {
                 perror("STRCONTK not close");
                 break;
             }
         case EOF:
-            return Token(content, filename, lin, col - content.size(), TK_EOF);
+            return Token(content, lin, col - content.size(), TK_EOF);
         default:
             char s[32];
             std::sprintf(s, "unknown token `%c`(ASCII:%d), lin: %d, col: %d", ch, ch, lin, col);
@@ -308,10 +315,40 @@ namespace tang {
         }
     }
 
-    Token Lexer::nextToken() {
+    Token Lexer::peekToken() {
+        return peekToken(1);
+    }
+
+    void Lexer::reverse(const unsigned int n) {
+        if (n > curPtr) {
+            perror("reverse to much in parser");
+        }
+        curPtr -= n;
+    }
+
+    Token Lexer::peekToken(const unsigned int n) {
+        return _peekToken(curPtr + n);
+    }
+
+    Token Lexer::_peekToken(const unsigned int index) {
+        while (index >= lexPtr)
+            _lexOneToken();
+        return tokens[index];
+    }
+
+    Token Lexer::getToken() {
+        curPtr++;
+        return peekToken(0);
+    }
+
+    Token Lexer::curToken() {
+        return peekToken(0);
+    }
+
+    Token Lexer::_lexOneToken() {
         Token t = _readNextToken();
         tokens.push_back(t);
-        curPtr++;
+        lexPtr++;
         return t;
     }
 

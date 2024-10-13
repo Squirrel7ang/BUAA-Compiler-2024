@@ -5,6 +5,8 @@
 #ifndef AST_HPP
 #define AST_HPP
 
+#include <memory>
+
 namespace tang {
     class MainFuncDef;
     class FuncDef;
@@ -24,9 +26,16 @@ namespace tang {
     };
 
     class CompUnit: public Node {
-        std::vector<std::unique_ptr<Decl>> decls;
-        std::vector<std::unique_ptr<FuncDef>> funcs;
-        std::unique_ptr<MainFuncDef> mainFuncDef;
+        std::vector<std::unique_ptr<Decl>> _decls;
+        std::vector<std::unique_ptr<FuncDef>> _funcdefs;
+        std::unique_ptr<MainFuncDef> _mainFuncDef;
+
+    public:
+        void addDecl(const std::unique_ptr<Decl> &decl) { _decls.push_back(decl); }
+        void addFuncDef(const std::unique_ptr<FuncDef> &funcdef) { _funcdefs.push_back(funcdef); }
+        void addMainFuncDef(const std::unique_ptr<MainFuncDef> &mainFuncDef) {
+            // TODO
+        }
 
     };
 

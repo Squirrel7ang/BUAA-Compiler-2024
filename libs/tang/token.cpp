@@ -7,11 +7,10 @@
 
 namespace tang {
     Token::Token(const std::string &str,
-        const std::string& filename,
         const unsigned int lin,
         const unsigned int col,
         const TokenType tokenType)
-        : content(str), _filename(filename), _lin(lin), _col(col), type(tokenType) {
+        : content(str), _lin(lin), _col(col), type(tokenType) {
     }
 
     unsigned int Token::getCol() const {
@@ -24,10 +23,6 @@ namespace tang {
 
     std::string Token::getContent() const {
         return this->content;
-    }
-
-    std::string Token::getFilename() const {
-        return this->_filename;
     }
 
     TokenType Token::getType() const {

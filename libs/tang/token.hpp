@@ -47,13 +47,11 @@ namespace tang {
 
     class Token {
         std::string content;
-        std::string _filename;
         unsigned int _lin;
         unsigned int _col;
         TokenType type;
     public:
         explicit Token(const std::string& str,
-            const std::string& filename,
             unsigned int lin,
             unsigned int col,
             TokenType tokenType);

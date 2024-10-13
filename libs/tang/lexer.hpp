@@ -16,7 +16,8 @@ namespace tang {
         std::istream& _input;
         std::vector<Token> tokens;
         unsigned int tokenNum;
-        int curPtr;
+        unsigned int curPtr; // point to the current token;
+        unsigned int lexPtr; // point to the about-to-be-lexed index
 
         std::string& filename;
         unsigned int lin;
@@ -26,15 +27,18 @@ namespace tang {
         char getCh();
         void consumeCh();
         char peekCh();
+        Token _peekToken(unsigned int);
         Token _readNextToken();
+        Token _lexOneToken();
+        int _readASCII(std::string& content);
 
     public:
-        explicit Lexer(std::istream& input, std::string& filename);
-        Token nextToken();
-        int readASCII(std::string& content);
-        // void move(); // move the pointer
-        // Token now(); // return Token on current pointer
-        // Token peek(unsigned int n); // peek the next n th token
+        explicit Lexer(std::istream&, std::string&);
+        Token peekToken(unsigned int);
+        Token peekToken();
+        Token getToken();
+        Token curToken();
+        void reverse(unsigned int);
     };
 }
 

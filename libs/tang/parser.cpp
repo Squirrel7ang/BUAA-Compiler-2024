@@ -9,34 +9,33 @@
 
 namespace tang {
     std::unique_ptr<CompUnit> Parser::parse() {
-        return _parseCompUnit();
+        std::unique_ptr<CompUnit> ptr;
+        bool success = _tryCompUnit(ptr);
+        if (success) {
+            return ptr;
+        }
+        else {
+            perror("CompUnit failed");
+            exit(1);
+        }
 
     }
 
-    std::unique_ptr<CompUnit> Parser::_parseCompUnit() {
-        auto compUnit = std::make_unique<CompUnit>();
-        Token t = _lexer.nextToken();
+    std::unique_ptr<CompUnit> Parser::_tryCompUnit(std::unique_ptr<CompUnit>& compUnit) {
+        Token&& t = _lexer.peekToken();
+        bool success = true;
+
+        compUnit = std::make_unique<CompUnit>();
         compUnit->setLin(t.getLin());
         compUnit->setCol(t.getCol());
 
         // parse decl
-        while (1 /* TODO */ ) {
-            // if this is a const declaration
-            if (t.getType() == TK_CONSTTK) {
-
-
+        while (success) {
+            std::unique_ptr<Decl> decl;
+            success = _tryDecl(decl);
+            if (success) {
+                compUnit.addDecl(std::move(decl));
             }
-
-            t = _lexer.nextToken();
-
-            if (t.isFuncType()) {
-
-            }
-            else {
-                // a CompUnit must start with an 'int' 'char' 'void' or 'const'
-                perror("CompUnitError");
-            }
-
         }
 
     }
