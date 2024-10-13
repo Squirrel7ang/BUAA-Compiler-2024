@@ -42,6 +42,16 @@ namespace tang {
         return type == TK_UNKNOWN;
     }
 
+    bool Token::isBType() const {
+        const auto tp = getType();
+        return tp == TK_INTTK || tp == TK_CHARTK;
+    }
+
+    bool Token::isFuncType() const {
+        const auto tp = getType();
+        return tp == TK_VOIDTK || isBType();
+    }
+
     std::string Token::toString() const {
         switch (type) {
             case (TK_IDENFR): return {"IDENFR"};

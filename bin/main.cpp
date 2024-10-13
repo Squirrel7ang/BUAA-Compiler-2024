@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     auto lexer = Lexer(infile, input);
 
     while (1) {
-        Token token = lexer.readNextToken();
+        Token token = lexer._readNextToken();
         if (token.isEOF())
             break;
         else if (token.getType() == TK_COMMENT) {
