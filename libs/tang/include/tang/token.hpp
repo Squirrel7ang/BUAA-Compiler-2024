@@ -25,6 +25,7 @@ namespace tang {
         TK_SEMICN, TK_COMMA, // ; ,
         TK_LPARENT, TK_RPARENT, TK_LBRACK, TK_RBRACK, TK_LBRACE, TK_RBRACE, // braces
         TK_EOF, // end of file
+        TK_COMMENT,
     };
 
     const std::unordered_map<std::string, TokenType> reservedTokens {

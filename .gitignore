@@ -13,3 +13,4 @@ Compiler
 error.txt
 lexer.txt
 testfile.txt
+*.zip

@@ -87,10 +87,12 @@ namespace tang {
         return 1;
     }
 
-    Token Lexer::readNextToken() {
+    bool Lexer::skipSpace() {
         char ch = input.get();
-        std::string content;
+        bool flag = false;
+        // skip empty space
         while (ch == '\n' || ch == ' ' || ch == '\t') {
+            flag = true;
             if (ch == '\n') {
                 lin++;
                 col = 1;
@@ -99,6 +101,57 @@ namespace tang {
                 col++;
             }
             ch = input.get();
+        }
+        input.unget();
+        return flag;
+    }
+
+
+    Token Lexer::readNextToken() {
+        std::string content = "";
+
+        skipSpace();
+
+        char ch = input.get();
+
+        // try comment token
+        if (ch == '/') {
+            col++;
+            ch = input.get();
+            if (ch != '/' && ch != '*') {
+                input.unget();
+                ch = '/';
+            }
+            else if (ch == '/') {
+                ch = input.get();
+                col++;
+                while (ch != '\n' && ch != EOF) {
+                    ch = input.get();
+                    col++;
+                    content += ch;
+                }
+                if (ch == '\n') {
+                    lin++;
+                    col = 1;
+                }
+                return Token(content, filename, lin, col, TK_COMMENT);
+            }
+            else {
+                char ch1 = '/';
+                while (ch1 != '*' || ch != '/') {
+                    content += ch;
+                    if (ch == '\n') {
+                        lin++;
+                        col = 1;
+                    }
+                    else {
+                        col++;
+                    }
+                    ch1 = ch;
+                    ch = input.get();
+                }
+                return Token(content, filename, lin, col, TK_COMMENT);
+            }
         }
 
         if (std::isdigit(ch)) {
@@ -113,7 +166,7 @@ namespace tang {
                 col++;
             }
             input.unget();
-            return Token(content, filename, lin, col - content.size(), TK_INTTK);
+            return Token(content, filename, lin, col - content.size(), TK_INTCON);
         }
         else if (std::isalpha(ch) || ch == '_') {
             // identifier
@@ -196,7 +249,7 @@ namespace tang {
             if (ch == '|') {
                 col++;
                 content.append(1, ch);
-                return Token(content, filename, lin, col - content.size(), TK_AND);
+                return Token(content, filename, lin, col - content.size(), TK_OR);
             }
             else {
                 input.unget();
@@ -239,6 +292,7 @@ namespace tang {
             }
         case '<':
             col++;
+            content.append(1, ch);
             ch = input.get();
             if (ch == '=') {
                 col++;
@@ -251,6 +305,7 @@ namespace tang {
             }
         case '>':
             col++;
+            content.append(1, ch);
             ch = input.get();
             if (ch == '=') {
                 col++;
@@ -269,10 +324,10 @@ namespace tang {
             if (ch == '\'') {
                 col++;
                 content.append(1, ch);
-                return Token(content, filename, lin, col - content.size(), TK_CHARTK);
+                return Token(content, filename, lin, col - content.size(), TK_CHRCON);
             }
             else {
-                perror("CHARTK not close");
+                perror("CHRCON not close");
                 break;
             }
         case '\"':
@@ -293,7 +348,9 @@ namespace tang {
         case EOF:
             return Token(content, filename, lin, col - content.size(), TK_EOF);
         default:
-            perror("unknown token");
+            char s[32];
+            std::sprintf(s, "unknown token `%c`(ASCII:%d), lin: %d, col: %d", ch, ch, lin, col);
+            perror(s);
             break;
         }
     }

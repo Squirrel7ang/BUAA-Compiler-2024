@@ -29,6 +29,9 @@ int main(int argc, char *argv[]) {
         Token token = lexer.readNextToken();
         if (token.isEOF())
             break;
+        else if (token.getType() == TK_COMMENT) {
+            continue;
+        }
         else if (token.isUnknown()) {
             unsigned line = token.getLin();
             erroutFile << line << ' ' << 'a' << std::endl;

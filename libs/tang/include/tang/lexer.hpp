@@ -22,6 +22,8 @@ namespace tang {
         unsigned int lin;
         unsigned int col;
 
+        bool skipSpace();
+
     public:
         explicit Lexer(std::istream& input, std::string& filename);
         Token readNextToken();
