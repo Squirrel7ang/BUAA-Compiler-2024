@@ -38,6 +38,7 @@ namespace tang {
         Token peekToken();
         Token getToken();
         Token curToken();
+        void skipToken(unsigned int);
         void reverse(unsigned int);
     };
 }

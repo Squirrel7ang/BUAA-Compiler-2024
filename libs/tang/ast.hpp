@@ -6,21 +6,42 @@
 #define AST_HPP
 
 #include <memory>
+#include <variant>
 
 namespace tang {
+    class Exp;
+    class Stmt;
+    class UnaryOp;
+    class FuncRParams;
+    class CharConst;
+    class IntConst;
+    class LOrExp;
+    class AddExp;
+    class BlockItem;
+    class FuncFParam;
+    class Block;
+    class FuncFParams;
+    class FuncType;
+    class InitVal;
+    class VarDef;
+    class StringConst;
+    class ConstDef;
+    class BType;
     class VarDecl;
     class ConstDecl;
+    class ConstExp;
+    class Ident;
+    class MainFuncDef;
+    class FuncDef;
+
     template <typename T>
     using u_ptr = std::unique_ptr<T>;
 
     template <typename T>
     using vector = std::vector<T>;
-    class ConstInitVal;
-    class ConstExp;
-    class Ident;
-    class MainFuncDef;
-    class FuncDef;
-    class Decl;
+
+    template <typename ...Ts>
+    using variant = std::variant<Ts...>;
 
     class Node {
         unsigned int _lin;
@@ -32,130 +53,208 @@ namespace tang {
         void setCol(const unsigned int col) { _col = col; }
 
         friend std::ostream& operator << (std::ostream& os, const Node& node);
+    };
 
+    using DeclVariant = variant<ConstDecl, VarDecl>;
+    class Decl: public Node {
+    public:
+        u_ptr<DeclVariant> decl;
     };
 
     class CompUnit: public Node {
-        vector<u_ptr<Decl>> _decls;
-        vector<u_ptr<FuncDef>> _funcdefs;
-        u_ptr<MainFuncDef> _mainFuncDef;
-
     public:
-        void addDecl(u_ptr<Decl> &decl) { _decls.push_back(std::move(decl)); }
-        void addFuncDef(u_ptr<FuncDef> &funcdef) { _funcdefs.push_back(std::move(funcdef)); }
-        void addMainFuncDef(u_ptr<MainFuncDef> &mainFuncDef) {
-            _mainFuncDef = std::move(mainFuncDef);
-        }
-    };
-
-    class Decl: public Node {
-        u_ptr<ConstDecl> constDecl;
-        u_ptr<VarDecl> varDecl;
-        bool isConstDecl;
-        bool isVarDecl;
-
+        vector<u_ptr<Decl>> decls;
+        vector<u_ptr<FuncDef>> funcDefs;
+        u_ptr<MainFuncDef> mainFuncDef;
 
     };
 
     class ConstDecl: public Node {
-
-    };
-
-    class BType: public Node {
-        bool _isInt;
-        bool _isChar;
     public:
-        void addInt() { _isInt = true, _isChar = false; }
-        void addChar() { _isChar = true, _isInt = false; }
-    };
-
-    class ConstDef: public Node {
-        u_ptr<Ident> _ident;
-        u_ptr<ConstExp> _constExp;
-        u_ptr<ConstInitVal> _constInitVal;
-    public:
-        void addIdent()
-
-
+        u_ptr<BType> bType;
+        vector<u_ptr<ConstDef>> constDefs;
     };
 
     class ConstInitVal: public Node {
+        vector<u_ptr<ConstExp>> constExps;
+    public:
+        u_ptr<StringConst> stringConst;
+        void addConstExp(u_ptr<ConstExp>& constExp) {
+            u_ptr<ConstExp> _constExp = std::move(constExp);
+            constExps.push_back(std::move(_constExp));
+        }
+    };
 
+    class BType: public Node {
+    public:
+        bool isInt;
+        bool isChar;
+        void setInt() { isInt = true, isChar = false; }
+        void setChar() { isChar = true, isInt = false; }
+    };
+
+    class ConstDef: public Node {
+    public:
+        u_ptr<Ident> ident;
+        u_ptr<ConstExp> constExp;
+        u_ptr<ConstInitVal> constInitVal;
     };
 
     class VarDecl: public Node {
+    public:
+        u_ptr<BType> bType;
+        vector<u_ptr<VarDef>> varDefs;
 
     };
 
     class VarDef: public Node {
-
+    public:
+        u_ptr<Ident> ident;
+        u_ptr<ConstExp> constExp;
+        u_ptr<InitVal> initVal;
     };
 
     class InitVal: public Node {
-
+        vector<u_ptr<Exp>> exps;
+    public:
+        u_ptr<StringConst> stringConst;
+        void addExp(u_ptr<Exp>& exp) {
+            exps.push_back(std::move(exp));
+            stringConst = nullptr;
+        }
     };
 
     class FuncDef: public Node {
-
+    public:
+        u_ptr<FuncType> funcType;
+        u_ptr<Ident> ident;
+        u_ptr<FuncFParams> funcFParams;
+        u_ptr<Block> block;
     };
 
     class MainFuncDef: public Node {
-
+    public:
+        u_ptr<Block> block;
     };
 
     class FuncType: public Node {
-
+    public:
+        bool isVoid;
+        bool isInt;
+        bool isChar;
+        void setVoid() { isVoid = true; isInt = isChar = false; }
+        void setInt() { isInt = true; isChar = isVoid = false; }
+        void setChar() { isChar = true; isInt = isVoid = false; }
     };
 
     class FuncFParams: public Node {
-
+    public:
+        vector<u_ptr<FuncFParam>> funcFParams;
     };
 
     class FuncFParam: public Node {
-
+    public:
+        u_ptr<BType> bType;
+        u_ptr<Ident> ident;
+        bool isArray;
     };
 
     class Block: public Node {
+    public:
+        u_ptr<BlockItem> blockItem;
 
     };
 
     class BlockItem: public Node {
+    public:
+        u_ptr<variant<Decl, Stmt>> blockItem;
+    };
+
+    class Assignment: public Node { // this is the ForStmt in the ducoment
+
+    };
+
+    class AssignStmt: public Node {
+
+    };
+
+    class IfStmt: public Node {
+
+    };
+
+    class ForStmt: public Node { // this is NOT the ForStmt in the document
+
+    };
+
+    class BreakStmt: public Node {
+
+    };
+
+    class ContinueStmt: public Node {
+
+    };
+
+    class ReturnStmt: public Node {
+
+    };
+
+    class GetintStmt: public Node {
+
+    };
+
+    class GetcharStmt: public Node {
+
+    };
+
+    class PrintfStmt: public Node {
 
     };
 
     class Stmt: public Node {
-
-    };
-
-    class ForStmt: public Node {
+        // TODO: variant of the above stmt;
 
     };
 
     class Exp: public Node {
-
+    public:
+        u_ptr<AddExp> addExp;
     };
 
     class Cond: public Node {
-
+    public:
+        u_ptr<LOrExp> lOrExp;
     };
 
     class LVal: public Node {
-
+    public:
+        u_ptr<Ident> ident;
+        u_ptr<Exp> exp;
     };
 
     class PrimaryExp: public Node {
-
+    // TODO: variant
     };
 
     class Number: public Node {
-
+    public:
+        u_ptr<IntConst> intConst;
     };
 
     class Character: public Node {
+    public:
+        u_ptr<CharConst> charConst;
+    };
 
+    class FuncCall: public Node {
+    public:
+        u_ptr<Ident> ident;
+        u_ptr<FuncRParams> funcRParams;
     };
 
     class UnaryExp: public Node {
+    public:
+        vector<u_ptr<UnaryOp>> unaryOps;
+        variant<PrimaryExp, FuncCall> unaryExp;
 
     };
 
@@ -192,10 +291,14 @@ namespace tang {
     };
 
     class ConstExp: public Node {
+    public:
+        u_ptr<AddExp> addExp;
 
     };
 
     class Ident: public Node {
+    public:
+        std::string str;
 
     };
 
@@ -208,6 +311,8 @@ namespace tang {
     };
 
     class StringConst: public Node {
+    public:
+        u_ptr<std::string> str;
 
     };
 } // namespace tang

@@ -341,12 +341,17 @@ namespace tang {
         return peekToken(0);
     }
 
+    void Lexer::skipToken(const unsigned int n) {
+        curPtr += n;
+    }
+
+
     Token Lexer::curToken() {
         return peekToken(0);
     }
 
     Token Lexer::_lexOneToken() {
-        Token t = _readNextToken();
+        Token&& t = _readNextToken();
         tokens.push_back(t);
         lexPtr++;
         return t;
