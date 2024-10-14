@@ -49,14 +49,13 @@ namespace tang {
         std::string content;
         unsigned int _lin;
         unsigned int _col;
-        TokenType type;
+        TokenType _type;
     public:
         explicit Token(const std::string& str,
             unsigned int lin,
             unsigned int col,
             TokenType tokenType);
         [[nodiscard]] std::string getContent() const;
-        [[nodiscard]] std::string getFilename() const;
         [[nodiscard]] unsigned int getCol() const;
         [[nodiscard]] unsigned int getLin() const;
         [[nodiscard]] TokenType getType() const;
@@ -64,6 +63,7 @@ namespace tang {
         [[nodiscard]] bool isUnknown() const;
         [[nodiscard]] bool isFuncType() const;
         [[nodiscard]] bool isBType() const;
+        [[nodiscard]] bool isConstTK() const;
         [[nodiscard]] std::string toString() const;
     }; // class Token
 } // namespace tang

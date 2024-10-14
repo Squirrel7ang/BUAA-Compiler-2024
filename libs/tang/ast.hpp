@@ -8,6 +8,16 @@
 #include <memory>
 
 namespace tang {
+    class VarDecl;
+    class ConstDecl;
+    template <typename T>
+    using u_ptr = std::unique_ptr<T>;
+
+    template <typename T>
+    using vector = std::vector<T>;
+    class ConstInitVal;
+    class ConstExp;
+    class Ident;
     class MainFuncDef;
     class FuncDef;
     class Decl;
@@ -26,20 +36,24 @@ namespace tang {
     };
 
     class CompUnit: public Node {
-        std::vector<std::unique_ptr<Decl>> _decls;
-        std::vector<std::unique_ptr<FuncDef>> _funcdefs;
-        std::unique_ptr<MainFuncDef> _mainFuncDef;
+        vector<u_ptr<Decl>> _decls;
+        vector<u_ptr<FuncDef>> _funcdefs;
+        u_ptr<MainFuncDef> _mainFuncDef;
 
     public:
-        void addDecl(const std::unique_ptr<Decl> &decl) { _decls.push_back(decl); }
-        void addFuncDef(const std::unique_ptr<FuncDef> &funcdef) { _funcdefs.push_back(funcdef); }
-        void addMainFuncDef(const std::unique_ptr<MainFuncDef> &mainFuncDef) {
-            // TODO
+        void addDecl(u_ptr<Decl> &decl) { _decls.push_back(std::move(decl)); }
+        void addFuncDef(u_ptr<FuncDef> &funcdef) { _funcdefs.push_back(std::move(funcdef)); }
+        void addMainFuncDef(u_ptr<MainFuncDef> &mainFuncDef) {
+            _mainFuncDef = std::move(mainFuncDef);
         }
-
     };
 
     class Decl: public Node {
+        u_ptr<ConstDecl> constDecl;
+        u_ptr<VarDecl> varDecl;
+        bool isConstDecl;
+        bool isVarDecl;
+
 
     };
 
@@ -48,10 +62,20 @@ namespace tang {
     };
 
     class BType: public Node {
-
+        bool _isInt;
+        bool _isChar;
+    public:
+        void addInt() { _isInt = true, _isChar = false; }
+        void addChar() { _isChar = true, _isInt = false; }
     };
 
     class ConstDef: public Node {
+        u_ptr<Ident> _ident;
+        u_ptr<ConstExp> _constExp;
+        u_ptr<ConstInitVal> _constInitVal;
+    public:
+        void addIdent()
+
 
     };
 
@@ -83,7 +107,15 @@ namespace tang {
 
     };
 
-    class FuncParams: public Node {
+    class FuncFParams: public Node {
+
+    };
+
+    class FuncFParam: public Node {
+
+    };
+
+    class Block: public Node {
 
     };
 

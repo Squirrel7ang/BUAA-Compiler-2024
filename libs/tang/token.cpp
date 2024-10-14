@@ -10,7 +10,7 @@ namespace tang {
         const unsigned int lin,
         const unsigned int col,
         const TokenType tokenType)
-        : content(str), _lin(lin), _col(col), type(tokenType) {
+        : content(str), _lin(lin), _col(col), _type(tokenType) {
     }
 
     unsigned int Token::getCol() const {
@@ -26,15 +26,15 @@ namespace tang {
     }
 
     TokenType Token::getType() const {
-        return this->type;
+        return this->_type;
     }
 
     bool Token::isEOF() const {
-        return type == TK_EOF;
+        return _type == TK_EOF;
     }
 
     bool Token::isUnknown() const {
-        return type == TK_UNKNOWN;
+        return _type == TK_UNKNOWN;
     }
 
     bool Token::isBType() const {
@@ -47,8 +47,12 @@ namespace tang {
         return tp == TK_VOIDTK || isBType();
     }
 
+    bool Token::isConstTK() const {
+        return _type == TK_CONSTTK;
+    }
+
     std::string Token::toString() const {
-        switch (type) {
+        switch (_type) {
             case (TK_IDENFR): return {"IDENFR"};
             case (TK_INTCON): return {"INTCON"};
             case (TK_STRCON): return {"STRCON"};

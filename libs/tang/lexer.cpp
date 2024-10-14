@@ -351,5 +351,4 @@ namespace tang {
         lexPtr++;
         return t;
     }
-
 }
