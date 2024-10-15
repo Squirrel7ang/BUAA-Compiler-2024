@@ -5,6 +5,9 @@
 #include <string>
 #include "token.hpp"
 
+#include <assert.h>
+#include <variant>
+
 namespace tang {
     Token::Token(const std::string &str,
         const unsigned int lin,
@@ -49,6 +52,67 @@ namespace tang {
 
     bool Token::isConstTK() const {
         return _type == TK_CONSTTK;
+    }
+
+    bool Token:: isUnaryOp() const {
+        return _type == TK_PLUS || _type == TK_MINU || _type == TK_NOT;
+    }
+
+    bool Token::isMulExpOp() const {
+        return _type == TK_MULT || _type == TK_DIV || _type == TK_MOD;
+    }
+
+    bool Token::isAddExpOp() const {
+        return _type == TK_PLUS || _type == TK_MINU;
+    }
+
+    bool Token::isRelExpOp() const {
+        return _type == TK_LEQ || _type == TK_LSS || _type == TK_GEQ || _type == TK_GRE;
+    }
+
+    bool Token::isEqExpOp() const {
+        return _type == TK_NEQ || _type == TK_EQL;
+    }
+
+    char Token::CHRCONToChar() const {
+        if (_type == TK_CHRCON) {
+            if (content[1] != '\\') {
+                assert(content.length() == 4); // '\'', ASCII, '\'', '\0'
+                return content[1];
+            }
+            else {
+                assert(content.length() == 5); //  '\'', '\\', ASCII, '\'', '\0'
+                char ch = content[2];
+                switch (ch) {
+                    case 'a':
+                        return '\a';
+                    case 'b':
+                        return '\b';
+                    case 't':
+                        return '\t';
+                    case 'n':
+                        return 'n';
+                    case 'v':
+                        return '\v';
+                    case 'f':
+                        return '\f';
+                    case '\"':
+                        return '\"';
+                    case '\'':
+                        return '\'';
+                    case '\\':
+                        return '\\';
+                    case '0':
+                        return '\0';
+                    default: {
+                        assert(0);
+                    }
+                }
+            }
+        }
+        else {
+            assert(0);
+        }
     }
 
     std::string Token::toString() const {

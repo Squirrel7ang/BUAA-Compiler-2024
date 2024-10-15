@@ -140,7 +140,7 @@ namespace tang {
 
         // try '='
         t1 = peekToken();
-        if (t1.getType() != TK_EQL) {
+        if (t1.getType() != TK_ASSIGN) {
             perror("a constDef without '=' to indicate initial value");
         }
         else {
@@ -313,7 +313,7 @@ namespace tang {
 
         // try initval
         t1 = peekToken();
-        if (t1.getType() == TK_EQL) {
+        if (t1.getType() == TK_ASSIGN) {
             skipToken();
             auto initVal = _tryInitVal();
             if (initVal == nullptr) {
@@ -425,55 +425,271 @@ namespace tang {
     u_ptr<FuncFParams> Parser::_tryFuncFParams() {
         auto funcFParams = std::make_unique<FuncFParams>();
 
+        auto funcFParam = _tryFuncFParam();
+        if (funcFParam == nullptr) {
+            return nullptr;
+        }
+        else {
+            funcFParams->funcFParams.push_back(funcFParam);
+        }
+
+        bool success = true;
+        while (success) {
+            Token&& t1 = peekToken();
+            if (t1.getType() != TK_COMMA) {
+                break;
+            }
+            skipToken();
+            funcFParam = _tryFuncFParam();
+            success = (funcFParam != nullptr);
+            if (success) {
+                funcFParams->funcFParams.push_back(funcFParam);
+            }
+        }
+
+        return funcFParams;
     }
 
     u_ptr<IntConst> Parser::_tryIntConst() {
-                auto intConst = std::make_unique<IntConst>();
-
+        auto intConst = std::make_unique<IntConst>();
+        Token&& t1 = peekToken();
+        if (t1.getCol() == TK_INTCON) {
+            skipToken();
+            intConst->val = std::stoi(t1.getContent());
+        }
+        else {
+            return nullptr;
+        }
+        return intConst;
     }
 
     u_ptr<Number> Parser::_tryNumber() {
-                auto number = std::make_unique<Number>();
+        auto number = std::make_unique<Number>();
 
+        auto intConst = _tryIntConst();
+        if (intConst != nullptr) {
+            number->intConst = std::move(intConst);
+        }
+        else {
+            return nullptr;
+        }
+        return number;
     }
 
     u_ptr<CharConst> Parser::_tryCharConst() {
-                auto charConst = std::make_unique<CharConst>();
-
+        auto charConst = std::make_unique<CharConst>();
+        Token&& t1 = peekToken();
+        if (t1.getType() == TK_CHARTK) {
+            // char token must start with '';
+            skipToken();
+            charConst->ch = t1.CHRCONToChar();
+        }
+        else {
+            return nullptr;
+        }
+        return charConst;
     }
 
     u_ptr<Character> Parser::_tryCharacter() {
-                auto character = std::make_unique<Character>();
+        auto character = std::make_unique<Character>();
 
+        auto charConst = _tryCharConst();
+        if (charConst != nullptr) {
+            character->charConst = std::move(charConst);
+        }
+        else {
+            return nullptr;
+        }
+
+        return character;
     }
 
     u_ptr<PrimaryExp> Parser::_tryPrimaryExp() {
-                auto primaryExp = std::make_unique<PrimaryExp>();
+        auto primaryExp = std::make_unique<PrimaryExp>();
+
+        // try LVal;
+        auto lVal = _tryLVal();
+        if (lVal != nullptr) {
+            primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(std::move(*lVal));
+            return primaryExp;
+        }
+
+        // try Number
+        auto number = _tryNumber();
+        if (number != nullptr) {
+            primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(std::move(*number));
+            return primaryExp;
+        }
+
+        // try Character
+        auto character = _tryCharacter();
+        if (character != nullptr) {
+            primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(std::move(*character));
+            return primaryExp;
+        }
+
+        // try (Exp)
+        Token&& t1 = peekToken();
+        if (t1.getType() == TK_LPARENT) {
+            skipToken();
+
+            auto exp = _tryExp();
+            if (exp != nullptr) {
+                primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(std::move(*exp));
+            }
+            else {
+                perror("primaryExp with ( but with none-Exp expression");
+                return nullptr;
+            }
+
+            t1 = peekToken();
+            if (t1.getType() == TK_RPARENT) {
+                skipToken();
+                return primaryExp;
+            }
+            else {
+                perror("a Primary Exp () not close, skip");
+            }
+        }
+        return nullptr;
 
     }
 
     u_ptr<FuncRParams> Parser::_tryFuncRParams() {
-                auto funcRParams = std::make_unique<FuncRParams>();
+        auto funcRParams = std::make_unique<FuncRParams>();
+
+        auto exp = _tryExp();
+        if (exp != nullptr) {
+            funcRParams->exps.push_back(exp);
+        }
+        else {
+            return nullptr;
+        }
+
+        bool success = true;
+        while (success) {
+            Token && t1 = peekToken();
+            if (t1.getType() != TK_COMMA) {
+                break;
+            }
+            skipToken();
+            exp = _tryExp();
+            success = (exp != nullptr);
+            if (success) {
+                funcRParams->exps.push_back(exp);
+            }
+        }
+
+        return funcRParams;
 
     }
 
     u_ptr<UnaryOp> Parser::_tryUnaryOp() {
-                auto unaryOp = std::make_unique<UnaryOp>();
+        auto unaryOp = std::make_unique<UnaryOp>();
+        Token&& t1 = peekToken();
+        if (t1.getType() == TK_PLUS) {
+            unaryOp->setPlus();
+        }
+        else if (t1.getType() == TK_MINU) {
+            unaryOp->setMinus();
+        }
+        else if (t1.getType() == TK_NOT) {
+            unaryOp->setExc();
+        }
+        else {
+            return nullptr;
+        }
+        return unaryOp;
+    }
 
+    u_ptr<FuncCall> Parser::_tryFuncCall() {
+        auto funcCall = std::make_unique<FuncCall>();
+
+        Token&& t1 = peekToken();
+        if (t1.getType() != TK_IDENFR) {
+            return nullptr;
+        }
+
+        skipToken();
+        t1 = peekToken();
+        if (t1.getType() == TK_LPARENT) {
+            skipToken();
+
+            auto funcRParams = _tryFuncRParams();
+            funcCall->funcRParams = std::move(funcRParams); // might be nullptr;
+
+            t1 = peekToken();
+            if (t1.getType() == TK_RPARENT) {
+                skipToken();
+            }
+            else {
+                perror("FuncCall () not close, skip");
+            }
+        }
+        else {
+            return nullptr;
+        }
+
+        return funcCall;
     }
 
     u_ptr<UnaryExp> Parser::_tryUnaryExp() {
-                auto unaryExp = std::make_unique<UnaryExp>();
+        auto unaryExp = std::make_unique<UnaryExp>();
 
+        // try unaryOp
+        bool success = true;
+        while (success) {
+            auto unaryOp = _tryUnaryOp();
+            success = (unaryOp != nullptr);
+            if (success) {
+                unaryExp->unaryOps.push_back(unaryOp);
+            }
+        }
+
+        // try PrimaryExp
+        auto primaryExp = _tryPrimaryExp();
+        if (primaryExp != nullptr) {
+            unaryExp->unaryExp = std::make_unique<UnaryExpVariant>(std::move(*primaryExp));
+            return unaryExp;
+        }
+
+        // try FuncCall;
+        auto funcCall = _tryFuncCall();
+        if (funcCall != nullptr) {
+            unaryExp->unaryExp = std::make_unique<UnaryExpVariant>(std::move(*funcCall));
+            return unaryExp;
+        }
+
+        return nullptr;
     }
 
     u_ptr<MulExp> Parser::_tryMulExp() {
-                auto mulExp = std::make_unique<MulExp>();
+        auto mulExp = std::make_unique<MulExp>();
 
+        auto unaryExp = _tryUnaryExp();
+        if (unaryExp != nullptr) {
+            mulExp->unaryExps.push_back(unaryExp);
+        }
+
+        bool success = true;
+        while (success) {
+            Token&& t1 = peekToken();
+            if (t1.isMulExpOp()) {
+                mulExp->ops.push_back(t1);
+            }
+            else {
+                break;
+            }
+
+            unaryExp = _tryUnaryExp();
+
+        }
     }
 
     u_ptr<AddExp> Parser::_tryAddExp() {
-                auto addExp = std::make_unique<AddExp>();
+        auto addExp = std::make_unique<AddExp>();
+
+
 
     }
 

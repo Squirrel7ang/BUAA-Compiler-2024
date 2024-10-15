@@ -39,6 +39,7 @@ namespace tang {
         u_ptr<PrimaryExp> _tryPrimaryExp();
         u_ptr<FuncRParams> _tryFuncRParams();
         u_ptr<UnaryOp> _tryUnaryOp();
+        u_ptr<FuncCall> _tryFuncCall();
         u_ptr<UnaryExp> _tryUnaryExp();
         u_ptr<MulExp> _tryMulExp();
         u_ptr<AddExp> _tryAddExp();

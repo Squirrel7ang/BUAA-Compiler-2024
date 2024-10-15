@@ -64,6 +64,12 @@ namespace tang {
         [[nodiscard]] bool isFuncType() const;
         [[nodiscard]] bool isBType() const;
         [[nodiscard]] bool isConstTK() const;
+        [[nodiscard]] bool isUnaryOp() const;
+        [[nodiscard]] bool isMulExpOp() const;
+        [[nodiscard]] bool isAddExpOp() const;
+        [[nodiscard]] bool isRelExpOp() const;
+        [[nodiscard]] bool isEqExpOp() const;
+        [[nodiscard]] char CHRCONToChar() const;
         [[nodiscard]] std::string toString() const;
     }; // class Token
 } // namespace tang

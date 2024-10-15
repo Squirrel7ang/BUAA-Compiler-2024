@@ -33,6 +33,8 @@ namespace tang {
     class Ident;
     class MainFuncDef;
     class FuncDef;
+    class Number;
+    class Character;
 
     template <typename T>
     using u_ptr = std::unique_ptr<T>;
@@ -231,8 +233,10 @@ namespace tang {
         u_ptr<Exp> exp;
     };
 
+    using PrimaryExpVariant = variant<Exp, LVal, Number, Character>;
     class PrimaryExp: public Node {
-    // TODO: variant
+    public:
+        u_ptr<PrimaryExpVariant> primaryExp;
     };
 
     class Number: public Node {
@@ -251,49 +255,66 @@ namespace tang {
         u_ptr<FuncRParams> funcRParams;
     };
 
+    using UnaryExpVariant = variant<PrimaryExp, FuncCall>;
     class UnaryExp: public Node {
     public:
         vector<u_ptr<UnaryOp>> unaryOps;
-        variant<PrimaryExp, FuncCall> unaryExp;
+        u_ptr<UnaryExpVariant> unaryExp;
 
     };
 
     class UnaryOp: public Node {
-
+    public:
+        bool isPlus;
+        bool isMinus;
+        bool isExc;
+        void setPlus() { isPlus = true; isMinus = isExc = false; }
+        void setMinus() { isMinus = true; isPlus = isExc = false; }
+        void setExc() { isExc = true; isMinus = isPlus = false; }
     };
 
     class FuncRParams: public Node {
-
+    public:
+        vector<u_ptr<Exp>> exps;
     };
 
     class MulExp: public Node {
-
+    public:
+        vector<u_ptr<UnaryExp>> unaryExps;
+        vector<Token> ops;
     };
 
     class AddExp: public Node {
-
+    public:
+        vector<u_ptr<MulExp>> mulExps;
+        vector<Token> ops;
     };
 
     class RelExp: public Node {
-
+    public:
+        vector<u_ptr<AddExp>> addExps;
+        vector<Token> ops;
     };
 
     class EqExp: public Node {
-
+    public:
+        vector<u_ptr<RelExp>> relExps;
+        vector<Token> ops;
     };
 
     class LAndExp: public Node {
-
+    public:
+        vector<u_ptr<EqExp>> eqExps;
     };
 
     class LOrExp: public Node {
-
+    public:
+        vector<u_ptr<LAndExp>> lAndExps;
     };
 
     class ConstExp: public Node {
     public:
         u_ptr<AddExp> addExp;
-
     };
 
     class Ident: public Node {
@@ -303,10 +324,13 @@ namespace tang {
     };
 
     class IntConst: public Node {
-
+    public:
+        int val;
     };
 
     class CharConst: public Node {
+    public:
+        char ch;
 
     };
 
