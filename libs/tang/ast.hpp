@@ -9,6 +9,8 @@
 #include <variant>
 
 namespace tang {
+    class Cond;
+    class LVal;
     class Exp;
     class Stmt;
     class UnaryOp;
@@ -167,25 +169,37 @@ namespace tang {
 
     };
 
+    using BlockItemVariant = variant<Decl, Stmt>;
     class BlockItem: public Node {
     public:
         u_ptr<variant<Decl, Stmt>> blockItem;
     };
 
     class Assignment: public Node { // this is the ForStmt in the ducoment
+    public:
+        u_ptr<LVal> lVal;
+        u_ptr<Exp> exp;
 
     };
 
     class AssignStmt: public Node {
-
+    public:
+        u_ptr<Assignment> assignment;
     };
 
     class IfStmt: public Node {
-
+    public:
+        u_ptr<Cond> cond;
+        u_ptr<Stmt> ifStmt;
+        u_ptr<Stmt> elseStmt;
     };
 
     class ForStmt: public Node { // this is NOT the ForStmt in the document
-
+    public:
+        u_ptr<Assignment> init;
+        u_ptr<Cond> cond;
+        u_ptr<Assignment> update;
+        u_ptr<Stmt> stmt;
     };
 
     class BreakStmt: public Node {
@@ -197,24 +211,33 @@ namespace tang {
     };
 
     class ReturnStmt: public Node {
-
+    public:
+        u_ptr<Exp> exp;
     };
 
     class GetintStmt: public Node {
-
+    public:
+        u_ptr<LVal> lVal;
     };
 
     class GetcharStmt: public Node {
-
+    public:
+        u_ptr<LVal> lVal;
     };
 
     class PrintfStmt: public Node {
-
+    public:
+        u_ptr<StringConst> stringConst;
+        vector<u_ptr<Exp>> exps;
     };
 
+    using StmtVariant = variant<AssignStmt, Exp, Block,
+                                IfStmt, ForStmt, BreakStmt,
+                                ContinueStmt, ReturnStmt, GetintStmt,
+                                GetcharStmt, PrintfStmt>;
     class Stmt: public Node {
-        // TODO: variant of the above stmt;
-
+    public:
+        u_ptr<StmtVariant> stmt;
     };
 
     class Exp: public Node {

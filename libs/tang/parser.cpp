@@ -670,6 +670,9 @@ namespace tang {
         if (unaryExp != nullptr) {
             mulExp->unaryExps.push_back(unaryExp);
         }
+        else {
+            return nullptr;
+        }
 
         bool success = true;
         while (success) {
@@ -682,76 +685,476 @@ namespace tang {
             }
 
             unaryExp = _tryUnaryExp();
-
+            if (unaryExp != nullptr) {
+                mulExp->unaryExps.push_back(unaryExp);
+            }
+            else {
+                perror("mulExp expect a unaryExp");
+            }
         }
+
+        return mulExp;
     }
 
     u_ptr<AddExp> Parser::_tryAddExp() {
         auto addExp = std::make_unique<AddExp>();
 
+        auto mulExp = _tryMulExp();
+        if (mulExp != nullptr) {
+            addExp->mulExps.push_back(mulExp);
+        }
+        else {
+            return nullptr;
+        }
 
+        bool success = true;
+        while (success) {
+            Token&& t1 = peekToken();
+            if (t1.isAddExpOp()) {
+                mulExp->ops.push_back(t1);
+            }
+            else {
+                break;
+            }
 
+            mulExp = _tryMulExp();
+            if (mulExp != nullptr) {
+                addExp->mulExps.push_back(mulExp);
+            }
+            else {
+                perror("addExp expect a mulExp");
+            }
+        }
+
+        return addExp;
     }
 
     u_ptr<Exp> Parser::_tryExp() {
         auto exp = std::make_unique<Exp>();
 
+        auto addExp = _tryAddExp();
+        if (addExp != nullptr) {
+            exp->addExp = std::move(addExp);
+        }
+        else {
+            return nullptr;
+        }
+
+        return exp;
     }
 
     u_ptr<LVal> Parser::_tryLVal() {
-                auto lVal = std::make_unique<LVal>();
+        auto lVal = std::make_unique<LVal>();
 
+        auto ident = _tryIdent();
+        if (ident != nullptr) {
+            lVal->ident = std::move(ident);
+        }
+        else {
+            return nullptr;
+        }
+
+        Token&& t1 = peekToken();
+        if (t1.getType() == TK_LBRACK) {
+            skipToken();
+
+            auto exp = _tryExp();
+            if (exp != nullptr) {
+                lVal->exp = std::move(exp);
+            }
+            else {
+                perror("lVal expect a exp inside []");
+            }
+
+            t1 = peekToken();
+            if (t1.getType() == TK_RBRACK) {
+                skipToken();
+            }
+            else {
+                perror("lVal [] not close");
+            }
+        }
+        else {
+            return lVal;
+        }
+
+        return lVal;
     }
 
     u_ptr<RelExp> Parser::_tryRelExp() {
-                auto relExp = std::make_unique<RelExp>();
+        auto relExp = std::make_unique<RelExp>();
 
+        auto addExp = _tryAddExp();
+        if (addExp != nullptr) {
+            relExp->addExps.push_back(addExp);
+        }
+        else {
+            return nullptr;
+        }
+
+        bool success = true;
+        while (success) {
+            Token&& t1 = peekToken();
+            if (t1.isRelExpOp()) {
+                relExp->ops.push_back(t1);
+            }
+            else {
+                break;
+            }
+
+            addExp = _tryAddExp();
+            if (addExp != nullptr) {
+                relExp->addExps.push_back(addExp);
+            }
+            else {
+                perror("relExp expect a addExp");
+            }
+        }
+
+        return relExp;
     }
 
     u_ptr<EqExp> Parser::_tryEqExp() {
-                auto eqExp = std::make_unique<EqExp>();
+        auto eqExp = std::make_unique<EqExp>();
 
+        auto relExp = _tryRelExp();
+        if (relExp != nullptr) {
+            eqExp->relExps.push_back(relExp);
+        }
+        else {
+            return nullptr;
+        }
+
+        bool success = true;
+        while (success) {
+            Token&& t1 = peekToken();
+            if (t1.isEqExpOp()) {
+                eqExp->ops.push_back(t1);
+            }
+            else {
+                break;
+            }
+
+            relExp = _tryRelExp();
+            if (relExp != nullptr) {
+                eqExp->relExps.push_back(relExp);
+            }
+            else {
+                perror("eqExp expect a relExp");
+            }
+        }
+
+        return eqExp;
     }
 
     u_ptr<LAndExp> Parser::_tryLAndExp() {
-                auto lAndExp = std::make_unique<LAndExp>();
+        auto lAndExp = std::make_unique<LAndExp>();
 
+        auto eqExp = _tryEqExp();
+        if (eqExp != nullptr) {
+            lAndExp->eqExps.push_back(eqExp);
+        }
+        else {
+            return nullptr;
+        }
+
+        bool success = true;
+        while (success) {
+            Token&& t1 = peekToken();
+            if (t1.getType() != TK_AND) {
+                break;
+            }
+
+            eqExp = _tryEqExp();
+            if (eqExp != nullptr) {
+                lAndExp->eqExps.push_back(eqExp);
+            }
+            else {
+                perror("LAndExp expect a eqExp");
+            }
+        }
+
+        return lAndExp;
     }
 
     u_ptr<LOrExp> Parser::_tryLOrExp() {
-                auto lOrExp = std::make_unique<LOrExp>();
+        auto lOrExp = std::make_unique<LOrExp>();
+
+        auto lAndExp = _tryLAndExp();
+        if (lAndExp != nullptr) {
+            lOrExp->lAndExps.push_back(lAndExp);
+        }
+        else {
+            return nullptr;
+        }
+
+        bool success = true;
+        while (success) {
+            Token&& t1 = peekToken();
+            if (t1.getType() != TK_OR) {
+                break;
+            }
+
+            lAndExp = _tryLAndExp();
+            if (lAndExp != nullptr) {
+                lOrExp->lAndExps.push_back(lAndExp);
+            }
+            else {
+                perror("lOrExp expect a LAndExp");
+            }
+        }
+
+        return lOrExp;
 
     }
 
     u_ptr<Cond> Parser::_tryCond() {
-                auto cond = std::make_unique<Cond>();
+        auto cond = std::make_unique<Cond>();
+
+        auto lOrExp = _tryLOrExp();
+        if (lOrExp != nullptr) {
+            cond->lOrExp = std::move(lOrExp);
+        }
+        else {
+            return nullptr;
+        }
+        return cond;
+    }
+
+    u_ptr<Assignment> _tryAssignment() {
 
     }
 
-    u_ptr<ForStmt> Parser::_tryForStmt() {
-                auto forStmt = std::make_unique<ForStmt>();
+    u_ptr<ForStmt> Parser::_tryForStmt() { // this forStmt is not the one in the document
+        auto forStmt = std::make_unique<ForStmt>();
 
+        Token &&t1 = peekToken();
+        if (t1.getType() != TK_FORTK) {
+            return nullptr;
+        }
+        skipToken();
+        t1 = getToken();
+        if (t1.getType() != TK_LPARENT) {
+            perror("expect (");
+        }
+
+        // try initAssignment;
+        auto assignment = _tryAssignment();
+        if (assignment != nullptr) {
+            forStmt->init = std::move(assignment);
+        }
+        else {
+            perror("illegal for statement Init");
+        }
+
+        t1 = peekToken();
+        if (t1.getType() == TK_COMMA) {
+            skipToken();
+        }
+        else {
+            perror("ForStmt expect comma");
+        }
+
+        // try Cond
+        auto cond = _tryCond();
+        if (cond != nullptr) {
+            forStmt->cond = std::move(cond);
+        }
+        else {
+            perror("illegal for statement Cond");
+        }
+
+        t1 = peekToken();
+        if (t1.getType() == TK_COMMA) {
+            skipToken();
+        }
+        else {
+            perror("ForStmt expect comma");
+        }
+
+        // try update
+        assignment = _tryAssignment();
+        if (assignment != nullptr) {
+            forStmt->update = std::move(assignment);
+        }
+        else {
+            perror("illegal for statement Init");
+        }
+
+        t1 = peekToken();
+        if (t1.getType() == TK_RPARENT) {
+            skipToken();
+        }
+        else {
+            perror("Forstmt expect )");
+        }
+
+        // try Stmt
+        auto stmt = _tryStmt();
+        if (stmt != nullptr) {
+            forStmt->stmt = std::move(stmt);
+        }
+        else {
+            perror("expect stmt");
+        }
+
+        return forStmt;
     }
 
     u_ptr<Stmt> Parser::_tryStmt() {
-                auto stmt = std::make_unique<Stmt>();
+        auto stmt = std::make_unique<Stmt>();
 
+        // try assignStmt
+        auto assignStmt = _tryAssignStmt();
+        if (assignStmt != nullptr) {
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(*assignStmt));
+            return stmt;
+        }
+
+        // try Exp
+        auto exp = _tryExp();
+        if (exp != nullptr) {
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(*exp));
+            return stmt;
+        }
+        else {
+            Token&& t1 = peekToken();
+            if (t1.getType() == TK_SEMICN) {
+                skipToken();
+                stmt->stmt = std::make_unique<StmtVariant>(std::move(*exp));
+                return stmt;
+            }
+        }
+
+        // try IfStmt
+        auto ifStmt = _tryifStmt();
+        if (ifStmt != nullptr) {
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(*ifStmt));
+            return stmt;
+        }
+
+        // try ForStmt
+        auto forStmt = _tryForStmt();
+        if (forStmt != nullptr) {
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(*forStmt));
+            return stmt;
+        }
+
+        // try break
+        auto breakStmt = _tryBreakStmt();
+        if (breakStmt != nullptr) {
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(*breakStmt));
+            return stmt;
+        }
+
+        // try continueStmt;
+        auto continueStmt = _tryContinueStmt();
+        if (continueStmt != nullptr) {
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(*continueStmt));
+            return stmt;
+        }
+
+        // try returnStmt;
+        auto returnStmt = _tryReturnStmt();
+        if (returnStmt != nullptr) {
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(*returnStmt));
+            return stmt;
+        }
+
+        // try getintStmt;
+        auto getintStmt = _tryGetintStmt();
+        if (getintStmt != nullptr) {
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(*getintStmt));
+            return stmt;
+        }
+
+        // try getcharStmt;
+        auto getcharStmt = _tryGetcharStmt();
+        if (getcharStmt != nullptr) {
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(*getcharStmt));
+            return stmt;
+        }
+
+        // try printfStmt;
+        auto printfStmt = _tryPrintfStmt();
+        if (continueStmt != nullptr) {
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(*printfStmt));
+            return stmt;
+        }
+
+        return nullptr;
     }
 
     u_ptr<BlockItem> Parser::_tryBlockItem() {
         auto blockItem = std::make_unique<BlockItem>();
-        u_ptr<Decl> decl = _tryDecl();
-        blockItem->blockItem = std::make_unique(std::move(*decl));
 
+        // try decl
+        auto decl = _tryDecl();
+        if (decl != nullptr) {
+            blockItem->blockItem = std::make_unique<BlockItemVariant>(std::move(*decl));
+            return blockItem;
+        }
+
+        // try Stmt
+        auto stmt = _tryStmt();
+        if (stmt != nullptr) {
+            blockItem->blockItem = std::make_unique<BlockItemVariant>(std::move(*stmt));
+            return blockItem;
+        }
+
+        return nullptr;
     }
 
     u_ptr<Block> Parser::_tryBlock() {
-            auto block = std::make_unique<Block>();
+        auto block = std::make_unique<Block>();
 
+        Token&& t1 = peekToken();
+        if (t1.getType() == TK_LBRACE) {
+            skipToken();
+
+            auto blockItem = _tryBlockItem();
+            if (blockItem != nullptr) {
+                block->blockItem = std::move(blockItem);
+            }
+            else {
+                perror("Block expect blockItem");
+            }
+
+            t1 = peekToken();
+            if (t1.getType() == TK_RBRACE) {
+                skipToken();
+            }
+            else {
+                perror("Block {} not closed");
+            }
+        }
+        else {
+            return nullptr;
+        }
+
+        return block;
     }
 
     u_ptr<FuncDef> Parser::_tryFuncDef() {
-            auto funcDef = std::make_unique<FuncDef>();
+        auto funcDef = std::make_unique<FuncDef>();
+
+        auto funcType = _tryFuncType();
+        if (funcType != nullptr) {
+            funcDef->funcType = std::move(funcType);
+        }
+        else {
+            return nullptr;
+        }
+
+        auto ident = _tryIdent();
+        if (ident != nullptr) {
+            funcDef->ident = std::move(ident);
+        }
+        else {
+            // TODO
+        }
+
+        Token // TODO
 
     }
 
