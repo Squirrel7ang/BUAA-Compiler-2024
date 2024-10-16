@@ -103,12 +103,38 @@ namespace tang {
         Token&& t1 = peekToken();
         if (t1.getType() == TK_LBRACE) {
             skipToken();
+
+            auto constExp = _tryConstExp();
+            if (constExp != nullptr) {
+                constInitVal->addConstExp(constExp);
+            }
+
+            bool success = true;
+            while (success) {
+                t1 = peekToken();
+                if (t1.getType() == TK_COMMA) {
+                    skipToken();
+                }
+                else {
+                    break;
+                }
+
+                constExp = _tryConstExp();
+                success = (constExp != nullptr);
+                if (success) {
+                    constInitVal->addConstExp(constExp);
+                }
+            }
+
+            t1 = peekToken();
+            if (t1.getType() == TK_RBRACE) {
+                skipToken();
+            }
+            else {
+                perror("constInitVal expect }");
+            }
         }
-        if (t1.getType() == TK_RBRACE) {
-            // TODO
-        }
-         // TODO
-        return nullptr;
+        return constInitVal;
     }
 
     u_ptr<ConstDef> Parser::_tryConstDef() {
@@ -205,7 +231,6 @@ namespace tang {
             skipToken();
         }
         else {
-            // TODO
             perror("a constDecl without semicolon");
         }
         return constDecl;
@@ -1001,6 +1026,220 @@ namespace tang {
         return forStmt;
     }
 
+    u_ptr<AssignStmt> Parser::_tryAssignStmt() {
+        auto assignStmt = std::make_unique<AssignStmt>();
+
+    }
+
+    u_ptr<IfStmt> Parser::_tryIfStmt() {
+        auto ifStmt = std::make_unique<IfStmt>();
+
+    }
+
+    u_ptr<BreakStmt> Parser::_tryBreakStmt() {
+        auto breakStmt = std::make_unique<BreakStmt>();
+
+        Token&& t1 = peekToken();
+        if (t1.getType() == TK_BREAKTK) {
+            skipToken();
+        }
+        else {
+            return nullptr;
+        }
+
+        // try semicolon
+        t1 = peekToken();
+        if (t1.getType() == TK_SEMICN) {
+            skipToken();
+        }
+        else {
+            perror("semicon");
+        }
+
+        return breakStmt;
+    }
+
+    u_ptr<ContinueStmt> Parser::_tryContinueStmt() {
+        auto continueStmt = std::make_unique<ContinueStmt>();
+
+        Token&& t1 = peekToken();
+        if (t1.getType() == TK_CONTINUETK) {
+            skipToken();
+        }
+        else {
+            return nullptr;
+        }
+
+        // try semicolon
+        t1 = peekToken();
+        if (t1.getType() == TK_SEMICN) {
+            skipToken();
+        }
+        else {
+            perror("semicon");
+        }
+
+        return continueStmt;
+
+    }
+
+    u_ptr<ReturnStmt> Parser::_tryReturnStmt() {
+        auto returnStmt = std::make_unique<ReturnStmt>();
+
+        Token&& t1 = peekToken();
+        if (t1.getType() == TK_RETURNTK) {
+            skipToken();
+        }
+        else {
+            return nullptr;
+        }
+
+        // try exp
+        auto exp = _tryExp();
+        if (exp != nullptr) {
+            returnStmt->exp = std::move(exp);
+        }
+
+        // try semicon
+        t1 = peekToken();
+        if (t1.getType() == TK_SEMICN) {
+            skipToken();
+        }
+        else {
+            perror("semicon");
+        }
+
+        return returnStmt;
+    }
+
+    u_ptr<GetintStmt> Parser::_tryGetintStmt() {
+        auto getintStmt = std::make_unique<GetintStmt>();
+
+        auto lVal = _tryLVal();
+        if (lVal != nullptr) {
+            getintStmt->lVal = std::move(lVal);
+        }
+        else {
+            return nullptr;
+        }
+
+        // try '='
+        Token&& t1 = peekToken();
+        if (t1.getType() == TK_ASSIGN) {
+           skipToken();
+        }
+        else {
+            return nullptr;
+        }
+
+        // try getint();
+        t1 = peekToken();
+        if (t1.getType() == TK_GETINTTK) {
+            skipToken();
+        }
+        else {
+            return nullptr;
+        }
+
+        // try the rest, "();"
+        if (peekToken().getType() == TK_LPARENT) {
+            skipToken();
+        }
+        if (peekToken().getType() == TK_RPARENT) {
+            skipToken();
+        }
+        if (peekToken().getType() == TK_SEMICN) {
+            skipToken();
+        }
+
+        return getintStmt;
+    }
+
+    u_ptr<GetcharStmt> Parser::_tryGetcharStmt() {
+        auto getcharStmt = std::make_unique<GetcharStmt>();
+
+        auto lVal = _tryLVal();
+        if (lVal != nullptr) {
+            getcharStmt->lVal = std::move(lVal);
+        }
+        else {
+            return nullptr;
+        }
+
+        // try '='
+        Token&& t1 = peekToken();
+        if (t1.getType() == TK_ASSIGN) {
+           skipToken();
+        }
+        else {
+            return nullptr;
+        }
+
+        // try getchar
+        t1 = peekToken();
+        if (t1.getType() == TK_GETCHARTK) {
+            skipToken();
+        }
+        else {
+            return nullptr;
+        }
+
+        // try the rest, "();"
+        if (peekToken().getType() == TK_LPARENT) {
+            skipToken();
+        }
+        if (peekToken().getType() == TK_RPARENT) {
+            skipToken();
+        }
+        if (peekToken().getType() == TK_SEMICN) {
+            skipToken();
+        }
+
+        return getcharStmt;
+    }
+
+    u_ptr<PrintfStmt> Parser::_tryPrintfStmt() {
+        auto printfStmt = std::make_unique<PrintfStmt>();
+
+        Token&& t1 = peekToken();
+        if (t1.getType() == TK_PRINTFTK) {
+            skipToken();
+        }
+        else {
+            return nullptr;
+        }
+
+        // try StringConst
+        auto stringConst = _tryStringConst();
+        if (stringConst != nullptr) {
+            printfStmt->stringConst = std::move(stringConst);
+        }
+        else {
+            perror("PrintfStmt expect stringConst");
+        }
+
+        // try many Exp;
+        bool success = true;
+        while (success) {
+            t1 = peekToken();
+            if (t1.getType() == TK_COMMA) {
+                skipToken();
+            }
+            else {
+                break;
+            }
+
+            // tryExp
+            auto exp = _tryExp();
+            success = (exp != nullptr);
+            if (success) {
+                printfStmt->exps.push_back(exp);
+            }
+        }
+
+        return printfStmt;
+    }
+
     u_ptr<Stmt> Parser::_tryStmt() {
         auto stmt = std::make_unique<Stmt>();
 
@@ -1027,7 +1266,7 @@ namespace tang {
         }
 
         // try IfStmt
-        auto ifStmt = _tryifStmt();
+        auto ifStmt = _tryIfStmt();
         if (ifStmt != nullptr) {
             stmt->stmt = std::make_unique<StmtVariant>(std::move(*ifStmt));
             return stmt;
@@ -1151,11 +1390,37 @@ namespace tang {
             funcDef->ident = std::move(ident);
         }
         else {
-            // TODO
+            return nullptr;
         }
 
-        Token // TODO
+        Token&& t1 = peekToken();
+        if (t1.getType() == TK_LPARENT) {
+            skipToken();
+            auto funcFParams = _tryFuncFParams();
+            if (funcFParams != nullptr) {
+                funcDef->funcFParams = std::move(funcFParams);
+            }
+            t1 = peekToken();
+            if (t1.getType() == TK_RPARENT) {
+                skipToken();
+            }
+            else {
+                perror("FuncDef expect )");
+            }
+            // try Block
+            auto block = _tryBlock();
+            if (block != nullptr) {
+                funcDef->block = std::move(block);
+            }
+            else {
+                perror("funcDef expect Block");
+            }
+        }
+        else {
+            return nullptr;
+        }
 
+        return funcDef;
     }
 
     u_ptr<Decl> Parser::_tryDecl() {
@@ -1180,9 +1445,56 @@ namespace tang {
             }
         }
         perror("a decl is neither constDecl nor varDecl");
+        return nullptr;
     }
 
     u_ptr<MainFuncDef> Parser::_tryMainFuncDef() {
+        auto mainFuncDef = std::make_unique<MainFuncDef>();
+
+        Token&& t1 = peekToken();
+        if (t1.getType() == TK_INTTK) {
+            skipToken();
+        }
+        else {
+            perror("MainFuncDef expect intToken");
+            return nullptr;
+        }
+
+        t1 = peekToken();
+        if (t1.getType() == TK_MAINTK) {
+            skipToken();
+        }
+        else {
+            perror("MainFuncDef expect intToken");
+            return nullptr;
+        }
+
+        if (peekToken().getType() == TK_LPARENT) {
+            skipToken();
+        }
+        else {
+            perror("MainFuncDef expect (");
+            return nullptr;
+        }
+
+        if (peekToken().getType() == TK_RPARENT) {
+            skipToken();
+        }
+        else {
+            perror("MainFuncDef expect )");
+            return nullptr;
+        }
+
+        auto block = _tryBlock();
+        if (block != nullptr) {
+            mainFuncDef->block = std::move(block);
+        }
+        else {
+            perror("MainFuncDef expect block");
+            return nullptr;
+        }
+
+        return mainFuncDef;
 
     }
 
@@ -1219,18 +1531,14 @@ namespace tang {
     }
 
     u_ptr<CompUnit> Parser::parse() {
-        u_ptr<CompUnit> ptr;
-        bool success = _tryCompUnit(ptr);
-        if (success) {
-            return ptr;
+        auto compUnit = _tryCompUnit();
+        if (compUnit != nullptr) {
+            return compUnit;
         }
         else {
             perror("CompUnit failed");
             exit(1);
         }
-
     }
-
-
 
 } // namespace tang

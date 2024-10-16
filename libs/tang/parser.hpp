@@ -16,7 +16,7 @@ namespace tang {
 
     public:
         explicit Parser(Lexer& lexer): _lexer(lexer) {}
-        std::unique_ptr<CompUnit> parse();
+        u_ptr<CompUnit> parse();
 
     private:
         u_ptr<BType> _tryBType();
@@ -51,17 +51,21 @@ namespace tang {
         u_ptr<LOrExp> _tryLOrExp();
         u_ptr<Cond> _tryCond();
         u_ptr<ForStmt> _tryForStmt();
+        u_ptr<AssignStmt> _tryAssignStmt();
+        u_ptr<IfStmt> _tryIfStmt();
+        u_ptr<BreakStmt> _tryBreakStmt();
+        u_ptr<ContinueStmt> _tryContinueStmt();
+        u_ptr<ReturnStmt> _tryReturnStmt();
+        u_ptr<GetintStmt> _tryGetintStmt();
+        u_ptr<GetcharStmt> _tryGetcharStmt();
+        u_ptr<PrintfStmt> _tryPrintfStmt();
         u_ptr<Stmt> _tryStmt();
         u_ptr<BlockItem> _tryBlockItem();
         u_ptr<Block> _tryBlock();
         u_ptr<FuncDef> _tryFuncDef();
         u_ptr<Decl> _tryDecl();
-
         u_ptr<MainFuncDef> _tryMainFuncDef();
-
-        std::unique_ptr<CompUnit> _tryCompUnit();
-        std::unique_ptr<Decl> _parseDecl();
-        std::unique_ptr<FuncDef> _parseFuncDef();
+        u_ptr<CompUnit> _tryCompUnit();
 
         [[nodiscard]] Token peekToken(unsigned int) const;
         [[nodiscard]] Token peekToken() const;
