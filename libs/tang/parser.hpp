@@ -50,6 +50,7 @@ namespace tang {
         u_ptr<LAndExp> _tryLAndExp();
         u_ptr<LOrExp> _tryLOrExp();
         u_ptr<Cond> _tryCond();
+        u_ptr<Assignment> _tryAssignment();
         u_ptr<ForStmt> _tryForStmt();
         u_ptr<AssignStmt> _tryAssignStmt();
         u_ptr<IfStmt> _tryIfStmt();

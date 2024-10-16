@@ -14,6 +14,8 @@ namespace tang {
     // one Lexer for one Compile Unit
     class Lexer {
         std::istream& _input;
+        std::ostream& _errOutput;
+        std::ostream& _correctOutput;
         std::vector<Token> tokens;
         unsigned int tokenNum;
         unsigned int curPtr; // point to the current token;
@@ -22,6 +24,7 @@ namespace tang {
         std::string& filename;
         unsigned int lin;
         unsigned int col;
+        bool ifPrint;
 
         bool skipSpace();
         char getCh();
@@ -34,10 +37,14 @@ namespace tang {
 
     public:
         explicit Lexer(std::istream&, std::string&);
+        explicit Lexer(std::istream&, std::string&, std::ostream&, std::ostream&);
         Token peekToken(unsigned int);
         Token peekToken();
         Token getToken();
         Token curToken();
+
+        void print(Token& t);
+
         void skipToken(unsigned int);
         void reverse(unsigned int);
     };

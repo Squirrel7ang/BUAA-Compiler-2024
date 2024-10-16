@@ -6,6 +6,7 @@
 
 #include "parser.hpp"
 
+#include <cassert>
 #include <csignal>
 
 #include "ast.hpp"
@@ -50,8 +51,7 @@ namespace tang {
             bType->isChar = true, bType->isInt = false;
         }
         else {
-            perror("a BType is neither int nor char");
-            return nullptr;
+            assert(0);
         }
         skipToken();
         return bType;
@@ -64,7 +64,7 @@ namespace tang {
             constExp->addExp = std::move(addExp);
         }
         else {
-            perror("a constExp with illegal AddExp");
+            assert(0);
         }
         return constExp;
     }
@@ -145,6 +145,9 @@ namespace tang {
         if (ident != nullptr) {
             constDef->ident = std::move(ident);
         }
+        else {
+            assert(0);
+        }
 
         // try ConstExp for array type
         Token&& t1 = peekToken();
@@ -152,22 +155,22 @@ namespace tang {
             skipToken();
             auto constExp = _tryConstExp();
             if (constExp == nullptr) {
-                perror("constDef with illegal ConstExp");
+                assert(0);
             }
             constDef->constExp = std::move(constExp);
             t1 = peekToken(); // if not TK_RBRACK, skip
-            if (t1.getType() != TK_RBRACK) {
-                perror("constDef for array [] not close, skip");
+            if (t1.getType() == TK_RBRACK) {
+                skipToken();
             }
             else {
-                skipToken();
+                perror("constDef expect ]");
             }
         }
 
         // try '='
         t1 = peekToken();
         if (t1.getType() != TK_ASSIGN) {
-            perror("a constDef without '=' to indicate initial value");
+            assert(0);
         }
         else {
             skipToken();
@@ -179,7 +182,7 @@ namespace tang {
             constDef->constInitVal = std::move(constInitVal);
         }
         else {
-            perror("a constDef without initial value");
+            assert(0);
         }
         return constDef;
     }
@@ -187,18 +190,13 @@ namespace tang {
     u_ptr<ConstDecl> Parser::_tryConstDecl() {
         auto constDecl = std::make_unique<ConstDecl>();
         Token&& t1 = _lexer.getToken();
-        if (t1.getType() != TK_CONSTTK) {
-            perror("a constdecl start without const");
-        }
-
         // BType
         u_ptr<BType> bType = _tryBType();
         if (bType != nullptr) {
-            constDecl->bType = std::make_unique<BType>(*bType);
+            constDecl->bType = std::move(bType);
         }
         else {
-            perror("a constDecl with illegal BType");
-            return nullptr;
+            assert(0);
         }
 
         // ConstDef
@@ -207,7 +205,7 @@ namespace tang {
             constDecl->constDefs.push_back(std::move(constDef));
         }
         else {
-            perror("a constDecl with illegal first ConstDef");
+            assert(0);
         }
 
         bool success = true;
@@ -221,6 +219,9 @@ namespace tang {
                 if (success) {
                     constDecl->constDefs.push_back(std::move(constDef));
                 }
+                else {
+                    assert(0);
+                }
             }
             else {
                 break;
@@ -231,7 +232,7 @@ namespace tang {
             skipToken();
         }
         else {
-            perror("a constDecl without semicolon");
+            perror("a constDecl expect ;");
         }
         return constDecl;
     }
@@ -244,7 +245,7 @@ namespace tang {
             ident->str = std::move(t1.getContent());
         }
         else {
-            perror("Ident with illegal token");
+            assert(0);
         }
         return ident;
     }
@@ -383,9 +384,11 @@ namespace tang {
             varDef = _tryVarDef();
             success = (varDef != nullptr);
             if (success) {
-                varDecl->varDefs.push_back(varDef);
+                varDecl->varDefs.push_back(std::move(varDef));
             }
         }
+
+        return varDecl;
 
     }
 
@@ -455,7 +458,7 @@ namespace tang {
             return nullptr;
         }
         else {
-            funcFParams->funcFParams.push_back(funcFParam);
+            funcFParams->funcFParams.push_back(std::move(funcFParam));
         }
 
         bool success = true;
@@ -468,7 +471,7 @@ namespace tang {
             funcFParam = _tryFuncFParam();
             success = (funcFParam != nullptr);
             if (success) {
-                funcFParams->funcFParams.push_back(funcFParam);
+                funcFParams->funcFParams.push_back(std::move(funcFParam));
             }
         }
 
@@ -535,21 +538,21 @@ namespace tang {
         // try LVal;
         auto lVal = _tryLVal();
         if (lVal != nullptr) {
-            primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(std::move(*lVal));
+            primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(std::move(lVal));
             return primaryExp;
         }
 
         // try Number
         auto number = _tryNumber();
         if (number != nullptr) {
-            primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(std::move(*number));
+            primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(std::move(number));
             return primaryExp;
         }
 
         // try Character
         auto character = _tryCharacter();
         if (character != nullptr) {
-            primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(std::move(*character));
+            primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(std::move(character));
             return primaryExp;
         }
 
@@ -560,7 +563,7 @@ namespace tang {
 
             auto exp = _tryExp();
             if (exp != nullptr) {
-                primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(std::move(*exp));
+                primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(std::move(exp));
             }
             else {
                 perror("primaryExp with ( but with none-Exp expression");
@@ -585,7 +588,7 @@ namespace tang {
 
         auto exp = _tryExp();
         if (exp != nullptr) {
-            funcRParams->exps.push_back(exp);
+            funcRParams->exps.push_back(std::move(exp));
         }
         else {
             return nullptr;
@@ -601,7 +604,7 @@ namespace tang {
             exp = _tryExp();
             success = (exp != nullptr);
             if (success) {
-                funcRParams->exps.push_back(exp);
+                funcRParams->exps.push_back(std::move(exp));
             }
         }
 
@@ -664,24 +667,25 @@ namespace tang {
         // try unaryOp
         bool success = true;
         while (success) {
-            auto unaryOp = _tryUnaryOp();
-            success = (unaryOp != nullptr);
-            if (success) {
-                unaryExp->unaryOps.push_back(unaryOp);
+            if (peekToken().isUnaryOp()) {
+                unaryExp->unaryOps.push_back(_tryUnaryOp());
+            }
+            else {
+                break;
             }
         }
 
         // try PrimaryExp
         auto primaryExp = _tryPrimaryExp();
         if (primaryExp != nullptr) {
-            unaryExp->unaryExp = std::make_unique<UnaryExpVariant>(std::move(*primaryExp));
+            unaryExp->unaryExp = std::make_unique<UnaryExpVariant>(std::move(primaryExp));
             return unaryExp;
         }
 
         // try FuncCall;
         auto funcCall = _tryFuncCall();
         if (funcCall != nullptr) {
-            unaryExp->unaryExp = std::make_unique<UnaryExpVariant>(std::move(*funcCall));
+            unaryExp->unaryExp = std::make_unique<UnaryExpVariant>(std::move(funcCall));
             return unaryExp;
         }
 
@@ -693,10 +697,10 @@ namespace tang {
 
         auto unaryExp = _tryUnaryExp();
         if (unaryExp != nullptr) {
-            mulExp->unaryExps.push_back(unaryExp);
+            mulExp->unaryExps.push_back(std::move(unaryExp));
         }
         else {
-            return nullptr;
+            assert(0);
         }
 
         bool success = true;
@@ -710,11 +714,12 @@ namespace tang {
             }
 
             unaryExp = _tryUnaryExp();
-            if (unaryExp != nullptr) {
-                mulExp->unaryExps.push_back(unaryExp);
+            success = unaryExp != nullptr;
+            if (success) {
+                mulExp->unaryExps.push_back(std::move(unaryExp));
             }
             else {
-                perror("mulExp expect a unaryExp");
+                assert(0);
             }
         }
 
@@ -726,10 +731,10 @@ namespace tang {
 
         auto mulExp = _tryMulExp();
         if (mulExp != nullptr) {
-            addExp->mulExps.push_back(mulExp);
+            addExp->mulExps.push_back(std::move(mulExp));
         }
         else {
-            return nullptr;
+            assert(0);
         }
 
         bool success = true;
@@ -744,10 +749,10 @@ namespace tang {
 
             mulExp = _tryMulExp();
             if (mulExp != nullptr) {
-                addExp->mulExps.push_back(mulExp);
+                addExp->mulExps.push_back(std::move(mulExp));
             }
             else {
-                perror("addExp expect a mulExp");
+                assert(0);
             }
         }
 
@@ -811,7 +816,7 @@ namespace tang {
 
         auto addExp = _tryAddExp();
         if (addExp != nullptr) {
-            relExp->addExps.push_back(addExp);
+            relExp->addExps.push_back(std::move(addExp));
         }
         else {
             return nullptr;
@@ -829,7 +834,7 @@ namespace tang {
 
             addExp = _tryAddExp();
             if (addExp != nullptr) {
-                relExp->addExps.push_back(addExp);
+                relExp->addExps.push_back(std::move(addExp));
             }
             else {
                 perror("relExp expect a addExp");
@@ -844,7 +849,7 @@ namespace tang {
 
         auto relExp = _tryRelExp();
         if (relExp != nullptr) {
-            eqExp->relExps.push_back(relExp);
+            eqExp->relExps.push_back(std::move(relExp));
         }
         else {
             return nullptr;
@@ -862,7 +867,7 @@ namespace tang {
 
             relExp = _tryRelExp();
             if (relExp != nullptr) {
-                eqExp->relExps.push_back(relExp);
+                eqExp->relExps.push_back(std::move(relExp));
             }
             else {
                 perror("eqExp expect a relExp");
@@ -877,7 +882,7 @@ namespace tang {
 
         auto eqExp = _tryEqExp();
         if (eqExp != nullptr) {
-            lAndExp->eqExps.push_back(eqExp);
+            lAndExp->eqExps.push_back(std::move(eqExp));
         }
         else {
             return nullptr;
@@ -892,7 +897,7 @@ namespace tang {
 
             eqExp = _tryEqExp();
             if (eqExp != nullptr) {
-                lAndExp->eqExps.push_back(eqExp);
+                lAndExp->eqExps.push_back(std::move(eqExp));
             }
             else {
                 perror("LAndExp expect a eqExp");
@@ -907,7 +912,7 @@ namespace tang {
 
         auto lAndExp = _tryLAndExp();
         if (lAndExp != nullptr) {
-            lOrExp->lAndExps.push_back(lAndExp);
+            lOrExp->lAndExps.push_back(std::move(lAndExp));
         }
         else {
             return nullptr;
@@ -922,7 +927,7 @@ namespace tang {
 
             lAndExp = _tryLAndExp();
             if (lAndExp != nullptr) {
-                lOrExp->lAndExps.push_back(lAndExp);
+                lOrExp->lAndExps.push_back(std::move(lAndExp));
             }
             else {
                 perror("lOrExp expect a LAndExp");
@@ -946,8 +951,40 @@ namespace tang {
         return cond;
     }
 
-    u_ptr<Assignment> _tryAssignment() {
+    u_ptr<Assignment> Parser::_tryAssignment() {
+        auto assignment = std::make_unique<Assignment>();
 
+        auto lVal = _tryLVal();
+        if (lVal != nullptr) {
+            assignment->lVal = std::move(lVal);
+        }
+        else {
+            return nullptr;
+        }
+
+        if (peekToken().getType() == TK_ASSIGN) {
+            skipToken();
+        }
+        else {
+            assert(0);
+        }
+
+        auto exp = _tryExp();
+        if (exp != nullptr) {
+            assignment->exp = std::move(exp);
+        }
+        else {
+            assert(0);
+        }
+
+        if (peekToken().getType() == TK_SEMICN) {
+            skipToken();
+        }
+        else {
+            perror("Assignment expect Semicon");
+        }
+
+        return assignment;
     }
 
     u_ptr<ForStmt> Parser::_tryForStmt() { // this forStmt is not the one in the document
@@ -1029,11 +1066,75 @@ namespace tang {
     u_ptr<AssignStmt> Parser::_tryAssignStmt() {
         auto assignStmt = std::make_unique<AssignStmt>();
 
+        auto assignment = _tryAssignment();
+        if (assignment != nullptr) {
+            assignStmt->assignment = std::move(assignment);
+        }
+        else {
+            return nullptr;
+        }
+
+        Token&& t1 = peekToken();
+        if (t1.getType() == TK_SEMICN) {
+            skipToken();
+        }
+        else {
+            perror("AssignStmt expect ;");
+        }
+
+        return assignStmt;
     }
 
     u_ptr<IfStmt> Parser::_tryIfStmt() {
         auto ifStmt = std::make_unique<IfStmt>();
 
+        if (peekToken().getType() == TK_IFTK) {
+            skipToken();
+        }
+        else {
+            return nullptr;
+        }
+
+        if (peekToken().getType() == TK_LPARENT) {
+            skipToken();
+        }
+        else {
+            assert(0);
+        }
+
+        auto cond = _tryCond();
+        if (cond != nullptr) {
+            ifStmt->cond = std::move(cond);
+        }
+        else {
+            assert(0);
+        }
+
+        if (peekToken().getType() == TK_RPARENT) {
+            skipToken();
+        }
+        else {
+            assert(0);
+        }
+
+        auto stmt = _tryStmt();
+        if (stmt != nullptr) {
+            ifStmt->ifStmt = std::move(stmt);
+        }
+        else {
+            assert(0);
+        }
+
+        if (peekToken().getType() == TK_ELSETK) {
+            skipToken();
+            stmt = _tryStmt();
+            ifStmt->elseStmt = std::move(stmt);
+        }
+        else {
+            ifStmt->elseStmt = nullptr;
+        }
+
+        return ifStmt;
     }
 
     u_ptr<BreakStmt> Parser::_tryBreakStmt() {
@@ -1233,7 +1334,7 @@ namespace tang {
             auto exp = _tryExp();
             success = (exp != nullptr);
             if (success) {
-                printfStmt->exps.push_back(exp);
+                printfStmt->exps.push_back(std::move(exp));
             }
         }
 
@@ -1246,21 +1347,21 @@ namespace tang {
         // try assignStmt
         auto assignStmt = _tryAssignStmt();
         if (assignStmt != nullptr) {
-            stmt->stmt = std::make_unique<StmtVariant>(std::move(*assignStmt));
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(assignStmt));
             return stmt;
         }
 
         // try Exp
         auto exp = _tryExp();
         if (exp != nullptr) {
-            stmt->stmt = std::make_unique<StmtVariant>(std::move(*exp));
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(exp));
             return stmt;
         }
         else {
             Token&& t1 = peekToken();
             if (t1.getType() == TK_SEMICN) {
                 skipToken();
-                stmt->stmt = std::make_unique<StmtVariant>(std::move(*exp));
+                stmt->stmt = std::make_unique<StmtVariant>(std::move(exp));
                 return stmt;
             }
         }
@@ -1268,56 +1369,56 @@ namespace tang {
         // try IfStmt
         auto ifStmt = _tryIfStmt();
         if (ifStmt != nullptr) {
-            stmt->stmt = std::make_unique<StmtVariant>(std::move(*ifStmt));
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(ifStmt));
             return stmt;
         }
 
         // try ForStmt
         auto forStmt = _tryForStmt();
         if (forStmt != nullptr) {
-            stmt->stmt = std::make_unique<StmtVariant>(std::move(*forStmt));
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(forStmt));
             return stmt;
         }
 
         // try break
         auto breakStmt = _tryBreakStmt();
         if (breakStmt != nullptr) {
-            stmt->stmt = std::make_unique<StmtVariant>(std::move(*breakStmt));
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(breakStmt));
             return stmt;
         }
 
         // try continueStmt;
         auto continueStmt = _tryContinueStmt();
         if (continueStmt != nullptr) {
-            stmt->stmt = std::make_unique<StmtVariant>(std::move(*continueStmt));
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(continueStmt));
             return stmt;
         }
 
         // try returnStmt;
         auto returnStmt = _tryReturnStmt();
         if (returnStmt != nullptr) {
-            stmt->stmt = std::make_unique<StmtVariant>(std::move(*returnStmt));
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(returnStmt));
             return stmt;
         }
 
         // try getintStmt;
         auto getintStmt = _tryGetintStmt();
         if (getintStmt != nullptr) {
-            stmt->stmt = std::make_unique<StmtVariant>(std::move(*getintStmt));
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(getintStmt));
             return stmt;
         }
 
         // try getcharStmt;
         auto getcharStmt = _tryGetcharStmt();
         if (getcharStmt != nullptr) {
-            stmt->stmt = std::make_unique<StmtVariant>(std::move(*getcharStmt));
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(getcharStmt));
             return stmt;
         }
 
         // try printfStmt;
         auto printfStmt = _tryPrintfStmt();
         if (continueStmt != nullptr) {
-            stmt->stmt = std::make_unique<StmtVariant>(std::move(*printfStmt));
+            stmt->stmt = std::make_unique<StmtVariant>(std::move(printfStmt));
             return stmt;
         }
 
@@ -1330,14 +1431,14 @@ namespace tang {
         // try decl
         auto decl = _tryDecl();
         if (decl != nullptr) {
-            blockItem->blockItem = std::make_unique<BlockItemVariant>(std::move(*decl));
+            blockItem->blockItem = std::make_unique<BlockItemVariant>(std::move(decl));
             return blockItem;
         }
 
         // try Stmt
         auto stmt = _tryStmt();
         if (stmt != nullptr) {
-            blockItem->blockItem = std::make_unique<BlockItemVariant>(std::move(*stmt));
+            blockItem->blockItem = std::make_unique<BlockItemVariant>(std::move(stmt));
             return blockItem;
         }
 
@@ -1425,23 +1526,26 @@ namespace tang {
 
     u_ptr<Decl> Parser::_tryDecl() {
         u_ptr<Decl> decl;
-        Token&& t1 = _lexer.peekToken(1);
-        Token&& t2 = _lexer.peekToken(2);
-        Token&& t3 = _lexer.peekToken(3);
-        bool constFlag = false;
+        Token&& t1 = _lexer.peekToken();
         if (t1.isConstTK()) {
             auto constDecl = _tryConstDecl();
             if (constDecl != nullptr) {
-                decl->decl = std::make_unique<DeclVariant>(std::move(*constDecl));
+                decl->decl = std::make_unique<DeclVariant>(std::move(constDecl));
                 return decl;
+            }
+            else {
+                assert(0);
             }
         }
         else {
             // this is a varDecl
             auto varDecl = _tryVarDecl();
             if (varDecl != nullptr) {
-                decl->decl = std::make_unique<DeclVariant>(std::move(*varDecl));
+                decl->decl = std::make_unique<DeclVariant>(std::move(varDecl));
                 return decl;
+            }
+            else {
+                assert(0);
             }
         }
         perror("a decl is neither constDecl nor varDecl");
@@ -1473,16 +1577,14 @@ namespace tang {
             skipToken();
         }
         else {
-            perror("MainFuncDef expect (");
-            return nullptr;
+            assert(0);
         }
 
         if (peekToken().getType() == TK_RPARENT) {
             skipToken();
         }
         else {
-            perror("MainFuncDef expect )");
-            return nullptr;
+            assert(0);
         }
 
         auto block = _tryBlock();
@@ -1490,8 +1592,7 @@ namespace tang {
             mainFuncDef->block = std::move(block);
         }
         else {
-            perror("MainFuncDef expect block");
-            return nullptr;
+            assert(0);
         }
 
         return mainFuncDef;
@@ -1500,34 +1601,47 @@ namespace tang {
 
     u_ptr<CompUnit> Parser::_tryCompUnit() {
         auto compUnit = std::make_unique<CompUnit>();
-        Token&& t = _lexer.peekToken();
+        Token&& t = peekToken();
 
         compUnit->setLin(t.getLin());
         compUnit->setCol(t.getCol());
 
-        // parse decl
-        bool success = true;
-        while (success) {
-            u_ptr<Decl> decl = std::move(_tryDecl());
-            success = (decl != nullptr);
-            if (success)
-                compUnit->decls.push_back(decl);
+        while (1) {
+            Token && t1 = peekToken(0);
+            Token && t2 = peekToken(1);
+            Token && t3 = peekToken(2);
+
+            if (t1.isConstTK() ||
+                t1.isBType() && t2.getType() == TK_IDENFR && t3.getType() != TK_LPARENT) {
+                compUnit->decls.push_back(_tryDecl());
+            }
+            else {
+                break;
+            }
         }
 
-        success = true;
-        while (success) {
-            u_ptr<FuncDef> funcDef = std::move(_tryFuncDef());
-            success = (funcDef != nullptr);
-            if (success)
-                compUnit->funcDefs.push_back(funcDef);
+        while (1) {
+            Token && t1 = peekToken(0);
+            Token && t2 = peekToken(1);
+            Token && t3 = peekToken(2);
+
+            if (t1.isFuncType() && t2.getType() == TK_IDENFR && t3.getType() == TK_LPARENT) {
+                compUnit->funcDefs.push_back(_tryFuncDef());
+            }
+            else {
+                break;
+            }
         }
 
-        u_ptr<MainFuncDef> mainFuncDef = std::move(_tryMainFuncDef());
-        success = (mainFuncDef != nullptr);
-        if (success)
-            compUnit->mainFuncDef = std::move(mainFuncDef);
+        Token && t1 = peekToken(0);
+        Token && t2 = peekToken(1);
+
+        if (t1.getType() == TK_INTTK && t2.getType() == TK_MAINTK) {
+            compUnit->mainFuncDef = _tryMainFuncDef();
+        }
 
         return compUnit;
+
     }
 
     u_ptr<CompUnit> Parser::parse() {

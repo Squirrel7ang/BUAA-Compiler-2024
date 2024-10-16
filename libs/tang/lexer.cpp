@@ -6,13 +6,18 @@
 #include <istream>
 
 namespace tang {
-    Lexer::Lexer(std::istream& input, std::string& filename)
-        : _input(input), filename(filename) {
+    Lexer::Lexer(std::istream& input, std::string& filename,
+                 std::ostream& errOutput, std::ostream& correctOutput):
+            _input(input),
+            filename(filename),
+            _errOutput(_errOutput),
+            _correctOutput(correctOutput) {
         tokenNum = 0;
         curPtr = 0;
         lexPtr = 0;
         lin = 1;
         col = 1;
+        ifPrint = true;
         _lexOneToken();
     }
 
@@ -308,20 +313,21 @@ namespace tang {
         case EOF:
             return Token(content, lin, col - content.size(), TK_EOF);
         default:
-            char s[32];
-            std::sprintf(s, "unknown token `%c`(ASCII:%d), lin: %d, col: %d", ch, ch, lin, col);
+            char s[100];
+            std::sprintf(s, "unknown token `%c`(ASCII:%u), lin: %u, col: %u", ch, ch, lin, col);
             perror(s);
             break;
         }
+        return Token(content, lin, col - content.size(), TK_UNKNOWN);
     }
 
     Token Lexer::peekToken() {
-        return peekToken(1);
+        return peekToken(0);
     }
 
     void Lexer::reverse(const unsigned int n) {
         if (n > curPtr) {
-            perror("reverse to much in parser");
+            perror("reverse too much in parser");
         }
         curPtr -= n;
     }
@@ -350,8 +356,24 @@ namespace tang {
         return peekToken(0);
     }
 
+    void Lexer::print(Token& t) {
+        if (!ifPrint) {
+            return;
+        }
+        if (!t.isEOF() && t.getType() != TK_COMMENT && !t.isUnknown()) {
+            _correctOutput << t.toString() << ' ' << t.getContent() << std::endl;
+        }
+        else if (t.isUnknown()) {
+            // TODO
+        }
+    }
+
     Token Lexer::_lexOneToken() {
         Token&& t = _readNextToken();
+        while (t.getType() == TK_COMMENT) {
+            t = _readNextToken();
+        }
+        print(t);
         tokens.push_back(t);
         lexPtr++;
         return t;

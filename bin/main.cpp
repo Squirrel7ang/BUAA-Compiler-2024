@@ -3,6 +3,7 @@
 
 #include "libs/tang/lexer.hpp"
 #include "libs/tang/token.hpp"
+#include "libs/tang/parser.hpp"
 #include <string>
 using namespace tang;
 
@@ -23,26 +24,9 @@ int main(int argc, char *argv[]) {
     std::ofstream erroutFile;
     erroutFile.open(errout, std::ios::out);
 
-    auto lexer = Lexer(infile, input);
-
-    while (1) {
-        Token token = lexer.nextToken();
-        if (token.isEOF())
-            break;
-        else if (token.getType() == TK_COMMENT) {
-            continue;
-        }
-        else if (token.isUnknown()) {
-            unsigned line = token.getLin();
-            erroutFile << line << ' ' << 'a' << std::endl;
-            // std::cout << line << ' ' << 'a' << std::endl;
-            break;
-        }
-        else {
-            coroutFile << token.toString() << ' ' << token.getContent() << std::endl;
-            // std::cout << token.toString() << ' ' << token.getContent() << std::endl;
-        }
-    }
+    auto lexer = Lexer(infile, input, erroutFile, coroutFile);
+    auto parser = Parser(lexer);
+    parser.parse();
 
     return 0;
 }

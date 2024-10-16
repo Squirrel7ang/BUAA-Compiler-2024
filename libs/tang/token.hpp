@@ -69,6 +69,10 @@ namespace tang {
         [[nodiscard]] bool isAddExpOp() const;
         [[nodiscard]] bool isRelExpOp() const;
         [[nodiscard]] bool isEqExpOp() const;
+        [[nodiscard]] bool isUnaryExp() const;
+
+        bool isComma() const;
+
         [[nodiscard]] char CHRCONToChar() const;
         [[nodiscard]] std::string toString() const;
     }; // class Token

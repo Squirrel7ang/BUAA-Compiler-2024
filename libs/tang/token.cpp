@@ -74,6 +74,14 @@ namespace tang {
         return _type == TK_NEQ || _type == TK_EQL;
     }
 
+    bool Token::isUnaryExp() const {
+        // TODO
+    }
+
+    bool Token::isComma() const {
+        return _type == TK_COMMA;
+    }
+
     char Token::CHRCONToChar() const {
         if (_type == TK_CHRCON) {
             if (content[1] != '\\') {
