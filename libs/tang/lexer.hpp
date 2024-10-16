@@ -9,13 +9,15 @@
 #include <vector>
 
 #include "token.hpp"
+#include "error.hpp"
 
 namespace tang {
     // one Lexer for one Compile Unit
     class Lexer {
         std::istream& _input;
-        std::ostream& _errOutput;
         std::ostream& _correctOutput;
+        ErrorReporter& _reporter;
+        
         std::vector<Token> tokens;
         unsigned int tokenNum;
         unsigned int curPtr; // point to the current token;
@@ -38,7 +40,7 @@ namespace tang {
 
     public:
         explicit Lexer(std::istream&, std::string&);
-        explicit Lexer(std::istream&, std::string&, std::ostream&, std::ostream&);
+        explicit Lexer(std::istream&, std::string&, std::ostream&, ErrorReporter&);
         Token peekToken(unsigned int);
         Token peekToken();
         Token getToken();

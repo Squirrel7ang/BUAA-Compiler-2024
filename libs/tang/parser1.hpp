@@ -6,6 +6,7 @@
 #define PARSER1_HPP
 
 #include <memory>
+#include <iostream>
 #include "lexer.hpp"
 #include "ast.hpp"
 #include "error.hpp"
@@ -15,9 +16,10 @@ namespace tang {
     class Parser1 {
         Lexer& _lexer;
         ErrorReporter& _reporter;
+        std::ostream& _correctOutput;
 
     public:
-        explicit Parser1(Lexer& lexer, ErrorReporter& reporter): _lexer(lexer), _reporter(reporter) {}
+        explicit Parser1(Lexer& lexer, ErrorReporter& reporter, std::ostream& output): _lexer(lexer), _reporter(reporter), _correctOutput(output) {}
         u_ptr<CompUnit> parse();
 
 

@@ -734,7 +734,14 @@ namespace tang {
     template <>
     auto Parser1::_try<BlockItem>() -> u_ptr<BlockItem> {
         auto blockItem = std::make_unique<BlockItem>(peekToken());
-        // TODO
+
+        if (peekToken().isBType()) {
+            blockItem->blockItem = std::make_unique<BlockItemVariant>(_try<Decl>());
+        }
+        else {
+            blockItem->blockItem = std::make_unique<BlockItemVariant>(_try<Stmt>());
+        }
+
         return blockItem;
     }
 
@@ -801,15 +808,41 @@ namespace tang {
     auto Parser1::_try<CompUnit>() -> u_ptr<CompUnit> {
         auto compUnit = std::make_unique<CompUnit>(peekToken());
 
-        Token&& t1 = peekToken(0);
-        Token&& t2 = peekToken(1);
-        Token&& t3 = peekToken(2);
-        Token&& t4 = peekToken(3);
-        if (t1.getType() == TK_CONSTTK) {
-            compUnit =
+        while (1) {
+            Token&& t1 = peekToken(0);
+            Token&& t2 = peekToken(1);
+            Token&& t3 = peekToken(2);
+            Token&& t4 = peekToken(3);
+            if (t1.getType() == TK_CONSTTK || 
+                t1.isBType() && t2.getType() == TK_IDENFR && t3.getType() != TK_LPARENT) {
+                compUnit->decls.push_back(_try<Decl>());
+            }
+            else {
+                break;
+            }
         }
 
+        while (1) {
+            Token&& t1 = peekToken(0);
+            Token&& t2 = peekToken(1);
+            Token&& t3 = peekToken(2);
+            if (t1.isFuncType() && t2.getType() == TK_IDENFR && t3.getType() == TK_LPARENT) {
+                compUnit->funcDefs.push_back(_try<FuncDef>());
+            }
+            else {
+                break;
+            }
+        }
+
+        assert(peekToken().getType() == TK_INTTK);
+        assert(peekToken(1).getType() == TK_MAINTK);
+        compUnit->mainFuncDef = _try<MainFuncDef>();
+
         return compUnit;
+    }
+
+    u_ptr<CompUnit> Parser1::parse() {
+        return _try<CompUnit>();
     }
 
     bool Parser1::_matchCurToken(TokenType expectType) {
@@ -818,6 +851,15 @@ namespace tang {
 
     bool Parser1::_match(Token&& t, TokenType expectType) {
         if (t.getType() != expectType) {
+            if (expectType == TK_SEMICN) {
+                _reporter.report(t.getLin(), 'i');
+            }
+            else if (expectType == TK_RPARENT) {
+                _reporter.report(t.getLin(), 'j');
+            }
+            else if (expectType == TK_RBRACK) {
+                _reporter.report(t.getLin(), 'k');
+            }
             // TODO: report error
             return false;
         }
@@ -835,16 +877,6 @@ namespace tang {
             return true;
         }
         return t2.isBType() && t3.getType() == TK_IDENFR && t4.getType() != TK_LPARENT;
-    }
-
-    template <>
-    bool Parser1::_lexIs<FuncDef>() {
-
-    }
-
-    template <>
-    bool Parser1::_lexIs<MainFuncDef>() {
-
     }
 
     template <>

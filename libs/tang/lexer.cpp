@@ -7,10 +7,10 @@
 
 namespace tang {
     Lexer::Lexer(std::istream& input, std::string& filename,
-                 std::ostream& errOutput, std::ostream& correctOutput):
+                 std::ostream& correctOutput, ErrorReporter& reporter):
             _input(input),
             filename(filename),
-            _errOutput(_errOutput),
+            _reporter(reporter),
             _correctOutput(correctOutput) {
         tokenNum = 0;
         curPtr = 0;
@@ -372,7 +372,7 @@ namespace tang {
             _correctOutput << t.toString() << ' ' << t.getContent() << std::endl;
         }
         else if (t.isUnknown()) {
-            // TODO
+            _reporter.report(t.getLin(), 'a');
         }
     }
 
