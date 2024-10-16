@@ -25,6 +25,7 @@ namespace tang {
         unsigned int lin;
         unsigned int col;
         bool ifPrint;
+        bool isEnd;
 
         bool skipSpace();
         char getCh();

@@ -9,6 +9,33 @@
 #include "ast.hpp"
 
 namespace tang {
+    Token Parser1::peekToken(const unsigned int n) const {
+        return _lexer.peekToken(n);
+    }
+
+    Token Parser1::peekToken() const {
+        return _lexer.peekToken();
+    }
+
+    Token Parser1::getToken() const {
+        return _lexer.getToken();
+    }
+
+    Token Parser1::curToken() const {
+        return _lexer.curToken();
+    }
+
+    void Parser1::skipToken(const unsigned int n) const {
+        _lexer.skipToken(n);
+    }
+
+    void Parser1::skipToken() const {
+        skipToken(1);
+    }
+
+    void Parser1::reverseToken(unsigned int n) const {
+        _lexer.reverse(n);
+    }
 
     template <>
     auto Parser1::_try<BType>() -> u_ptr<BType> {
@@ -38,8 +65,7 @@ namespace tang {
         auto stringConst = std::make_unique<StringConst>(peekToken());
         assert(peekToken().getType() == TK_STRCON);
 
-        std::string&& _content = peekToken().getContent();
-        std::string&& content = _content.substr(1, _content.length() - 2);
+        std::string&& content = getToken().STRCONToString();
         stringConst->str = std::make_unique<std::string>(content);
 
         return stringConst;
@@ -265,7 +291,7 @@ namespace tang {
         auto charConst = std::make_unique<CharConst>(peekToken());
 
         assert(peekToken().getType() == TK_CHRCON);
-        charConst->ch = getToken().getContent()[1];
+        charConst->ch = getToken().CHRCONToChar();
 
         return charConst;
     }
@@ -287,25 +313,21 @@ namespace tang {
         Token&& t1 = peekToken();
         if (t1.getType() == TK_INTCON) {
             // try number
-            auto number = _try<Number>();
-            primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(std::move(number));
+            primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(_try<Number>());
         }
         else if (t1.getType() == TK_CHRCON) {
             // try Character
-            auto character = _try<Character>();
-            primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(std::move(character));
+            primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(_try<Character>());
         }
         else if (t1.getType() == TK_LPARENT) {
             // try (exp)
             skipToken();
-            auto exp = _try<Exp>();
-            primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(std::move(exp));
+            primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(_try<Exp>());
             _matchCurToken(TK_RPARENT);
         }
         else if (t1.getType() == TK_IDENFR) {
             // try LVal
-            auto lVal = _try<LVal>();
-            primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(std::move(lVal));
+            primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(_try<LVal>());
         }
         else {
             assert(0);
@@ -559,7 +581,19 @@ namespace tang {
     template <>
     auto Parser1::_try<IfStmt>() -> u_ptr<IfStmt> {
         auto ifStmt = std::make_unique<IfStmt>(peekToken());
-        // TODO
+
+        assert(peekToken().getType() == TK_IFTK);
+        skipToken();
+        _matchCurToken(TK_LPARENT);
+        ifStmt->cond = _try<Cond>();
+        _matchCurToken(TK_RPARENT);
+        ifStmt->ifStmt = _try<Stmt>();
+
+        if (peekToken().getType() == TK_ELSETK) {
+            skipToken();
+            ifStmt->elseStmt = _try<Stmt>();
+        }
+
         return ifStmt;
     }
 
@@ -599,28 +633,101 @@ namespace tang {
     template <>
     auto Parser1::_try<GetintStmt>() -> u_ptr<GetintStmt> {
         auto getintStmt = std::make_unique<GetintStmt>(peekToken());
-        // TODO
+
+        assert(peekToken().getType() == TK_IDENFR);
+        getintStmt->lVal = _try<LVal>();
+        _matchCurToken(TK_ASSIGN);
+        _matchCurToken(TK_GETINTTK);
+        _matchCurToken(TK_LPARENT);
+        _matchCurToken(TK_RPARENT);
+        _matchCurToken(TK_SEMICN);
+
         return getintStmt;
     }
 
     template <>
     auto Parser1::_try<GetcharStmt>() -> u_ptr<GetcharStmt> {
         auto getcharStmt = std::make_unique<GetcharStmt>(peekToken());
-        // TODO
+
+        assert(peekToken().getType() == TK_IDENFR);
+        getcharStmt->lVal = _try<LVal>();
+        _matchCurToken(TK_ASSIGN);
+        _matchCurToken(TK_GETCHARTK);
+        _matchCurToken(TK_LPARENT);
+        _matchCurToken(TK_RPARENT);
+        _matchCurToken(TK_SEMICN);
+
         return getcharStmt;
     }
 
     template <>
     auto Parser1::_try<PrintfStmt>() -> u_ptr<PrintfStmt> {
         auto printfStmt = std::make_unique<PrintfStmt>(peekToken());
-        // TODO
+
+        assert(peekToken().getType() == TK_PRINTFTK);
+        skipToken();
+        _matchCurToken(TK_LPARENT);
+        assert(peekToken().getType() == TK_STRCON);
+        printfStmt->stringConst = _try<StringConst>();
+        while (peekToken().isComma()) {
+            skipToken();
+            printfStmt->stringConst = _try<StringConst>();
+        }
+        _matchCurToken(TK_RPARENT);
+        _matchCurToken(TK_SEMICN);
+
         return printfStmt;
     }
 
     template <>
     auto Parser1::_try<Stmt>() -> u_ptr<Stmt> {
         auto stmt = std::make_unique<Stmt>(peekToken());
-        // TODO
+
+        Token&& t1 = peekToken(0);
+        Token&& t2 = peekToken(1);
+        Token&& t3 = peekToken(2);
+
+        if (t1.getType() == TK_IFTK) {
+            // try if
+            stmt->stmt = std::make_unique<StmtVariant>(_try<IfStmt>());
+        }
+        else if (t1.getType() == TK_FORTK) {
+            // try for
+            stmt->stmt = std::make_unique<StmtVariant>(_try<ForStmt>());
+        }
+        else if (t1.getType() == TK_BREAKTK) {
+            // try break
+            stmt->stmt = std::make_unique<StmtVariant>(_try<BreakStmt>());
+        }
+        else if (t1.getType() == TK_CONTINUETK) {
+            // try continue
+            stmt->stmt = std::make_unique<StmtVariant>(_try<ContinueStmt>());
+        }
+        else if (t1.getType() == TK_RETURNTK) {
+            // try return
+            stmt->stmt = std::make_unique<StmtVariant>(_try<ReturnStmt>());
+        }
+        else if (t1.getType() == TK_PRINTFTK) {
+            // try printf
+            stmt->stmt = std::make_unique<StmtVariant>(_try<PrintfStmt>());
+        }
+        else if (t1.getType() == TK_LBRACE) {
+            // try block
+            stmt->stmt = std::make_unique<StmtVariant>(_try<Block>());
+        }
+        else if (t1.isUnaryOp() || t1.getType() == TK_LPARENT ||
+                 t1.getType() == TK_INTCON || t1.getType() == TK_CHARTK ||
+                 (t1.getType() == TK_IDENFR && t2.getType() == TK_LPARENT)) {
+            // Exp
+            stmt->stmt = std::make_unique<StmtVariant>(_try<Exp>());
+            _matchCurToken(TK_SEMICN);
+        }
+        else if (t1.getType() == TK_IDENFR) {
+            // this could be LVal [^=] and thus a primary exp and thus an exp
+            // it could also be LVal = and thus not an exp
+            auto lVal = _try<lVal>();
+            // TODO
+        }
         return stmt;
     }
 
@@ -634,35 +741,74 @@ namespace tang {
     template <>
     auto Parser1::_try<Block>() -> u_ptr<Block> {
         auto block = std::make_unique<Block>(peekToken());
-        // TODO
+
+        assert(peekToken().getType() == TK_LBRACE);
+        skipToken();
+        block->blockItem = _try<BlockItem>();
+        _matchCurToken(TK_RBRACE);
+
         return block;
     }
 
     template <>
     auto Parser1::_try<FuncDef>() -> u_ptr<FuncDef> {
         auto funcDef = std::make_unique<FuncDef>(peekToken());
-        // TODO
+
+        assert(peekToken().isFuncType());
+        funcDef->funcType = _try<FuncType>();
+        funcDef->ident = _try<Ident>();
+        _matchCurToken(TK_LPARENT);
+        if (peekToken().isBType()) {
+            funcDef->funcFParams = _try<FuncFParams>();
+        }
+        _matchCurToken(TK_RPARENT);
+        funcDef->block = _try<Block>();
+
         return funcDef;
     }
 
     template <>
     auto Parser1::_try<Decl>() -> u_ptr<Decl> {
         auto decl = std::make_unique<Decl>(peekToken());
-        // TODO
+
+        // !!! NO ASSERT !!!
+        if (peekToken().getType() == TK_CONSTTK) {
+            decl->decl = std::make_unique<DeclVariant>(_try<ConstDecl>());
+        }
+        else {
+            decl->decl = std::make_unique<DeclVariant>(_try<VarDecl>());
+        }
+
         return decl;
     }
 
     template <>
     auto Parser1::_try<MainFuncDef>() -> u_ptr<MainFuncDef> {
         auto mainFuncDef = std::make_unique<MainFuncDef>(peekToken());
-        // TODO
+
+        assert(peekToken().getType() == TK_INTTK);
+        assert(peekToken(1).getType() == TK_MAINTK);
+        skipToken();
+        skipToken();
+        _matchCurToken(TK_LPARENT);
+        _matchCurToken(TK_RPARENT);
+        mainFuncDef->block = _try<Block>();
+
         return mainFuncDef;
     }
 
     template <>
     auto Parser1::_try<CompUnit>() -> u_ptr<CompUnit> {
         auto compUnit = std::make_unique<CompUnit>(peekToken());
-        // TODO
+
+        Token&& t1 = peekToken(0);
+        Token&& t2 = peekToken(1);
+        Token&& t3 = peekToken(2);
+        Token&& t4 = peekToken(3);
+        if (t1.getType() == TK_CONSTTK) {
+            compUnit =
+        }
+
         return compUnit;
     }
 
@@ -677,6 +823,35 @@ namespace tang {
         }
         skipToken();
         return true;
+    }
+
+    template <>
+    bool Parser1::_lexIs<Decl>() {
+        Token&& t1 = peekToken(0);
+        Token&& t2 = peekToken(1);
+        Token&& t3 = peekToken(2);
+        Token&& t4 = peekToken(3);
+        if (t1.getType() == TK_CONSTTK) {
+            return true;
+        }
+        return t2.isBType() && t3.getType() == TK_IDENFR && t4.getType() != TK_LPARENT;
+    }
+
+    template <>
+    bool Parser1::_lexIs<FuncDef>() {
+
+    }
+
+    template <>
+    bool Parser1::_lexIs<MainFuncDef>() {
+
+    }
+
+    template <>
+    bool Parser1::_lexIs<LVal>() {
+        Token&& t1 = peekToken(0);
+        Token&& t2 = peekToken(1);
+        return t1.getType() == TK_IDENFR && t2.getType() != TK_LPARENT;
     }
 
 };

@@ -18,6 +18,7 @@ namespace tang {
         lin = 1;
         col = 1;
         ifPrint = true;
+        isEnd = false;
         _lexOneToken();
     }
 
@@ -121,6 +122,9 @@ namespace tang {
         skipSpace();
 
         char ch = getCh();
+        if (ch == EOF) {
+            return Token("", lin, col, TK_EOF);
+        }
 
         // try comment token
         if (ch == '/') {
@@ -337,6 +341,10 @@ namespace tang {
     }
 
     Token Lexer::_peekToken(const unsigned int index) {
+        if (index >= lexPtr && isEnd) {
+            // if is end, then don't lex any more
+            return tokens[tokens.size() - 1];
+        }
         while (index >= lexPtr)
             _lexOneToken();
         return tokens[index];
@@ -373,9 +381,15 @@ namespace tang {
         while (t.getType() == TK_COMMENT) {
             t = _readNextToken();
         }
-        print(t);
-        tokens.push_back(t);
-        lexPtr++;
+        if (!isEnd) {
+            if (t.getType() != TK_EOF) {
+                print(t);
+            }
+            tokens.push_back(t);
+            lexPtr++;
+        }
+        else
+            isEnd = true;
         return t;
     }
 }

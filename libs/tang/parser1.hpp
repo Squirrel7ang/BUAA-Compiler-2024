@@ -8,20 +8,25 @@
 #include <memory>
 #include "lexer.hpp"
 #include "ast.hpp"
+#include "error.hpp"
 
 namespace tang {
 
     class Parser1 {
         Lexer& _lexer;
+        ErrorReporter& _reporter;
 
     public:
-        explicit Parser1(Lexer& lexer): _lexer(lexer) {}
+        explicit Parser1(Lexer& lexer, ErrorReporter& reporter): _lexer(lexer), _reporter(reporter) {}
         u_ptr<CompUnit> parse();
 
 
     private:
         template<typename T>
         auto _try() -> u_ptr<T>;
+
+        template<typename T>
+        bool _lexIs();
 
         // u_ptr<BType> _tryBType();
         // u_ptr<ConstExp> _tryConstExp();
@@ -78,6 +83,7 @@ namespace tang {
         [[nodiscard]] Token curToken() const;
         void skipToken(unsigned int) const;
         void skipToken() const;
+        void reverseToken(unsigned int) const;
 
         bool _matchCurToken(TokenType expectType);
 

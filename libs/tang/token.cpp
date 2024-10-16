@@ -6,6 +6,7 @@
 #include "token.hpp"
 
 #include <assert.h>
+#include <sstream>
 #include <variant>
 
 namespace tang {
@@ -74,12 +75,22 @@ namespace tang {
         return _type == TK_NEQ || _type == TK_EQL;
     }
 
-    bool Token::isUnaryExp() const {
-        // TODO
-    }
-
     bool Token::isComma() const {
         return _type == TK_COMMA;
+    }
+
+    std::string Token::STRCONToString() const {
+        if (_type == TK_STRCON) {
+            std::string str;
+            std::stringstream ss(content);
+            ss.get();
+            char ch;
+            while (ch = ss.get()) {
+                str += ch;
+            }
+            return str.substr(0, str.length() - 1);
+        }
+        assert(0);
     }
 
     char Token::CHRCONToChar() const {
