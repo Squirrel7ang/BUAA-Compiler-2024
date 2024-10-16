@@ -17,9 +17,17 @@ namespace tang {
         Lexer& _lexer;
         ErrorReporter& _reporter;
         std::ostream& _correctOutput;
+        bool isPrint;
 
     public:
-        explicit Parser1(Lexer& lexer, ErrorReporter& reporter, std::ostream& output): _lexer(lexer), _reporter(reporter), _correctOutput(output) {}
+        explicit Parser1(Lexer& lexer, 
+                         ErrorReporter& reporter, 
+                         std::ostream& output): 
+                        _lexer(lexer), 
+                        _reporter(reporter), 
+                        _correctOutput(output) {
+            isPrint = true;
+        }
         u_ptr<CompUnit> parse();
 
 

@@ -57,7 +57,7 @@ namespace tang {
         void setLin(const unsigned int lin) { _lin = lin; }
         void setCol(const unsigned int col) { _col = col; }
 
-        friend std::ostream& operator << (std::ostream& os, const Node& node);
+        void print(std::ostream& out) override;
     };
 
     using DeclVariant = variant<u_ptr<ConstDecl>, u_ptr<VarDecl>>;
@@ -65,6 +65,9 @@ namespace tang {
     public:
         explicit Decl(const Token& t) : Node(t) {}
         u_ptr<DeclVariant> decl;
+        void print(std::ostream& out) {
+            
+        }
     };
 
     class CompUnit: public Node {
