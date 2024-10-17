@@ -3,7 +3,8 @@
 
 #include "libs/tang/lexer.hpp"
 #include "libs/tang/token.hpp"
-#include "libs/tang/parser.hpp"
+#include "libs/tang/error.hpp"
+#include "libs/tang/parser1.hpp"
 #include <string>
 using namespace tang;
 
@@ -15,17 +16,22 @@ int main(int argc, char *argv[]) {
     else {
         input = "testfile.txt";
     }
-    std::string corout = "lexer.txt";
+    std::string lexerOut = "lexer.txt";
+    std::string parserOut = "parser.txt";
     std::string errout = "error.txt";
 
     std::ifstream infile(input, std::ios::in);
-    std::ofstream coroutFile;
-    coroutFile.open(corout, std::ios::out);
-    std::ofstream erroutFile;
-    erroutFile.open(errout, std::ios::out);
+    std::ofstream lexerStream;
+    std::ofstream parserStream;
+    std::ofstream erroutStream;
 
-    auto lexer = Lexer(infile, input, erroutFile, coroutFile);
-    auto parser = Parser(lexer);
+    lexerStream.open(lexerOut, std::ios::out);
+    parserStream.open(parserOut, std::ios::out);
+    erroutStream.open(errout, std::ios::out);
+
+    auto reporter = ErrorReporter(erroutStream);
+    auto lexer = Lexer(infile, input, lexerStream, reporter);
+    auto parser = Parser1(lexer, reporter, parserStream);
     parser.parse();
 
     return 0;

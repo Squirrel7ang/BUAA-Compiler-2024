@@ -41,7 +41,7 @@ namespace tang {
     using u_ptr = std::unique_ptr<T>;
 
     u_ptr<BType> Parser::_tryBType() {
-        auto bType = std::make_unique<BType>();
+        auto bType = std::make_unique<BType>(peekToken());
         Token&& t = peekToken();
 
         if (t.getType() == TK_INTTK) {
@@ -58,7 +58,7 @@ namespace tang {
     }
 
     u_ptr<ConstExp> Parser::_tryConstExp() {
-        auto constExp = std::make_unique<ConstExp>();
+        auto constExp = std::make_unique<ConstExp>(peekToken());
         auto addExp = _tryAddExp();
         if (addExp != nullptr) {
             constExp->addExp = std::move(addExp);
@@ -70,7 +70,7 @@ namespace tang {
     }
 
     u_ptr<StringConst> Parser::_tryStringConst() {
-        auto stringConst = std::make_unique<StringConst>();
+        auto stringConst = std::make_unique<StringConst>(peekToken());
         Token&& t1 = peekToken();
         if (t1.getType() == TK_STRCON) {
             skipToken();

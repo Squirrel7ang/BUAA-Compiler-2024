@@ -5,32 +5,32 @@
 #include <string>
 #include "token.hpp"
 
-#include <assert.h>
+#include <cassert>
 #include <sstream>
-#include <variant>
+#include <utility>
 
 namespace tang {
-    Token::Token(const std::string &str,
+    Token::Token(std::string str,
         const unsigned int lin,
         const unsigned int col,
         const TokenType tokenType)
-        : content(str), _lin(lin), _col(col), _type(tokenType) {
+        : content(std::move(str)), _lin(lin), _col(col), _type(tokenType) {
     }
 
     unsigned int Token::getCol() const {
-        return this->_col;
+        return _col;
     }
 
     unsigned int Token::getLin() const {
-        return this->_lin;
+        return _lin;
     }
 
     std::string Token::getContent() const {
-        return this->content;
+        return content;
     }
 
     TokenType Token::getType() const {
-        return this->_type;
+        return _type;
     }
 
     bool Token::isEOF() const {
@@ -42,13 +42,11 @@ namespace tang {
     }
 
     bool Token::isBType() const {
-        const auto tp = getType();
-        return tp == TK_INTTK || tp == TK_CHARTK;
+        return _type == TK_INTTK || _type == TK_CHARTK;
     }
 
     bool Token::isFuncType() const {
-        const auto tp = getType();
-        return tp == TK_VOIDTK || isBType();
+        return _type == TK_VOIDTK || isBType();
     }
 
     bool Token::isConstTK() const {
@@ -79,59 +77,79 @@ namespace tang {
         return _type == TK_COMMA;
     }
 
-    std::string Token::STRCONToString() const {
-        if (_type == TK_STRCON) {
-            std::string str;
-            std::stringstream ss(content);
-            ss.get();
-            char ch;
-            while (ch = ss.get()) {
-                str += ch;
-            }
-            return str.substr(0, str.length() - 1);
-        }
-        assert(0);
+    bool Token::isExpFirst() const {
+        return isUnaryOp() ||
+               _type == TK_IDENFR ||
+               _type == TK_LPARENT ||
+               _type == TK_INTCON ||
+               _type == TK_CHRCON;
     }
 
-    char Token::CHRCONToChar() const {
-        if (_type == TK_CHRCON) {
-            if (content[1] != '\\') {
-                assert(content.length() == 4); // '\'', ASCII, '\'', '\0'
-                return content[1];
-            }
-            else {
-                assert(content.length() == 5); //  '\'', '\\', ASCII, '\'', '\0'
-                char ch = content[2];
-                switch (ch) {
+    std::string escapeToChar(const std::string& str) {
+        std::string s;
+        if (s.length() < 2) {
+            s = str;
+            return s;
+        }
+
+        if (str[0] != '\\') {
+            s += '\\';
+        }
+
+        const int len = str.length();
+        for (int i = 0; i < len - 1; i++) {
+            char ch1 = str[i];
+            char ch2 = str[i+1];
+            if (ch1 == '\\') {
+                switch (ch2) {
                     case 'a':
-                        return '\a';
+                        s += '\a';
                     case 'b':
-                        return '\b';
+                        s += '\b';
                     case 't':
-                        return '\t';
+                        s += '\t';
                     case 'n':
-                        return 'n';
+                        s += 'n';
                     case 'v':
-                        return '\v';
+                        s += '\v';
                     case 'f':
-                        return '\f';
+                        s += '\f';
                     case '\"':
-                        return '\"';
+                        s += '\"';
                     case '\'':
-                        return '\'';
+                        s += '\'';
                     case '\\':
-                        return '\\';
+                        s += '\\';
                     case '0':
-                        return '\0';
+                        s += '\0';
                     default: {
                         assert(0);
                     }
                 }
+                i++;
+            }
+            else {
+                s += ch2;
             }
         }
-        else {
-            assert(0);
+
+    }
+
+    std::string Token::STRCONToString() const {
+        if (_type == TK_STRCON) {
+            const std::string str = escapeToChar(content);
+            return str.substr(1, str.length() - 1);
         }
+        assert(0);
+        return "";
+    }
+
+    char Token::CHRCONToChar() const {
+        if (_type == TK_CHRCON) {
+            const std::string str = escapeToChar(content);
+            return str[1];
+        }
+        assert(0);
     }
 
     std::string Token::toString() const {

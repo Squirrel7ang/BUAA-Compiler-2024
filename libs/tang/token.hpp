@@ -5,6 +5,7 @@
 #ifndef TOKEN_HPP
 #define TOKEN_HPP
 
+#include <ostream>
 #include <string>
 #include <unordered_map>
 
@@ -51,7 +52,7 @@ namespace tang {
         unsigned int _col;
         TokenType _type;
     public:
-        explicit Token(const std::string& str,
+        explicit Token(std::string  str,
             unsigned int lin,
             unsigned int col,
             TokenType tokenType);
@@ -70,9 +71,13 @@ namespace tang {
         [[nodiscard]] bool isRelExpOp() const;
         [[nodiscard]] bool isEqExpOp() const;
         [[nodiscard]] bool isComma() const;
+        [[nodiscard]] bool isExpFirst() const;
         [[nodiscard]] std::string STRCONToString() const;
         [[nodiscard]] char CHRCONToChar() const;
         [[nodiscard]] std::string toString() const;
+        void print(std::ostream& out) const {
+            out << toString() << " " << content << std::endl;
+        }
     }; // class Token
 } // namespace tang
 

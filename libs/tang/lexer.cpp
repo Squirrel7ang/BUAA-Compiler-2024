@@ -342,7 +342,7 @@ namespace tang {
 
     Token Lexer::_peekToken(const unsigned int index) {
         if (index >= lexPtr && isEnd) {
-            // if is end, then don't lex any more
+            // if is end, then don't lex anymore
             return tokens[tokens.size() - 1];
         }
         while (index >= lexPtr)
@@ -351,8 +351,9 @@ namespace tang {
     }
 
     Token Lexer::getToken() {
+        Token&& t = peekToken(0);
         curPtr++;
-        return peekToken(0);
+        return t;
     }
 
     void Lexer::skipToken(const unsigned int n) {
@@ -369,7 +370,7 @@ namespace tang {
             return;
         }
         if (!t.isEOF() && t.getType() != TK_COMMENT && !t.isUnknown()) {
-            _correctOutput << t.toString() << ' ' << t.getContent() << std::endl;
+            t.print(_correctOutput);
         }
         else if (t.isUnknown()) {
             _reporter.report(t.getLin(), 'a');
