@@ -79,15 +79,16 @@ namespace tang {
         }
         else if (t1.getType() == TK_LBRACE) {
             skipToken();
-            auto constExp = _tryConstExp();
-            constInitVal->addConstExp(constExp);
-
-            while (peekToken().isComma()) {
-                skipToken();
-                constExp = _tryConstExp();
+            if (peekToken().getType() != TK_RBRACE) {
+                auto constExp = _tryConstExp();
                 constInitVal->addConstExp(constExp);
-            }
 
+                while (peekToken().isComma()) {
+                    skipToken();
+                    constExp = _tryConstExp();
+                    constInitVal->addConstExp(constExp);
+                }
+            }
             _matchCurToken(TK_RBRACE);
         }
         else {
@@ -332,6 +333,7 @@ namespace tang {
             primaryExp->primaryExp = std::make_unique<PrimaryExpVariant>(_tryLVal());
         }
         else {
+            cout << peekToken().getLin() << std::endl;
             assert(0);
         }
 
@@ -839,7 +841,7 @@ namespace tang {
             stmt->stmt = nullptr;
         }
         else if (t1.isUnaryOp() || t1.getType() == TK_LPARENT ||
-                 t1.getType() == TK_INTCON || t1.getType() == TK_CHARTK ||
+                 t1.getType() == TK_INTCON || t1.getType() == TK_CHRCON ||
                  (t1.getType() == TK_IDENFR && t2.getType() == TK_LPARENT)) {
             // Exp
             stmt->stmt = std::make_unique<StmtVariant>(_tryExp());
@@ -855,6 +857,7 @@ namespace tang {
             if (t1.getType() != TK_ASSIGN) {
                 // ExpStmt
                 stmt->stmt = std::make_unique<StmtVariant>(_tryExp(lVal));
+                _matchCurToken(TK_SEMICN);
             }
             else if (t2.getType() == TK_GETINTTK) {
                 // getintStmt
@@ -870,6 +873,7 @@ namespace tang {
             }
         }
         else {
+            std::cout << peekToken().getLin() << std::endl;
             assert(0);
         }
         Stmt::print(_correctOutput);
