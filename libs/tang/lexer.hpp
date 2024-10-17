@@ -49,6 +49,9 @@ namespace tang {
         void print(Token& t);
 
         void skipToken(unsigned int);
+
+        Token lastToken();
+
         void reverse(unsigned int);
     };
 }

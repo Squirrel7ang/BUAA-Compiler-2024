@@ -32,6 +32,9 @@ namespace tang {
         _lexer.skipToken(1);
     }
 
+    unsigned int Parser1::_lastLine () {
+        return _lexer.lastToken().getLin();
+    }
     u_ptr<BType> Parser1::_tryBType()  {
         auto bType = std::make_unique<BType>(peekToken());
         Token&& t1 = getToken();
@@ -985,8 +988,10 @@ namespace tang {
             }
         }
 
-        assert(peekToken().getType() == TK_INTTK);
-        assert(peekToken(1).getType() == TK_MAINTK);
+        Token&& t1 = peekToken(0);
+        Token&& t2 = peekToken(1);
+        assert(t1.getType() == TK_INTTK);
+        assert(t2.getType() == TK_MAINTK);
         compUnit->mainFuncDef = _tryMainFuncDef();
         CompUnit::print(_correctOutput);
         return compUnit;
@@ -997,19 +1002,16 @@ namespace tang {
     }
 
     bool Parser1::_matchCurToken(const TokenType expectType) {
-        return _match(peekToken(), expectType);
-    }
-
-    bool Parser1::_match(Token&& t, const TokenType expectType) const {
+        Token&& t = peekToken();
         if (t.getType() != expectType) {
             if (expectType == TK_SEMICN) {
-                _reporter.report(t.getLin(), 'i');
+                _reporter.report(_lastLine(), 'i');
             }
             else if (expectType == TK_RPARENT) {
-                _reporter.report(t.getLin(), 'j');
+                _reporter.report(_lastLine(), 'j');
             }
             else if (expectType == TK_RBRACK) {
-                _reporter.report(t.getLin(), 'k');
+                _reporter.report(_lastLine(), 'k');
             }
             return false;
         }

@@ -96,8 +96,10 @@ namespace tang {
         [[nodiscard]] Token curToken() const;
         void skipToken() const;
 
+        unsigned int _lastLine();
+
         bool _matchCurToken(TokenType expectType);
-        bool _match(Token&& t, TokenType expectType) const;
+        bool _match(Token&& t, TokenType expectType, unsigned int) const;
     };
 
 } // namespace tang

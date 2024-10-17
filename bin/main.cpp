@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     }
     std::string lexerOut = "lexer.txt";
     std::string parserOut = "parser.txt";
-    std::string errout = "error.txt";
+    std::string errOut = "error.txt";
 
     std::ifstream infile(input, std::ios::in);
     std::ofstream lexerStream;
@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 
     lexerStream.open(lexerOut, std::ios::out);
     parserStream.open(parserOut, std::ios::out);
-    erroutStream.open(errout, std::ios::out);
+    erroutStream.open(errOut, std::ios::out);
 
     auto reporter = ErrorReporter(erroutStream);
     auto lexer = Lexer(infile, input, lexerStream, reporter);

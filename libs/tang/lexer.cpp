@@ -1,6 +1,6 @@
 #include "lexer.hpp"
 
-#include <iostream>
+#include <cassert>
 
 #include "token.hpp"
 #include <istream>
@@ -226,7 +226,7 @@ namespace tang {
                 return Token(content, lin, col - content.size(), TK_AND);
             }
             else {
-                return Token("&", lin, col - content.size(), TK_UNKNOWN);
+                return Token("&", lin, col - content.size(), TK_AND);
             }
         case '|': // TODO
             content.append(1, ch);
@@ -237,7 +237,7 @@ namespace tang {
                 return Token(content, lin, col - content.size(), TK_OR);
             }
             else {
-                return Token("&", lin, col - content.size(), TK_UNKNOWN);
+                return Token("|", lin, col - content.size(), TK_OR);
             }
         case ',':
             content.append(1, ch);
@@ -360,6 +360,13 @@ namespace tang {
         curPtr += n;
     }
 
+    Token Lexer::lastToken() {
+        if (curPtr == 0) {
+            perror("Last token doesn't exist");
+            assert(0);
+        }
+        return _peekToken(curPtr - 1);
+    }
 
     Token Lexer::curToken() {
         return peekToken(0);
@@ -372,13 +379,17 @@ namespace tang {
         if (!t.isEOF() && t.getType() != TK_COMMENT && !t.isUnknown()) {
             t.print(_correctOutput);
         }
-        else if (t.isUnknown()) {
-            _reporter.report(t.getLin(), 'a');
-        }
+        // else if (t.isUnknown()) {
+        //     _reporter.report(t.getLin(), 'a');
+        // }
     }
 
     Token Lexer::_lexOneToken() {
         Token&& t = _readNextToken();
+        if ((t.getType() == TK_AND && t.getContent() == "&") ||
+            (t.getType() == TK_OR  && t.getContent() == "|")) {
+            _reporter.report(t.getLin(), 'a');
+        }
         while (t.getType() == TK_COMMENT) {
             t = _readNextToken();
         }
@@ -386,11 +397,12 @@ namespace tang {
             if (t.getType() != TK_EOF) {
                 print(t);
             }
+            else {
+                isEnd = true;
+            }
             tokens.push_back(t);
             lexPtr++;
         }
-        else
-            isEnd = true;
         return t;
     }
 }
