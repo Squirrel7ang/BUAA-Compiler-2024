@@ -243,7 +243,7 @@ namespace tang {
         u_ptr<LVal> lVal;
         u_ptr<Exp> exp;
         static void print(std::ostream& out) {
-            out << "<Assignment>" << std::endl;
+            out << "<ForStmt>" << std::endl;
         }
     };
 
@@ -253,7 +253,7 @@ namespace tang {
         u_ptr<LVal> lVal;
         u_ptr<Exp> exp;
         static void print(std::ostream& out) {
-            out << "<ForStmt>" << std::endl;
+            // nothing
         }
     };
 
@@ -408,7 +408,7 @@ namespace tang {
         u_ptr<Ident> ident;
         u_ptr<FuncRParams> funcRParams;
         static void print(std::ostream& out) {
-            out << "<FuncCall>" << std::endl;
+            // nothing
         }
     };
 

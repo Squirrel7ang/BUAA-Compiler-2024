@@ -3,10 +3,11 @@
 //
 
 #include "parser1.hpp"
-
-#include <cassert>
-
 #include "ast.hpp"
+#include <cassert>
+#include <iostream>
+
+using std::cout;
 
 namespace tang {
     Token Parser1::peekToken(const unsigned int n) const {
@@ -81,7 +82,7 @@ namespace tang {
             auto constExp = _tryConstExp();
             constInitVal->addConstExp(constExp);
 
-            while (t1.isComma()) {
+            while (peekToken().isComma()) {
                 skipToken();
                 constExp = _tryConstExp();
                 constInitVal->addConstExp(constExp);
@@ -109,7 +110,7 @@ namespace tang {
             skipToken();
             constDef->constExp = _tryConstExp();
 
-            _matchCurToken(TK_RBRACE);
+            _matchCurToken(TK_RBRACK);
         }
         _matchCurToken(TK_ASSIGN);
         constDef->constInitVal = _tryConstInitVal();
@@ -129,6 +130,7 @@ namespace tang {
             skipToken();
             constDecl->constDefs.push_back(_tryConstDef());
         }
+        _matchCurToken(TK_SEMICN);
 
         ConstDecl::print(_correctOutput);
         return constDecl;
@@ -155,7 +157,7 @@ namespace tang {
             auto exp = _tryExp();
             initVal->addExp(exp);
 
-            while (t1.isComma()) {
+            while (peekToken().isComma()) {
                 skipToken();
                 exp = _tryExp();
                 initVal->addExp(exp);
@@ -168,7 +170,6 @@ namespace tang {
             auto exp = _tryExp();
             initVal->addExp(exp);
         }
-        InitVal::print(_correctOutput);
         InitVal::print(_correctOutput);
         return initVal;
     }
@@ -203,6 +204,7 @@ namespace tang {
         varDecl->varDefs.push_back(_tryVarDef());
 
         while (peekToken().isComma()) {
+            skipToken();
             varDecl->varDefs.push_back(_tryVarDef());
         }
 
@@ -260,6 +262,7 @@ namespace tang {
         assert(peekToken().isBType());
         funcFParams->funcFParams.push_back(_tryFuncFParam());
         while (peekToken().isComma()) {
+            skipToken();
             funcFParams->funcFParams.push_back(_tryFuncFParam());
         }
         FuncFParams::print(_correctOutput);
@@ -388,7 +391,7 @@ namespace tang {
         funcCall->ident = _tryIdent();
 
         _matchCurToken(TK_LPARENT);
-        if (peekToken().isBType()) {
+        if (peekToken().isExpFirst()) {
             funcCall->funcRParams = _tryFuncRParams();
         }
         _matchCurToken(TK_RPARENT);
@@ -412,6 +415,9 @@ namespace tang {
             unaryExp->unaryExp = std::make_unique<UnaryExpVariant>(_tryPrimaryExp());
         }
 
+        for (int i = 0; i < unaryExp->unaryOps.size(); i++) {
+            UnaryExp::print(_correctOutput);
+        }
         UnaryExp::print(_correctOutput);
         return unaryExp;
     }
@@ -431,12 +437,13 @@ namespace tang {
 
         // !!! NO ASSERT !!!
         mulExp->unaryExps.push_back(_tryUnaryExp());
+        MulExp::print(_correctOutput);
         while (peekToken().isMulExpOp()) {
             mulExp->ops.push_back(getToken());
             mulExp->unaryExps.push_back(_tryUnaryExp());
+            MulExp::print(_correctOutput);
         }
 
-        MulExp::print(_correctOutput);
         return mulExp;
     }
 
@@ -445,12 +452,13 @@ namespace tang {
 
         // !!! NO ASSERT !!!
         mulExp->unaryExps.push_back(_tryUnaryExp(lVal));
+        MulExp::print(_correctOutput);
         while (peekToken().isMulExpOp()) {
             mulExp->ops.push_back(getToken());
             mulExp->unaryExps.push_back(_tryUnaryExp());
+            MulExp::print(_correctOutput);
         }
 
-        MulExp::print(_correctOutput);
         return mulExp;
     }
 
@@ -459,12 +467,13 @@ namespace tang {
 
         // !!! NO ASSERT !!!
         addExp->mulExps.push_back(_tryMulExp());
+        AddExp::print(_correctOutput);
         while (peekToken().isAddExpOp()) {
             addExp->ops.push_back(getToken());
             addExp->mulExps.push_back(_tryMulExp());
+            AddExp::print(_correctOutput);
         }
 
-        AddExp::print(_correctOutput);
         return addExp;
     }
 
@@ -473,12 +482,13 @@ namespace tang {
 
         // !!! NO ASSERT !!!
         addExp->mulExps.push_back(_tryMulExp(lVal));
+        AddExp::print(_correctOutput);
         while (peekToken().isAddExpOp()) {
             addExp->ops.push_back(getToken());
             addExp->mulExps.push_back(_tryMulExp());
+            AddExp::print(_correctOutput);
         }
 
-        AddExp::print(_correctOutput);
         return addExp;
     }
 
@@ -525,12 +535,13 @@ namespace tang {
 
         // !!! NO ASSERT !!!
         relExp->addExps.push_back(_tryAddExp());
+        RelExp::print(_correctOutput);
         while (peekToken().isRelExpOp()) {
             relExp->ops.push_back(getToken());
             relExp->addExps.push_back(_tryAddExp());
+            RelExp::print(_correctOutput);
         }
 
-        RelExp::print(_correctOutput);
         return relExp;
     }
 
@@ -539,12 +550,13 @@ namespace tang {
 
         // !!! NO ASSERT !!!
         eqExp->relExps.push_back(_tryRelExp());
+        EqExp::print(_correctOutput);
         while (peekToken().isEqExpOp()) {
             eqExp->ops.push_back(getToken());
             eqExp->relExps.push_back(_tryRelExp());
+            EqExp::print(_correctOutput);
         }
 
-        EqExp::print(_correctOutput);
         return eqExp;
     }
 
@@ -553,12 +565,13 @@ namespace tang {
 
         // !!! NO ASSERT !!!
         lAndExp->eqExps.push_back(_tryEqExp());
+        LAndExp::print(_correctOutput);
         while (peekToken().getType() == TK_AND) {
             skipToken();
             lAndExp->eqExps.push_back(_tryEqExp());
+            LAndExp::print(_correctOutput);
         }
 
-        LAndExp::print(_correctOutput);
         return lAndExp;
     }
 
@@ -567,12 +580,13 @@ namespace tang {
 
         // !!! NO ASSERT !!!
         lOrExp->lAndExps.push_back(_tryLAndExp());
+        LOrExp::print(_correctOutput);
         while (peekToken().getType() == TK_OR) {
             skipToken();
             lOrExp->lAndExps.push_back(_tryLAndExp());
+            LOrExp::print(_correctOutput);
         }
 
-        LOrExp::print(_correctOutput);
         return lOrExp;
     }
 
@@ -605,15 +619,17 @@ namespace tang {
         _matchCurToken(TK_FORTK);
         _matchCurToken(TK_LPARENT);
 
-        if (peekToken().getType() == TK_IDENFR) {
+        if (peekToken().getType() != TK_SEMICN) {
             forStmt->init = _tryAssignment();
         }
-        _matchCurToken(TK_COMMA);
+        _matchCurToken(TK_SEMICN);
 
-        forStmt->cond = _tryCond();
-        _matchCurToken(TK_COMMA);
+        if (peekToken().getType() != TK_SEMICN) {
+            forStmt->cond = _tryCond();
+        }
+        _matchCurToken(TK_SEMICN);
 
-        if (peekToken().getType() == TK_IDENFR) {
+        if (peekToken().getType() != TK_RPARENT) {
             forStmt->update = _tryAssignment();
         }
         _matchCurToken(TK_RPARENT);
@@ -853,6 +869,9 @@ namespace tang {
                 stmt->stmt = std::make_unique<StmtVariant>(_tryAssignStmt(lVal));
             }
         }
+        else {
+            assert(0);
+        }
         Stmt::print(_correctOutput);
         return stmt;
     }
@@ -861,7 +880,8 @@ namespace tang {
         auto blockItem = std::make_unique<BlockItem>(peekToken());
 
         while (peekToken().getType() != TK_RBRACE) {
-            if (peekToken().isBType()) {
+            Token&& t1 = peekToken();
+            if (t1.isBType() || t1.isConstTK()) {
                 blockItem->blockItem = std::make_unique<BlockItemVariant>(_tryDecl());
             }
             else {
