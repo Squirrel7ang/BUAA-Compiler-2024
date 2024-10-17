@@ -1,8 +1,8 @@
 ## Lexer
 
-- reconstruct this part
+- [x] reconstruct this part
 
 
 ## Parser
 
-- assuming lexer have method `readNextToken()`
+- [x] reconstruct this part
