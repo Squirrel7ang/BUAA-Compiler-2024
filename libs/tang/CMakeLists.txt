@@ -9,6 +9,10 @@ add_library(${LIBRARY_NAME}
 #        parser.cpp
         parser1.hpp
         parser1.cpp
+        visitor.hpp
+        visitor.cpp
         error.hpp
         error.cpp
         ast.hpp)
+
+target_link_libraries(${LIBRARY_NAME} llvm)

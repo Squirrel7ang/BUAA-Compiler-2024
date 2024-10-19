@@ -108,7 +108,7 @@ namespace tang {
         char ch = peekCh();
         bool flag = false;
         // skip empty space
-        while (ch == '\n' || ch == ' ' || ch == '\t') {
+        while (std::isspace(ch)) {
             flag = true;
             consumeCh();
             ch = peekCh();

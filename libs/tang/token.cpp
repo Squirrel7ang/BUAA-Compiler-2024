@@ -132,7 +132,7 @@ namespace tang {
                 s += ch2;
             }
         }
-
+        return s;
     }
 
     std::string Token::STRCONToString() const {
