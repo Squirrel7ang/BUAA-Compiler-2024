@@ -5,6 +5,7 @@
 #ifndef SYMBOL_HPP
 #define SYMBOL_HPP
 #include <cassert>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -13,39 +14,89 @@ namespace llvm {
 
     public:
         unsigned int getSize();
+        std::string toOutput();
     };
 
     class IntSymbolType: SymbolType {
     public:
+        explicit IntSymbolType(bool isConst): _isConst(isConst) {}
+        bool _isConst;
         unsigned int getSize() {
             return 4;
         }
-
+        std::string toOutput() {
+            if (_isConst)
+                return "ConstInt";
+            else
+                return "Int";
+        }
     };
 
     class CharSymbolType: SymbolType {
     public:
+        explicit CharSymbolType(bool isConst): _isConst(isConst) {}
+        bool _isConst;
         unsigned int getSize() {
             return 1;
+        }
+        std::string toOutput() {
+            if (_isConst)
+                return "ConstChar";
+            else
+                return "Char";
         }
     };
 
     class VoidSymbolType: SymbolType {
     public:
-        unsigned int getSize() {
-            assert(0);
+        unsigned int getSize();
+        std::string toOutput() {
+            return "Void";
         }
     };
 
-    class ArraySymbolType: SymbolType {
-        const SymbolType _basicType;
-        const unsigned int _length;
-        const unsigned int _size;
+    class IntArrayType: SymbolType {
+    public: 
+        const bool _isConst;
+        const unsigned int _len;
+        explicit IntArrayType(bool isConst, const unsigned int len) 
+            : _isConst(isConst), _len(len) { }
+        unsigned int getSize() {
+            return _len << 2;
+        }
+        std::string toOutput() {
+            if (_isConst)
+                return "ConstIntArray";
+            else 
+                return "IntArray";
+        }
+    };
+
+    class CharArrayType: SymbolType {
     public:
-        explicit ArraySymbolType(SymbolType& basicType, const unsigned int length)
-            : _basicType(basicType), _length(length), _size(basicType.getSize() * length) { }
-        SymbolType getType() {
-            return _basicType;
+        const bool _isConst;
+        const unsigned int _len;
+        explicit CharArrayType(const bool isConst, const unsigned int len) 
+            : _isConst(isConst), _len(len) {}
+        unsigned int getSize() {
+            return _len << 2;
+        }
+        std::string toOutput() {
+            if (_isConst)
+                return "ConstCharArray";
+            else 
+                return "CharArray";
+        }
+    };
+
+    class FunctionType: SymbolType {
+    public:
+        SymbolType _returnType;
+        unsigned int getSize() {
+            assert(0);
+        }
+        std::string toOutput() {
+            return _returnType.toOutput() + "Func";
         }
     };
 
@@ -66,7 +117,11 @@ namespace llvm {
     class SymbolTable {
         std::vector<Symbol> _stack;
         std::vector<unsigned int> _scopePtrs;
+        std::vector<std::vector<Symbol>> _globalStack; // use for output and nothing else;
+        std::ostream& _out;
+        unsigned int _curPtr;
     public:
+        explicit SymbolTable(std::ostream& out) : _out(out), _curPtr(0) {}
         void addSymbol(Symbol& s) {
             _stack.push_back(s);
         }
@@ -79,7 +134,14 @@ namespace llvm {
             _scopePtrs.push_back(_stack.size());
         }
         void exitScope() {
+            std::vector<Symbol> curScope;
+            for (unsigned int i = _scopePtrs.back(); i < _stack.size(); i++) {
+                curScope.push_back(_stack.at(i));
+            }
+            _globalStack.push_back(curScope);
+
             _scopePtrs.pop_back();
+            _curPtr = _scopePtrs.back();
         }
         bool findSymbol(Symbol& s, const std::string& name) {
             for (unsigned int i = _scopePtrs.back(); i < _stack.size(); i++) {
@@ -90,8 +152,15 @@ namespace llvm {
             }
             return false;
         }
+        void print() {
+            for (int i = 0; i < _globalStack.size(); i++) {
+                auto curScope = _globalStack.at(i);
+                for (auto symbol: curScope) {
+                    _out << i+1 << " " << symbol.getName() << " " << symbol.getType().toOutput() << std::endl;
+                }
+            }
+        }
     };
-
 } // namespace llvm
 
 #endif //SYMBOL_HPP
