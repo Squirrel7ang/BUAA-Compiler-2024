@@ -21,6 +21,8 @@ namespace tang {
             : _compUnit(std::move(compUnit)), _symbolTable(out) { }
         void visit();
     private:
+        void _visitVarDecl(const VarDecl& node);
+        void _visitConstDecl(const ConstDecl& node);
         void _visitDecl(const Decl& node);
         void _visitFuncDef(const FuncDef& node);
         void _visitMainFuncDef(const MainFuncDef& node);

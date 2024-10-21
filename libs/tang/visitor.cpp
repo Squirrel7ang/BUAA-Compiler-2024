@@ -3,11 +3,26 @@
 //
 
 #include "visitor.hpp"
+#include "ast.hpp"
+#include <cassert>
 
 namespace tang {
+
+    void Visitor::_visitVarDecl(const VarDecl& node) {
+
+    }
+
+    void Visitor::_visitConstDecl(const ConstDecl& node) {
+
+    }
+
     void Visitor::_visitDecl(const Decl& node) {
         // TODO
-
+        DeclVariant decl = *(node.decl);
+        std::visit(overloaded {
+            [](u_ptr<VarDecl> arg) { _visitVarDecl(arg); },
+            [](u_ptr<VarDecl> arg) { _visitConstDecl(arg); },
+        }, decl);
     }
 
     void Visitor::_visitFuncDef(const FuncDef& node) {
