@@ -7,6 +7,8 @@
 
 #include <memory>
 #include <variant>
+#include <vector>
+#include "token.hpp"
 
 namespace tang {
     class Cond;

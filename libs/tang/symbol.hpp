@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace llvm {
+namespace tang {
     class SymbolType {
 
     public:
@@ -100,11 +100,11 @@ namespace llvm {
         }
     };
 
-    class Symbol {
+    class symbol {
         SymbolType _type;
         std::string _name;
     public:
-        explicit Symbol(SymbolType type, std::string& name)
+        explicit symbol(SymbolType type, std::string& name)
             :_type(type), _name(name) { }
         SymbolType getType() {
             return _type;
@@ -115,17 +115,20 @@ namespace llvm {
     };
 
     class SymbolTable {
-        std::vector<Symbol> _stack;
+    private:
+        std::vector<symbol> _stack;
         std::vector<unsigned int> _scopePtrs;
-        std::vector<std::vector<Symbol>> _globalStack; // use for output and nothing else;
+        std::vector<std::vector<symbol>> _globalStack; // use for output and nothing else;
         std::ostream& _out;
         unsigned int _curPtr;
     public:
-        explicit SymbolTable(std::ostream& out) : _out(out), _curPtr(0) {}
-        void addSymbol(Symbol& s) {
+        explicit SymbolTable(std::ostream& out) : _out(out), _curPtr(0) {
+
+        }
+        void addSymbol(symbol& s) {
             _stack.push_back(s);
         }
-        Symbol popSymbol() {
+        symbol popSymbol() {
             auto&& s = _stack.back();
             _stack.pop_back();
             return s;
@@ -134,7 +137,7 @@ namespace llvm {
             _scopePtrs.push_back(_stack.size());
         }
         void exitScope() {
-            std::vector<Symbol> curScope;
+            std::vector<symbol> curScope;
             for (unsigned int i = _scopePtrs.back(); i < _stack.size(); i++) {
                 curScope.push_back(_stack.at(i));
             }
@@ -143,7 +146,7 @@ namespace llvm {
             _scopePtrs.pop_back();
             _curPtr = _scopePtrs.back();
         }
-        bool findSymbol(Symbol& s, const std::string& name) {
+        bool findSymbol(symbol& s, const std::string& name) {
             for (unsigned int i = _scopePtrs.back(); i < _stack.size(); i++) {
                 if (name == _stack.at(i).getName()) {
                     s = _stack.at(i);
@@ -161,6 +164,6 @@ namespace llvm {
             }
         }
     };
-} // namespace llvm
+} // namespace tang
 
 #endif //SYMBOL_HPP

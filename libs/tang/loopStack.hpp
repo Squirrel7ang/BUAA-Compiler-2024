@@ -7,11 +7,18 @@
 
 #include <vector>
 
-namespace llvm {
+namespace tang {
+
     class LoopStack {
     public:
+        void pushLoop() {
+
+        }
+        void popLoop() {
+
+        }
         
     };
-}
+} // namespace tang
 
 #endif //LOOPSTACK_HPP
