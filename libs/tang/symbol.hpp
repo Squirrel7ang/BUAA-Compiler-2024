@@ -9,15 +9,16 @@
 #include <string>
 #include <vector>
 
+#include "error.hpp"
+
 namespace tang {
     class SymbolType {
-
     public:
         unsigned int getSize();
         std::string toOutput();
     };
 
-    class IntSymbolType: SymbolType {
+    class IntSymbolType: public SymbolType {
     public:
         explicit IntSymbolType(bool isConst): _isConst(isConst) {}
         bool _isConst;
@@ -32,7 +33,7 @@ namespace tang {
         }
     };
 
-    class CharSymbolType: SymbolType {
+    class CharSymbolType: public SymbolType {
     public:
         explicit CharSymbolType(bool isConst): _isConst(isConst) {}
         bool _isConst;
@@ -47,7 +48,7 @@ namespace tang {
         }
     };
 
-    class VoidSymbolType: SymbolType {
+    class VoidSymbolType: public SymbolType {
     public:
         unsigned int getSize();
         std::string toOutput() {
@@ -55,7 +56,7 @@ namespace tang {
         }
     };
 
-    class IntArrayType: SymbolType {
+    class IntArrayType: public SymbolType {
     public: 
         const bool _isConst;
         const unsigned int _len;
@@ -72,7 +73,7 @@ namespace tang {
         }
     };
 
-    class CharArrayType: SymbolType {
+    class CharArrayType: public SymbolType {
     public:
         const bool _isConst;
         const unsigned int _len;
@@ -89,22 +90,28 @@ namespace tang {
         }
     };
 
-    class FunctionType: SymbolType {
+    class FunctionType: public SymbolType {
     public:
+        explicit FunctionType(SymbolType& returnType) :_returnType(returnType) {}
         SymbolType _returnType;
+        std::vector<SymbolType> _argType;
         unsigned int getSize() {
             assert(0);
         }
         std::string toOutput() {
             return _returnType.toOutput() + "Func";
         }
+        void addArgType(SymbolType& argType) {
+            _argType.push_back(argType);
+        }
     };
 
-    class symbol {
+    class Symbol {
         SymbolType _type;
         std::string _name;
     public:
-        explicit symbol(SymbolType type, std::string& name)
+        explicit Symbol() {}
+        explicit Symbol(SymbolType type, std::string& name)
             :_type(type), _name(name) { }
         SymbolType getType() {
             return _type;
@@ -116,19 +123,21 @@ namespace tang {
 
     class SymbolTable {
     private:
-        std::vector<symbol> _stack;
+        std::vector<Symbol> _stack;
         std::vector<unsigned int> _scopePtrs;
-        std::vector<std::vector<symbol>> _globalStack; // use for output and nothing else;
+        std::vector<std::vector<Symbol>> _globalStack; // use for output and nothing else;
         std::ostream& _out;
+        ErrorReporter& _reporter;
         unsigned int _curPtr;
     public:
-        explicit SymbolTable(std::ostream& out) : _out(out), _curPtr(0) {
+        explicit SymbolTable(std::ostream& out, ErrorReporter& reporter) 
+            : _out(out), _curPtr(0), _reporter(reporter) {
 
         }
-        void addSymbol(symbol& s) {
+        void addSymbol(Symbol& s) {
             _stack.push_back(s);
         }
-        symbol popSymbol() {
+        Symbol popSymbol() {
             auto&& s = _stack.back();
             _stack.pop_back();
             return s;
@@ -137,7 +146,7 @@ namespace tang {
             _scopePtrs.push_back(_stack.size());
         }
         void exitScope() {
-            std::vector<symbol> curScope;
+            std::vector<Symbol> curScope;
             for (unsigned int i = _scopePtrs.back(); i < _stack.size(); i++) {
                 curScope.push_back(_stack.at(i));
             }
@@ -146,7 +155,7 @@ namespace tang {
             _scopePtrs.pop_back();
             _curPtr = _scopePtrs.back();
         }
-        bool findSymbol(symbol& s, const std::string& name) {
+        bool findSymbol(Symbol& s, const std::string& name) {
             for (unsigned int i = _scopePtrs.back(); i < _stack.size(); i++) {
                 if (name == _stack.at(i).getName()) {
                     s = _stack.at(i);

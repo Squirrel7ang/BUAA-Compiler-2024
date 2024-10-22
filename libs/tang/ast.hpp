@@ -128,6 +128,8 @@ namespace tang {
         static void print(std::ostream& out) {
             out << "<ConstDef>" << std::endl;
         }
+        bool is_array() { return constExp == nullptr; }
+        bool has_initVal() { return constInitVal == nullptr; }
     };
 
     class VarDecl: public Node {
@@ -149,6 +151,8 @@ namespace tang {
         static void print(std::ostream& out) {
             out << "<VarDef>" << std::endl;
         }
+        bool is_array() { return constExp == nullptr; }
+        bool has_initVal() { return initVal == nullptr; }
     };
 
     class InitVal: public Node {
@@ -223,7 +227,7 @@ namespace tang {
     class Block: public Node {
     public:
         explicit Block(const Token& t) : Node(t) {}
-        u_ptr<BlockItem> blockItem;
+        vector<u_ptr<BlockItem>> blockItems;
         static void print(std::ostream& out) {
             out << "<Block>" << std::endl;
         }
@@ -512,6 +516,10 @@ namespace tang {
         u_ptr<AddExp> addExp;
         static void print(std::ostream& out) {
             out << "<ConstExp>" << std::endl;
+        }
+        int evaluate() {
+            /* !!! TODO !!! */
+            return 0;
         }
     };
 
