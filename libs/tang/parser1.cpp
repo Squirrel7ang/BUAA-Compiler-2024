@@ -905,7 +905,9 @@ namespace tang {
 
         assert(peekToken().getType() == TK_LBRACE);
         skipToken();
-        block->blockItem = _tryBlockItem();
+        while (peekToken().getType() != TK_RBRACE) {
+            block->blockItems.push_back(_tryBlockItem());
+        }
         _matchCurToken(TK_RBRACE);
 
         Block::print(_correctOutput);

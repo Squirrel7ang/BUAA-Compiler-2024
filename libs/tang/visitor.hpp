@@ -17,31 +17,46 @@ namespace tang {
     class Visitor {
         // CodeGen _codeGen;
         SymbolTable _symbolTable;
+        LoopStack _loopStack;
         u_ptr<CompUnit> _compUnit;
+        ErrorReporter& _reporter;
+        FuncSymbolType _curFuncType; // TODO
     public:
-        explicit Visitor(u_ptr<CompUnit>& compUnit, std::ostream& out, ErrorReporter& reporter)
-            : _compUnit(std::move(compUnit)), _symbolTable(out, reporter) { }
+        explicit Visitor(u_ptr<CompUnit>& compUnit, std::ostream& out,
+                         ErrorReporter& reporter)
+            : _compUnit(std::move(compUnit)), _loopStack(reporter),
+              _symbolTable(out, reporter), _reporter(reporter) { }
         void visit();
     private:
-        void _visitVarDecl(u_ptr<VarDecl>& node);
-        void _visitConstDecl(u_ptr<ConstDecl>& node);
-        void _visitDecl(u_ptr<Decl>& node);
-        void Visitor::_visitPrintfStmt(u_ptr<PrintfStmt>& node);
-        void Visitor::_visitGetcharStmt(u_ptr<GetcharStmt>& node);
-        void Visitor::_visitGetintStmt(u_ptr<GetintStmt>& node);
-        void Visitor::_visitReturnStmt(u_ptr<ReturnStmt>& node);
-        void Visitor::_visitContinueStmt(u_ptr<ContinueStmt>& node);
-        void Visitor::_visitBreakStmt(u_ptr<BreakStmt>& node);
-        void Visitor::_visitForStmt(u_ptr<ForStmt>& node);
-        void Visitor::_visitIfStmt(u_ptr<IfStmt>& node);
-        void Visitor::_visitBlock(u_ptr<Block>& node);
-        void Visitor::_visitExp(u_ptr<Exp>& node);
-        void Visitor::_visitAssignStmt(u_ptr<AssignStmt>& node);
-        void _visitStmt(u_ptr<Stmt>& node);
-        void _visitBlock(u_ptr<Block>& node);
-        void _visitFuncDef(u_ptr<FuncDef>& node);
-        void _visitMainFuncDef(u_ptr<MainFuncDef>& node);
-        void _visitCompUnit(u_ptr<CompUnit>& node);
+        void _visitVarDecl(const u_ptr<VarDecl>& node);
+        void _visitConstDecl(const u_ptr<ConstDecl>& node);
+        void _visitDecl(const u_ptr<Decl>& node);
+        void _visitPrintfStmt(const u_ptr<PrintfStmt>& node);
+        void _visitGetcharStmt(const u_ptr<GetcharStmt>& node);
+        void _visitGetintStmt(const u_ptr<GetintStmt>& node);
+        void _visitReturnStmt(const u_ptr<ReturnStmt>& node);
+        void _visitContinueStmt(const u_ptr<ContinueStmt>& node);
+        void _visitBreakStmt(const u_ptr<BreakStmt>& node);
+        void _visitForStmt(const u_ptr<ForStmt>& node);
+        void _visitIfStmt(const u_ptr<IfStmt>& node);
+
+        void _visitFuncCall(const u_ptr<FuncCall> &node);
+
+        void _visitPrimaryExp(const u_ptr<PrimaryExp> &node);
+
+        void _visitUnaryExp(const u_ptr<UnaryExp> &node);
+
+        void _visitMulExp(const u_ptr<MulExp> &node);
+
+        void _visitAddExp(const u_ptr<AddExp> &node);
+
+        void _visitBlock(const u_ptr<Block>& node);
+        void _visitExp(const u_ptr<Exp>& node);
+        void _visitAssignStmt(const u_ptr<AssignStmt>& node);
+        void _visitStmt(const u_ptr<Stmt>& node);
+        void _visitFuncDef(const u_ptr<FuncDef>& node);
+        void _visitMainFuncDef(const u_ptr<MainFuncDef>& node);
+        void _visitCompUnit(const u_ptr<CompUnit>& node);
     };
 } // namespace tang
 

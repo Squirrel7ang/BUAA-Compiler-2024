@@ -7,6 +7,7 @@
 #include <cassert>
 #include <iostream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "error.hpp"
@@ -14,95 +15,118 @@
 namespace tang {
     class SymbolType {
     public:
-        unsigned int getSize();
-        std::string toOutput();
+        virtual ~SymbolType();
+        virtual unsigned int getSize();
+        virtual std::string toOutput();
+        [[nodiscard]] virtual bool isConst() const ;
     };
 
     class IntSymbolType: public SymbolType {
+        const bool _isConst;
     public:
         explicit IntSymbolType(bool isConst): _isConst(isConst) {}
-        bool _isConst;
-        unsigned int getSize() {
+        unsigned int getSize() override {
             return 4;
         }
-        std::string toOutput() {
+        std::string toOutput() override {
             if (_isConst)
                 return "ConstInt";
             else
                 return "Int";
         }
+        [[nodiscard]] bool isConst() const override {
+            return _isConst;
+        }
     };
 
     class CharSymbolType: public SymbolType {
+        const bool _isConst;
     public:
         explicit CharSymbolType(bool isConst): _isConst(isConst) {}
-        bool _isConst;
-        unsigned int getSize() {
+        unsigned int getSize() override {
             return 1;
         }
-        std::string toOutput() {
+        std::string toOutput() override {
             if (_isConst)
                 return "ConstChar";
             else
                 return "Char";
         }
+        [[nodiscard]] bool isConst() const override {
+            return _isConst;
+        }
     };
 
     class VoidSymbolType: public SymbolType {
     public:
-        unsigned int getSize();
-        std::string toOutput() {
+        unsigned int getSize() override {
+            assert(0);
+        }
+        std::string toOutput() override {
             return "Void";
+        }
+        [[nodiscard]] bool isConst() const override {
+            assert(0);
         }
     };
 
     class IntArrayType: public SymbolType {
-    public: 
         const bool _isConst;
+    public:
         const unsigned int _len;
         explicit IntArrayType(bool isConst, const unsigned int len) 
             : _isConst(isConst), _len(len) { }
-        unsigned int getSize() {
+        unsigned int getSize() override {
             return _len << 2;
         }
-        std::string toOutput() {
+        std::string toOutput() override {
             if (_isConst)
                 return "ConstIntArray";
             else 
                 return "IntArray";
         }
+        [[nodiscard]] bool isConst() const override {
+            return _isConst;
+        }
     };
 
     class CharArrayType: public SymbolType {
-    public:
         const bool _isConst;
+    public:
         const unsigned int _len;
         explicit CharArrayType(const bool isConst, const unsigned int len) 
             : _isConst(isConst), _len(len) {}
-        unsigned int getSize() {
+        unsigned int getSize() override {
             return _len << 2;
         }
-        std::string toOutput() {
+        std::string toOutput() override {
             if (_isConst)
                 return "ConstCharArray";
             else 
                 return "CharArray";
         }
+        [[nodiscard]] bool isConst() const override {
+            return _isConst;
+        }
     };
 
-    class FunctionType: public SymbolType {
+    class FuncSymbolType: public SymbolType {
     public:
-        explicit FunctionType(SymbolType& returnType) :_returnType(returnType) {}
+        // explicit FuncSymbolType() = default; // TODO
+        explicit FuncSymbolType(SymbolType& returnType) :_returnType(returnType) {}
         SymbolType _returnType;
         std::vector<SymbolType> _argType;
-        unsigned int getSize() {
+        unsigned int getSize() override {
             assert(0);
         }
-        std::string toOutput() {
+        std::string toOutput() override {
             return _returnType.toOutput() + "Func";
         }
-        void addArgType(SymbolType& argType) {
+        void addArgType(const SymbolType& argType) {
             _argType.push_back(argType);
+        }
+        [[nodiscard]] bool isConst() const override {
+            assert(0);
         }
     };
 
@@ -110,9 +134,9 @@ namespace tang {
         SymbolType _type;
         std::string _name;
     public:
-        explicit Symbol() {}
-        explicit Symbol(SymbolType type, std::string& name)
-            :_type(type), _name(name) { }
+        explicit Symbol() = default;
+        explicit Symbol(const SymbolType& type, std::string  name)
+            :_type(type), _name(std::move(name)) { }
         SymbolType getType() {
             return _type;
         }
@@ -123,55 +147,29 @@ namespace tang {
 
     class SymbolTable {
     private:
-        std::vector<Symbol> _stack;
+        std::vector<Symbol> _symbolStack;
         std::vector<unsigned int> _scopePtrs;
-        std::vector<std::vector<Symbol>> _globalStack; // use for output and nothing else;
+        std::vector<std::vector<Symbol>> _OutputSymbolStack; // use for output and nothing else;
         std::ostream& _out;
         ErrorReporter& _reporter;
         unsigned int _curPtr;
+        bool _checkDuplicatedSymbol(unsigned int, Symbol& );
     public:
         explicit SymbolTable(std::ostream& out, ErrorReporter& reporter) 
-            : _out(out), _curPtr(0), _reporter(reporter) {
+            : _out(out), _reporter(reporter), _curPtr(0) {
 
         }
-        void addSymbol(Symbol& s) {
-            _stack.push_back(s);
-        }
+        void addSymbol(unsigned int, Symbol&);
         Symbol popSymbol() {
-            auto&& s = _stack.back();
-            _stack.pop_back();
+            auto&& s = _symbolStack.back();
+            _symbolStack.pop_back();
             return s;
         }
-        void enterScope() {
-            _scopePtrs.push_back(_stack.size());
-        }
-        void exitScope() {
-            std::vector<Symbol> curScope;
-            for (unsigned int i = _scopePtrs.back(); i < _stack.size(); i++) {
-                curScope.push_back(_stack.at(i));
-            }
-            _globalStack.push_back(curScope);
-
-            _scopePtrs.pop_back();
-            _curPtr = _scopePtrs.back();
-        }
-        bool findSymbol(Symbol& s, const std::string& name) {
-            for (unsigned int i = _scopePtrs.back(); i < _stack.size(); i++) {
-                if (name == _stack.at(i).getName()) {
-                    s = _stack.at(i);
-                    return true;
-                }
-            }
-            return false;
-        }
-        void print() {
-            for (int i = 0; i < _globalStack.size(); i++) {
-                auto curScope = _globalStack.at(i);
-                for (auto symbol: curScope) {
-                    _out << i+1 << " " << symbol.getName() << " " << symbol.getType().toOutput() << std::endl;
-                }
-            }
-        }
+        void enterScope();
+        void exitScope();
+        bool findSymbolGlobal(Symbol& s, const std::string& name);
+        bool findSymbolLocal(Symbol &s, const std::string &name);
+        void print();
     };
 } // namespace tang
 

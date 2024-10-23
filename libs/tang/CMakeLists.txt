@@ -16,6 +16,7 @@ add_library(${LIBRARY_NAME}
         ast.hpp
         loopStack.hpp
         symbol.hpp
+        symbol.cpp
 )
 target_link_libraries(${LIBRARY_NAME} PUBLIC llvm)
 

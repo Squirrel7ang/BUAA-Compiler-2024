@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "ast.hpp"
+#include "error.hpp"
 
 namespace tang {
 
@@ -16,16 +17,22 @@ namespace tang {
 
     class LoopStack {
         vector<Loop> loops;
+        ErrorReporter& _reporter;
     public:
+        explicit LoopStack(ErrorReporter& reporter)
+            : _reporter(reporter) { }
         void pushLoop() {
-            Loop l = Loop();
+            auto l = Loop();
             loops.push_back(l);
         }
         void popLoop() {
-            Loop l = Loop();
+            auto l = Loop();
             loops.push_back(l);
         }
-        bool checkReturnContinue() {
+        bool checkBreakContinue(const unsigned int lin) {
+            if (loops.empty()) {
+                _reporter.report(lin, 'm');
+            }
             return !loops.empty();
         }
     };
