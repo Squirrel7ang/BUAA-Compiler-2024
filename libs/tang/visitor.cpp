@@ -17,12 +17,12 @@ namespace tang {
         if (node->bType->isInt) {
             for (auto& vardef: node->varDefs) {
                 if (vardef->is_array()) {
-                    auto st = IntArrayType(isConst, vardef->constExp->evaluate());
+                    auto st = std::make_shared<IntArrayType>(isConst, vardef->constExp->evaluate());
                     Symbol s(st, vardef->ident->str);
                     _symbolTable.addSymbol(vardef->ident->getLin(), s);
                 }
                 else {
-                    auto st = IntSymbolType(isConst);
+                    auto st = std::make_shared<IntSymbolType>(isConst);
                     Symbol s(st, vardef->ident->str);
                     _symbolTable.addSymbol(vardef->ident->getLin(), s);
                 }
@@ -31,12 +31,12 @@ namespace tang {
         else if (node->bType->isChar) {
             for (auto& vardef: node->varDefs) {
                 if (vardef->is_array()) {
-                    auto st = CharArrayType(isConst, vardef->constExp->evaluate());
+                    auto st = std::make_shared<CharArrayType>(isConst, vardef->constExp->evaluate());
                     Symbol s(st, vardef->ident->str);
                     _symbolTable.addSymbol(vardef->ident->getLin(), s);
                 }
                 else {
-                    auto st = CharSymbolType(isConst);
+                    auto st = std::make_shared<CharSymbolType>(isConst);
                     Symbol s(st, vardef->ident->str);
                     _symbolTable.addSymbol(vardef->ident->getLin(), s);
                 }
@@ -49,12 +49,12 @@ namespace tang {
         if (node->bType->isInt) {
             for (auto& constdef: node->constDefs) {
                 if (constdef->is_array()) {
-                    auto st = IntArrayType(isConst, constdef->constExp->evaluate());
+                    auto st = std::make_shared<IntArrayType>(isConst, constdef->constExp->evaluate());
                     Symbol s(st, constdef->ident->str);
                     _symbolTable.addSymbol(constdef->ident->getLin(), s);
                 }
                 else {
-                    auto st = IntSymbolType(isConst);
+                    auto st = std::make_shared<IntSymbolType>(isConst);
                     Symbol s(st, constdef->ident->str);
                     _symbolTable.addSymbol(constdef->ident->getLin(), s);
                 }
@@ -63,12 +63,12 @@ namespace tang {
         else if (node->bType->isChar) {
             for (auto& constdef: node->constDefs) {
                 if (constdef->is_array()) {
-                    auto st = CharArrayType(isConst, constdef->constExp->evaluate());
+                    auto st = std::make_shared<CharArrayType>(isConst, constdef->constExp->evaluate());
                     Symbol s(st, constdef->ident->str);
                     _symbolTable.addSymbol(constdef->ident->getLin(), s);
                 }
                 else {
-                    auto st = CharSymbolType(isConst);
+                    auto st = std::make_shared<CharSymbolType>(isConst);
                     Symbol s(st, constdef->ident->str);
                     _symbolTable.addSymbol(constdef->ident->getLin(), s);
                 }
@@ -90,7 +90,10 @@ namespace tang {
     }
 
     void Visitor::_visitPrintfStmt(const u_ptr<PrintfStmt>& node) {
-        // TODO
+        unsigned int formatNum = node->stringConst->getFormatNum();
+        if (formatNum != node->exps.size()) {
+            _reporter.report(node->printfToken.getLin(), 'l');
+        }
     }
 
     void Visitor::_visitGetcharStmt(const u_ptr<GetcharStmt>& node) {
@@ -102,8 +105,10 @@ namespace tang {
     } 
 
     void Visitor::_visitReturnStmt(const u_ptr<ReturnStmt>& node) {
-        // TODO
-    } 
+        if (_curFuncType->toRawType() == VOID_FUNC_ST && node->exp != nullptr) {
+            _reporter.report(node->returnToken.getLin(), 'f');
+        }
+    }
 
     void Visitor::_visitContinueStmt(const u_ptr<ContinueStmt>& node) {
         _loopStack.checkBreakContinue(node->getLin());
@@ -139,21 +144,40 @@ namespace tang {
         _loopStack.popLoop();
     }
 
-    void Visitor::_visitFuncCall(const u_ptr<FuncCall>& node) {
+    void Visitor::_visitFuncCall(const u_ptr<FuncCall>& node, s_ptr<SymbolType> & type) {
         Symbol s;
         bool found;
         found = _symbolTable.findSymbolGlobal(s, node->ident->str);
         if (!found) {
-            _reporter.report(node->ident->getLin(), 'c');
+            // _reporter.report(node->ident->getLin(), 'c');
+            assert(0);
+        }
+        s_ptr<FuncSymbolType> symbolTypePtr = std::dynamic_pointer_cast<FuncSymbolType>(s.getType());
+        assert(symbolTypePtr != nullptr);
+        type = symbolTypePtr->_returnType;
+        auto& rparamExps = node->funcRParams->exps;
+        auto args = symbolTypePtr->_argType;
+        if (rparamExps.size() != args.size()) {
+            _reporter.report(node->ident->getLin(), 'd');
+            return; // TODO
+        }
+        for (int i = 0; i < rparamExps.size(); i++) {
+            auto& exp = rparamExps.at(i);
+            s_ptr<SymbolType> argType;
+            _visitExp(exp, argType);
+            // TODO
+            // if (exp->getType().toRawType() != args.at(i).toRawType()) {
+            //     _reporter.report(node->ident->getLin(), 'e');
+            // }
         }
 
     }
 
-    void Visitor::_visitPrimaryExp(const u_ptr<PrimaryExp>& node) {
+    void Visitor::_visitPrimaryExp(const u_ptr<PrimaryExp>& node, s_ptr<SymbolType>& type) {
         std::visit([&](auto && arg) {
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, u_ptr<Exp>>)
-                _visitExp(arg);
+                _visitExp(arg, type);
             else if constexpr (std::is_same_v<T, u_ptr<LVal>>) {
                 Symbol s;
                 bool found = _symbolTable.findSymbolGlobal(s, arg->ident->str);
@@ -162,9 +186,11 @@ namespace tang {
                 }
             }
             else if constexpr (std::is_same_v<T, u_ptr<Number>>) {
+                type = std::make_shared<IntSymbolType>(false);
                 // TODO
             }
             else if constexpr (std::is_same_v<T, u_ptr<Character>>) {
+                type = std::make_shared<CharSymbolType>(false);
                 // TODO
             }
             else
@@ -172,32 +198,41 @@ namespace tang {
         }, *(node->primaryExp));
     }
 
-    void Visitor::_visitUnaryExp(const u_ptr<UnaryExp>& node) {
+    void Visitor::_visitUnaryExp(const u_ptr<UnaryExp>& node, s_ptr<SymbolType>& type) {
         std::visit([&](auto && arg) {
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, u_ptr<PrimaryExp>>)
-                _visitPrimaryExp(arg);
+                _visitPrimaryExp(arg, type);
             else if constexpr (std::is_same_v<T, u_ptr<FuncCall>>)
-                _visitFuncCall(arg);
+                _visitFuncCall(arg, type);
             else
                 assert(0);
         }, *(node->unaryExp));
+        if (node->unaryOps.size() > 0) {
+            type = std::make_shared<IntSymbolType>(false);
+        }
     }
 
-    void Visitor::_visitMulExp(const u_ptr<MulExp>& node) {
+    void Visitor::_visitMulExp(const u_ptr<MulExp>& node, s_ptr<SymbolType>& type) {
         for (auto& unaryexp: node->unaryExps) {
-            _visitUnaryExp(unaryexp);
+            _visitUnaryExp(unaryexp, type);
+        }
+        if (node->unaryExps.size() > 1) {
+            type = std::make_shared<IntSymbolType>(false);
         }
     }
 
-    void Visitor::_visitAddExp(const u_ptr<AddExp>& node) {
+    void Visitor::_visitAddExp(const u_ptr<AddExp>& node, s_ptr<SymbolType>& type) {
         for (auto& mulexp: node->mulExps) {
-            _visitMulExp(mulexp);
+            _visitMulExp(mulexp, type);
+        }
+        if (node->mulExps.size() > 1) {
+            type = std::make_shared<IntSymbolType>(false);
         }
     }
 
-    void Visitor::_visitExp(const u_ptr<Exp>& node) {
-        _visitAddExp(node->addExp);
+    void Visitor::_visitExp(const u_ptr<Exp>& node, s_ptr<SymbolType>& type) {
+        _visitAddExp(node->addExp, type);
     }
 
     void Visitor::_visitAssignStmt(const u_ptr<AssignStmt>& node) {
@@ -207,20 +242,24 @@ namespace tang {
         if (!found) {
             _reporter.report(node->lVal->ident->getLin(), 'c');
         }
-        if (s.getType().isConst()) {
+        if (s.getType()->isConst()) {
             _reporter.report(node->lVal->getLin(), 'h');
         }
     } 
 
     void Visitor::_visitStmt(const u_ptr<Stmt>& node) {
+        s_ptr<SymbolType> p;
         std::visit([&](auto && arg) {
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, u_ptr<AssignStmt>>)
                 _visitAssignStmt(arg);
             else if constexpr (std::is_same_v<T, u_ptr<Exp>>)
-                _visitExp(arg);
-            else if constexpr (std::is_same_v<T, u_ptr<Block>>)
+                _visitExp(arg, p);
+            else if constexpr (std::is_same_v<T, u_ptr<Block>>) {
+                _symbolTable.enterScope();
                 _visitBlock(arg);
+                _symbolTable.exitScope();
+            }
             else if constexpr (std::is_same_v<T, u_ptr<IfStmt>>)
                 _visitIfStmt(arg);
             else if constexpr (std::is_same_v<T, u_ptr<ForStmt>>)
@@ -243,49 +282,50 @@ namespace tang {
     }
 
     void Visitor::_visitBlock(const u_ptr<Block>& node) {
-        _symbolTable.enterScope();
         for (auto& blockItem: node->blockItems) {
             // use _visitDecl and _visitStmt;
             std::visit([&](auto && arg) {
                 using T = std::decay_t<decltype(arg)>;
-                if constexpr (std::is_same_v<T, u_ptr<Decl>>)
+                if constexpr (std::is_same_v<T, u_ptr<Decl>>) {
                     _visitDecl(arg);
-                else if constexpr (std::is_same_v<T, u_ptr<Stmt>>)
+                }
+                else if constexpr (std::is_same_v<T, u_ptr<Stmt>>) {
                     _visitStmt(arg);
-                else 
+                }
+                else {
                     assert(0);
+                }
             }, *(blockItem->blockItem));
         }
-        _symbolTable.exitScope();
     }
 
     void Visitor::_visitFuncDef(const u_ptr<FuncDef>& node) {
         // get Function return Type and Identifier.
-        SymbolType rt;
+        s_ptr<SymbolType> rt;
         vector<Symbol> fparams;
         if (node->funcType->isInt) {
-            rt = IntSymbolType(false);
+            rt = std::make_shared<IntSymbolType>(false);
         }
         else if (node->funcType->isChar) {
-            rt = CharSymbolType(false);
+            rt = std::make_shared<CharSymbolType>(false);
         }
         else if (node->funcType->isVoid) {
-            rt = VoidSymbolType();
+            rt = std::make_shared<VoidSymbolType>();
         }
         else {
             assert(0);
         }
-        auto ft = FuncSymbolType(rt);
+        auto ft = std::make_shared<FuncSymbolType>(rt);
         // get Function FParams Type and add to rt;
         for (auto& fparam: node->funcFParams->funcFParams) {
-            SymbolType st;
+            s_ptr<SymbolType> st;
             const bool isConst = false;
             if (fparam->isArray) {
                 if (fparam->bType->isInt) {
-                    st = IntArrayType(isConst, 0);
+                    st = std::make_shared<IntArrayType>(isConst, 0);
                 }
                 else if (fparam->bType->isChar) {
-                    st = CharArrayType(isConst, 0);
+                    st = std::make_shared<CharArrayType>(isConst, 0);
                 }
                 else {
                     assert(0);
@@ -293,21 +333,22 @@ namespace tang {
             }
             else {
                 if (fparam->bType->isInt) {
-                    st = IntSymbolType(isConst);
+                    st = std::make_shared<IntSymbolType>(isConst);
                 }
                 else if (fparam->bType->isChar) {
-                    st = CharSymbolType(isConst);
+                    st = std::make_shared<CharSymbolType>(isConst);
                 }
                 else {
                     assert(0);
                 }
             }
-            ft.addArgType(st);
+            ft->addArgType(st);
             Symbol s = Symbol(st, fparam->ident->str);
             fparams.push_back(s);
         }
 
         // create Symbol for function
+        _curFuncType = ft;
         Symbol s = Symbol(ft, node->ident->str);
         _symbolTable.addSymbol(node->ident->getLin(), s);
 
@@ -319,10 +360,29 @@ namespace tang {
 
         // then visit inside;
         _visitBlock(node->block);
-        _symbolTable.exitScope();
+
+        // check if there is return in the inside;
+        auto& blockItem = node->block->blockItems.back()->blockItem;
+        if (_curFuncType->toRawType() == VOID_FUNC_ST) {
+            _symbolTable.exitScope();
+            return;
+        }
+        if (!std::holds_alternative<u_ptr<Stmt>>(*blockItem)) {
+            _reporter.report(node->block->rBrace.getLin(), 'g');
+            _symbolTable.exitScope();
+            return;
+        }
+        auto& stmt = std::get<u_ptr<Stmt>>(*blockItem)->stmt;
+        if (!std::holds_alternative<u_ptr<ReturnStmt>>(*stmt)) {
+            _reporter.report(node->block->rBrace.getLin(), 'g');
+            _symbolTable.exitScope();
+        }
     }
 
     void Visitor::_visitMainFuncDef(const u_ptr<MainFuncDef>& node) {
+        auto rt = std::make_shared<IntSymbolType>();
+        auto ft = std::make_shared<FuncSymbolType>(rt);
+        _curFuncType = ft;
         _symbolTable.enterScope();
 
         _visitBlock(node->block);
@@ -330,6 +390,7 @@ namespace tang {
     }
 
     void Visitor::_visitCompUnit(const u_ptr<CompUnit>& node) {
+        _symbolTable.enterScope();
         for (auto& decl: node->decls) {
             _visitDecl(decl);
         }
@@ -339,16 +400,12 @@ namespace tang {
         }
 
         _visitMainFuncDef(node->mainFuncDef);
+        _symbolTable.exitScope();
     }
 
     void Visitor::visit() {
-        _symbolTable.enterScope();
         _visitCompUnit(_compUnit);
+        _symbolTable.print();
     }
-
-
-
-
-
 
 } // namespace tang

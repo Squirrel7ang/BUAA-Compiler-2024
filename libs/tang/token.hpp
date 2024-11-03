@@ -52,6 +52,7 @@ namespace tang {
         unsigned int _col;
         TokenType _type;
     public:
+        explicit Token() = default;
         explicit Token(std::string  str,
             unsigned int lin,
             unsigned int col,

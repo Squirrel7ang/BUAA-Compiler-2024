@@ -716,6 +716,7 @@ namespace tang {
         auto returnStmt = std::make_unique<ReturnStmt>(peekToken());
 
         assert(peekToken().getType() == TK_RETURNTK);
+        returnStmt->returnToken = peekToken();
         skipToken();
         if (peekToken().isExpFirst()) {
             returnStmt->exp = _tryExp();
@@ -788,6 +789,7 @@ namespace tang {
         auto printfStmt = std::make_unique<PrintfStmt>(peekToken());
 
         assert(peekToken().getType() == TK_PRINTFTK);
+        printfStmt->printfToken = peekToken();
         skipToken();
         _matchCurToken(TK_LPARENT);
         assert(peekToken().getType() == TK_STRCON);
@@ -886,14 +888,14 @@ namespace tang {
     u_ptr<BlockItem> Parser1::_tryBlockItem()  {
         auto blockItem = std::make_unique<BlockItem>(peekToken());
 
-        while (peekToken().getType() != TK_RBRACE) {
-            Token&& t1 = peekToken();
-            if (t1.isBType() || t1.isConstTK()) {
-                blockItem->blockItem = std::make_unique<BlockItemVariant>(_tryDecl());
-            }
-            else {
-                blockItem->blockItem = std::make_unique<BlockItemVariant>(_tryStmt());
-            }
+        assert(peekToken().getType() != TK_RBRACE);
+
+        Token&& t1 = peekToken();
+        if (t1.isBType() || t1.isConstTK()) {
+            blockItem->blockItem = std::make_unique<BlockItemVariant>(_tryDecl());
+        }
+        else {
+            blockItem->blockItem = std::make_unique<BlockItemVariant>(_tryStmt());
         }
 
         BlockItem::print(_correctOutput);
@@ -907,6 +909,9 @@ namespace tang {
         skipToken();
         while (peekToken().getType() != TK_RBRACE) {
             block->blockItems.push_back(_tryBlockItem());
+        }
+        if (peekToken().getType() == TK_RBRACE) {
+            block->rBrace = peekToken();
         }
         _matchCurToken(TK_RBRACE);
 

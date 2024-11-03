@@ -2,9 +2,9 @@
 #include <iostream>
 
 #include "libs/tang/lexer.hpp"
-#include "libs/tang/token.hpp"
 #include "libs/tang/error.hpp"
 #include "libs/tang/parser1.hpp"
+#include "libs/tang/visitor.hpp"
 #include <string>
 using namespace tang;
 
@@ -18,21 +18,26 @@ int main(int argc, char *argv[]) {
     }
     std::string lexerOut = "lexer.txt";
     std::string parserOut = "parser.txt";
+    std::string visitorOut = "symbol.txt";
     std::string errOut = "error.txt";
 
     std::ifstream infile(input, std::ios::in);
     std::ofstream lexerStream;
     std::ofstream parserStream;
+    std::ofstream visitorStream;
     std::ofstream erroutStream;
 
     lexerStream.open(lexerOut, std::ios::out);
     parserStream.open(parserOut, std::ios::out);
+    visitorStream.open(visitorOut, std::ios::out);
     erroutStream.open(errOut, std::ios::out);
 
     auto reporter = ErrorReporter(erroutStream);
     auto lexer = Lexer(infile, input, lexerStream, reporter);
     auto parser = Parser1(lexer, reporter, parserStream);
-    parser.parse();
+    auto compUnitPtr = parser.parse();
+    auto visitor = Visitor(compUnitPtr, visitorStream, reporter);
+    visitor.visit();
 
     return 0;
 }

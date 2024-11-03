@@ -9,7 +9,9 @@ namespace tang {
         Symbol _s = Symbol();;
         if (!findSymbolLocal(_s, s.getName())) {
             _reporter.report(lin, 'b');
+            return false;
         }
+        return true;
     }
 
     void SymbolTable::addSymbol(const unsigned int lin, Symbol& s) {
@@ -24,8 +26,13 @@ namespace tang {
 
     void SymbolTable::exitScope() {
         std::vector<Symbol> curScope;
-        for (unsigned int i = _scopePtrs.back(); i < _symbolStack.size(); i++) {
+        int begin = _scopePtrs.back();
+        int end = _symbolStack.size();
+        for (int i = begin; i < end; i++) {
             curScope.push_back(_symbolStack.at(i));
+        }
+        for (int i = begin; i < end; i++) {
+            _symbolStack.pop_back();
         }
         _OutputSymbolStack.push_back(curScope);
 
@@ -54,10 +61,11 @@ namespace tang {
     }
 
     void SymbolTable::print() {
+        int end = _OutputSymbolStack.size() - 1;
         for (int i = 0; i < _OutputSymbolStack.size(); i++) {
-            auto curScope = _OutputSymbolStack.at(i);
+            auto curScope = _OutputSymbolStack.at(end - i);
             for (auto symbol: curScope) {
-                _out << i+1 << " " << symbol.getName() << " " << symbol.getType().toOutput() << std::endl;
+                _out << i+1 << " " << symbol.getName() << " " << symbol.getType()->toOutput() << std::endl;
             }
         }
     }

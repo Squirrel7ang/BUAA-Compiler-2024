@@ -14,13 +14,14 @@
 
 namespace tang {
     using namespace llvm;
+
     class Visitor {
         // CodeGen _codeGen;
         SymbolTable _symbolTable;
         LoopStack _loopStack;
         u_ptr<CompUnit> _compUnit;
         ErrorReporter& _reporter;
-        FuncSymbolType _curFuncType; // TODO
+        s_ptr<FuncSymbolType> _curFuncType; // TODO
     public:
         explicit Visitor(u_ptr<CompUnit>& compUnit, std::ostream& out,
                          ErrorReporter& reporter)
@@ -39,19 +40,13 @@ namespace tang {
         void _visitBreakStmt(const u_ptr<BreakStmt>& node);
         void _visitForStmt(const u_ptr<ForStmt>& node);
         void _visitIfStmt(const u_ptr<IfStmt>& node);
-
-        void _visitFuncCall(const u_ptr<FuncCall> &node);
-
-        void _visitPrimaryExp(const u_ptr<PrimaryExp> &node);
-
-        void _visitUnaryExp(const u_ptr<UnaryExp> &node);
-
-        void _visitMulExp(const u_ptr<MulExp> &node);
-
-        void _visitAddExp(const u_ptr<AddExp> &node);
-
+        void _visitFuncCall(const u_ptr<FuncCall> &node, s_ptr<SymbolType>& type);
+        void _visitPrimaryExp(const u_ptr<PrimaryExp> &node, s_ptr<SymbolType>& type);
+        void _visitUnaryExp(const u_ptr<UnaryExp> &node, s_ptr<SymbolType>& type);
+        void _visitMulExp(const u_ptr<MulExp> &node, s_ptr<SymbolType>& type);
+        void _visitAddExp(const u_ptr<AddExp> &node, s_ptr<SymbolType>& type);
         void _visitBlock(const u_ptr<Block>& node);
-        void _visitExp(const u_ptr<Exp>& node);
+        void _visitExp(const u_ptr<Exp>& node, s_ptr<SymbolType>& type);
         void _visitAssignStmt(const u_ptr<AssignStmt>& node);
         void _visitStmt(const u_ptr<Stmt>& node);
         void _visitFuncDef(const u_ptr<FuncDef>& node);

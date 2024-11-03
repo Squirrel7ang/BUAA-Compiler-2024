@@ -151,8 +151,8 @@ namespace tang {
         static void print(std::ostream& out) {
             out << "<VarDef>" << std::endl;
         }
-        bool is_array() { return constExp == nullptr; }
-        bool has_initVal() { return initVal == nullptr; }
+        bool is_array() { return constExp != nullptr; }
+        bool has_initVal() { return initVal != nullptr; }
     };
 
     class InitVal: public Node {
@@ -228,6 +228,7 @@ namespace tang {
     public:
         explicit Block(const Token& t) : Node(t) {}
         vector<u_ptr<BlockItem>> blockItems;
+        Token rBrace;
         static void print(std::ostream& out) {
             out << "<Block>" << std::endl;
         }
@@ -306,6 +307,7 @@ namespace tang {
     public:
         explicit ReturnStmt(const Token& t) : Node(t) {}
         u_ptr<Exp> exp;
+        Token returnToken;
         static void print(std::ostream& out) {
             // nothing
         }
@@ -334,6 +336,7 @@ namespace tang {
         explicit PrintfStmt(const Token& t) : Node(t) {}
         u_ptr<StringConst> stringConst;
         vector<u_ptr<Exp>> exps;
+        Token printfToken;
         static void print(std::ostream& out) {
             // nothing
         }
@@ -556,6 +559,18 @@ namespace tang {
         u_ptr<std::string> str;
         static void print(std::ostream& out) {
             // nothing
+        }
+        unsigned int getFormatNum() {
+            unsigned int ret = 0;
+            for (int i = 0; i < str->length()-1; i++) {
+                char ch1 = (*str)[i];
+                char ch2 = (*str)[i+1];
+                if ((ch1 == '%' && ch2 == 'd') ||
+                    (ch1 == '%' && ch2 == 'c')) {
+                    ret++;
+                }
+            }
+            return ret;
         }
     };
 } // namespace tang

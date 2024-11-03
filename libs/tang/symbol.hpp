@@ -6,6 +6,7 @@
 #define SYMBOL_HPP
 #include <cassert>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -13,17 +14,51 @@
 #include "error.hpp"
 
 namespace tang {
+    template <typename T>
+    using s_ptr = std::shared_ptr<T>;
+
+    class RawSymbolType {
+    public:
+        int id;
+        explicit RawSymbolType(const int i): id(i) {}
+        bool operator==(const RawSymbolType & operand) const {
+            return id == operand.id;
+        }
+    };
+    static RawSymbolType INT_ST = RawSymbolType(1);
+    static RawSymbolType CHAR_ST = RawSymbolType(2);
+    static RawSymbolType CONST_INT_ST = RawSymbolType(3);
+    static RawSymbolType CONST_CHAR_ST = RawSymbolType(4);
+    static RawSymbolType INT_ARRAY_ST = RawSymbolType(5);
+    static RawSymbolType CHAR_ARRAY_ST = RawSymbolType(6);
+    static RawSymbolType CONST_INT_ARRAY_ST = RawSymbolType(7);
+    static RawSymbolType CONST_CHAR_ARRAY_ST = RawSymbolType(8);
+    static RawSymbolType VOID_FUNC_ST = RawSymbolType(9);
+    static RawSymbolType INT_FUNC_ST = RawSymbolType(10);
+    static RawSymbolType CHAR_FUNC_ST = RawSymbolType(11);
+    static RawSymbolType VOID_ST = RawSymbolType(12);
+
     class SymbolType {
     public:
-        virtual ~SymbolType();
-        virtual unsigned int getSize();
-        virtual std::string toOutput();
-        [[nodiscard]] virtual bool isConst() const ;
+        virtual unsigned int getSize() = 0;
+        virtual std::string toOutput() = 0;
+        virtual bool isArray() = 0;
+        virtual bool isFunc() = 0;
+        virtual RawSymbolType toRawType() = 0;
+        virtual bool isConst() = 0;
+        // bool operator==(SymbolType & op) {
+        //     return this->toRawType() == op.toRawType() &&
+        //         this->isArray() == op.isArray() &&
+        //         this->isFunc() == op.isFunc() &&
+        //         this->getSize() == op.getSize() &&
+        //         this->isConst() == op.isConst();
+        // }
     };
 
     class IntSymbolType: public SymbolType {
         const bool _isConst;
     public:
+        explicit IntSymbolType(): _isConst(false) {}
         explicit IntSymbolType(bool isConst): _isConst(isConst) {}
         unsigned int getSize() override {
             return 4;
@@ -34,14 +69,24 @@ namespace tang {
             else
                 return "Int";
         }
-        [[nodiscard]] bool isConst() const override {
+        bool isConst() override {
             return _isConst;
         }
+        RawSymbolType toRawType() {
+            if (_isConst) return CONST_INT_ST;
+            else return INT_ST;
+        }
+        bool isArray() override { return false; }
+        bool isFunc() override { return false; }
     };
+
+    static IntSymbolType INT_TYPE = IntSymbolType(false);
+    static IntSymbolType CONST_INT_TYPE = IntSymbolType(true);
 
     class CharSymbolType: public SymbolType {
         const bool _isConst;
     public:
+        explicit CharSymbolType(): _isConst(false) {}
         explicit CharSymbolType(bool isConst): _isConst(isConst) {}
         unsigned int getSize() override {
             return 1;
@@ -52,29 +97,43 @@ namespace tang {
             else
                 return "Char";
         }
-        [[nodiscard]] bool isConst() const override {
+        bool isConst() override {
             return _isConst;
         }
+        RawSymbolType toRawType() {
+            if (_isConst) return CONST_CHAR_ST;
+            else return CHAR_ST;
+        }
+        bool isArray() override { return false; }
+        bool isFunc() override { return false; }
     };
+
+    static CharSymbolType CHAR_TYPE = CharSymbolType(false);
+    static CharSymbolType CONST_CHAR_TYPE = CharSymbolType(true);
 
     class VoidSymbolType: public SymbolType {
     public:
         unsigned int getSize() override {
-            assert(0);
+            return 0;
         }
         std::string toOutput() override {
             return "Void";
         }
-        [[nodiscard]] bool isConst() const override {
-            assert(0);
+        bool isConst() override {
+            return false;
         }
+        RawSymbolType toRawType() {
+            return VOID_ST;
+        }
+        bool isArray() override { return false; }
+        bool isFunc() override { return false; }
     };
 
     class IntArrayType: public SymbolType {
         const bool _isConst;
     public:
         const unsigned int _len;
-        explicit IntArrayType(bool isConst, const unsigned int len) 
+        explicit IntArrayType(bool isConst, const unsigned int len)
             : _isConst(isConst), _len(len) { }
         unsigned int getSize() override {
             return _len << 2;
@@ -85,9 +144,15 @@ namespace tang {
             else 
                 return "IntArray";
         }
-        [[nodiscard]] bool isConst() const override {
+        bool isConst() override {
             return _isConst;
         }
+        RawSymbolType toRawType() {
+            if (_isConst) return CONST_INT_ARRAY_ST;
+            else return INT_ARRAY_ST;
+        }
+        bool isArray() override { return true; }
+        bool isFunc() override { return false; }
     };
 
     class CharArrayType: public SymbolType {
@@ -105,39 +170,64 @@ namespace tang {
             else 
                 return "CharArray";
         }
-        [[nodiscard]] bool isConst() const override {
+        bool isConst() override {
             return _isConst;
         }
+        RawSymbolType toRawType() {
+            if (_isConst) return CONST_CHAR_ARRAY_ST;
+            else return CHAR_ARRAY_ST;
+        }
+        bool isArray() override { return true; }
+        bool isFunc() override { return false; }
     };
 
     class FuncSymbolType: public SymbolType {
     public:
-        // explicit FuncSymbolType() = default; // TODO
-        explicit FuncSymbolType(SymbolType& returnType) :_returnType(returnType) {}
-        SymbolType _returnType;
-        std::vector<SymbolType> _argType;
+        explicit FuncSymbolType() = default;
+        explicit FuncSymbolType(s_ptr<SymbolType> returnType) :_returnType(std::move(returnType)) {}
+        s_ptr<SymbolType> _returnType;
+        std::vector<s_ptr<SymbolType>> _argType;
         unsigned int getSize() override {
-            assert(0);
+            return 8;
         }
         std::string toOutput() override {
-            return _returnType.toOutput() + "Func";
+            std::string s;
+            s = _returnType->toOutput();
+            return s + "Func";
         }
-        void addArgType(const SymbolType& argType) {
+        void addArgType(const s_ptr<SymbolType>& argType) {
             _argType.push_back(argType);
         }
-        [[nodiscard]] bool isConst() const override {
+        bool isConst() override {
             assert(0);
         }
+        RawSymbolType toRawType() override {
+            auto rawType = _returnType->toRawType();
+            if (rawType == INT_ST) {
+                return INT_FUNC_ST;
+            }
+            else if (rawType == CHAR_ST) {
+                return CHAR_FUNC_ST;
+            }
+            else if (rawType == VOID_ST) {
+                return VOID_FUNC_ST;
+            }
+            else {
+                assert(0);
+            }
+        }
+        bool isArray() override { return false; }
+        bool isFunc() override { return true; }
     };
 
     class Symbol {
-        SymbolType _type;
+        s_ptr<SymbolType> _type;
         std::string _name;
     public:
         explicit Symbol() = default;
-        explicit Symbol(const SymbolType& type, std::string  name)
+        explicit Symbol(const s_ptr<SymbolType>& type, std::string  name)
             :_type(type), _name(std::move(name)) { }
-        SymbolType getType() {
+        s_ptr<SymbolType> getType() {
             return _type;
         }
         std::string getName() {
