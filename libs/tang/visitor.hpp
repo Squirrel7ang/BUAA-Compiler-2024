@@ -45,7 +45,7 @@ namespace tang {
         void _visitUnaryExp(const u_ptr<UnaryExp> &node, s_ptr<SymbolType>& type);
         void _visitMulExp(const u_ptr<MulExp> &node, s_ptr<SymbolType>& type);
         void _visitAddExp(const u_ptr<AddExp> &node, s_ptr<SymbolType>& type);
-        void _visitBlock(const u_ptr<Block>& node);
+        void _visitBlock(const u_ptr<Block>& node, bool newScope, unsigned int scopeId);
         void _visitExp(const u_ptr<Exp>& node, s_ptr<SymbolType>& type);
         void _visitAssignStmt(const u_ptr<AssignStmt>& node);
         void _visitStmt(const u_ptr<Stmt>& node);

@@ -110,9 +110,13 @@ namespace tang {
         assert(peekToken().getType() == TK_IDENFR);
 
         constDef->ident = _tryIdent();
-        if (peekToken().getType() == TK_LBRACK) {
+
+        bool isArray = peekToken().getType() == TK_LBRACK;
+        constDef->isArray = isArray;
+        if (isArray) {
             skipToken();
             constDef->constExp = _tryConstExp();
+            constDef->isArray = true;
 
             _matchCurToken(TK_RBRACK);
         }
@@ -183,7 +187,9 @@ namespace tang {
         assert(peekToken().getType() == TK_IDENFR);
         varDef->ident = _tryIdent();
 
-        if (peekToken().getType() == TK_LBRACK) {
+        bool isArray = peekToken().getType() == TK_LBRACK;
+        varDef->isArray = isArray;
+        if (isArray) {
             skipToken();
             varDef->constExp = _tryConstExp();
             _matchCurToken(TK_RBRACK);
@@ -250,7 +256,9 @@ namespace tang {
         assert(peekToken().getType() == TK_IDENFR);
         funcFParam->ident = _tryIdent();
 
-        if (peekToken().getType() == TK_LBRACK) {
+        bool isArray = (peekToken().getType() == TK_LBRACK);
+        funcFParam->isArray = isArray;
+        if (isArray) {
             skipToken();
             funcFParam->isArray = true;
             _matchCurToken(TK_RBRACK);
@@ -842,8 +850,8 @@ namespace tang {
             stmt->stmt = std::make_unique<StmtVariant>(_tryBlock());
         }
         else if (t1.getType() == TK_SEMICN) {
+            stmt->stmt = std::make_unique<StmtVariant>(std::make_unique<EmptyStmt>(peekToken()));
             skipToken();
-            stmt->stmt = nullptr;
         }
         else if (t1.isUnaryOp() || t1.getType() == TK_LPARENT ||
                  t1.getType() == TK_INTCON || t1.getType() == TK_CHRCON ||

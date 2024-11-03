@@ -124,11 +124,12 @@ namespace tang {
         explicit ConstDef(const Token& t) : Node(t) {}
         u_ptr<Ident> ident;
         u_ptr<ConstExp> constExp;
+        bool isArray;
         u_ptr<ConstInitVal> constInitVal;
         static void print(std::ostream& out) {
             out << "<ConstDef>" << std::endl;
         }
-        bool is_array() { return constExp == nullptr; }
+        bool is_array() { return isArray; }
         bool has_initVal() { return constInitVal == nullptr; }
     };
 
@@ -147,11 +148,12 @@ namespace tang {
         explicit VarDef(const Token& t) : Node(t) {}
         u_ptr<Ident> ident;
         u_ptr<ConstExp> constExp;
+        bool isArray;
         u_ptr<InitVal> initVal;
         static void print(std::ostream& out) {
             out << "<VarDef>" << std::endl;
         }
-        bool is_array() { return constExp != nullptr; }
+        bool is_array() { return isArray; }
         bool has_initVal() { return initVal != nullptr; }
     };
 
@@ -342,10 +344,18 @@ namespace tang {
         }
     };
 
+    class EmptyStmt: public Node {
+    public:
+        explicit EmptyStmt(const Token& t) : Node(t) {}
+        static void print(std::ostream& out) {
+            // nothing
+        }
+    };
+
     using StmtVariant = variant<u_ptr<AssignStmt>, u_ptr<Exp>, u_ptr<Block>,
                                 u_ptr<IfStmt>, u_ptr<ForStmt>, u_ptr<BreakStmt>,
                                 u_ptr<ContinueStmt>, u_ptr<ReturnStmt>, u_ptr<GetintStmt>,
-                                u_ptr<GetcharStmt>, u_ptr<PrintfStmt>>;
+                                u_ptr<GetcharStmt>, u_ptr<PrintfStmt>, u_ptr<EmptyStmt>>;
     class Stmt: public Node {
     public:
         explicit Stmt(const Token& t) : Node(t) {}

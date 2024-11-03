@@ -20,12 +20,17 @@ namespace tang {
         }
     }
 
-    void SymbolTable::enterScope() {
+    unsigned int SymbolTable::enterScope() {
         _scopePtrs.push_back(_symbolStack.size());
+
+        std::vector<Symbol> curScope;
+        _OutputSymbolStack.push_back(curScope);
+
+        return (int)_OutputSymbolStack.size() - 1;
     }
 
-    void SymbolTable::exitScope() {
-        std::vector<Symbol> curScope;
+    void SymbolTable::exitScope(unsigned int index) {
+        std::vector<Symbol>& curScope = _OutputSymbolStack.at(index);
         int begin = _scopePtrs.back();
         int end = _symbolStack.size();
         for (int i = begin; i < end; i++) {
@@ -34,7 +39,6 @@ namespace tang {
         for (int i = begin; i < end; i++) {
             _symbolStack.pop_back();
         }
-        _OutputSymbolStack.push_back(curScope);
 
         _scopePtrs.pop_back();
         _curPtr = _scopePtrs.back();
@@ -51,6 +55,9 @@ namespace tang {
     }
 
     bool SymbolTable::findSymbolGlobal(Symbol& s, const std::string& name) {
+        if (name == "a4") {
+            int halt = 0;
+        }
         for (auto& _s: _symbolStack) {
             if (name == _s.getName()) {
                 s = _s;
@@ -63,7 +70,7 @@ namespace tang {
     void SymbolTable::print() {
         int end = _OutputSymbolStack.size() - 1;
         for (int i = 0; i < _OutputSymbolStack.size(); i++) {
-            auto curScope = _OutputSymbolStack.at(end - i);
+            auto curScope = _OutputSymbolStack.at(i);
             for (auto symbol: curScope) {
                 _out << i+1 << " " << symbol.getName() << " " << symbol.getType()->toOutput() << std::endl;
             }

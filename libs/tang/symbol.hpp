@@ -46,13 +46,13 @@ namespace tang {
         virtual bool isFunc() = 0;
         virtual RawSymbolType toRawType() = 0;
         virtual bool isConst() = 0;
-        // bool operator==(SymbolType & op) {
-        //     return this->toRawType() == op.toRawType() &&
-        //         this->isArray() == op.isArray() &&
-        //         this->isFunc() == op.isFunc() &&
-        //         this->getSize() == op.getSize() &&
-        //         this->isConst() == op.isConst();
-        // }
+        bool operator==(SymbolType & op) {
+            return this->toRawType() == op.toRawType() &&
+                this->isArray() == op.isArray() &&
+                this->isFunc() == op.isFunc() &&
+                this->getSize() == op.getSize() &&
+                this->isConst() == op.isConst();
+        }
     };
 
     class IntSymbolType: public SymbolType {
@@ -255,8 +255,8 @@ namespace tang {
             _symbolStack.pop_back();
             return s;
         }
-        void enterScope();
-        void exitScope();
+        [[nodiscard]] unsigned int enterScope();
+        void exitScope(unsigned int index);
         bool findSymbolGlobal(Symbol& s, const std::string& name);
         bool findSymbolLocal(Symbol &s, const std::string &name);
         void print();
