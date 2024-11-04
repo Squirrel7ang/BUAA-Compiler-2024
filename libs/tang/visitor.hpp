@@ -38,6 +38,7 @@ namespace tang {
         void _visitReturnStmt(const u_ptr<ReturnStmt>& node);
         void _visitContinueStmt(const u_ptr<ContinueStmt>& node);
         void _visitBreakStmt(const u_ptr<BreakStmt>& node);
+        void _visitAssignment(const u_ptr<Assignment>& node);
         void _visitForStmt(const u_ptr<ForStmt>& node);
         void _visitIfStmt(const u_ptr<IfStmt>& node);
         void _visitFuncCall(const u_ptr<FuncCall> &node, s_ptr<SymbolType>& type);
@@ -47,6 +48,11 @@ namespace tang {
         void _visitAddExp(const u_ptr<AddExp> &node, s_ptr<SymbolType>& type);
         void _visitBlock(const u_ptr<Block>& node, bool newScope, unsigned int scopeId);
         void _visitExp(const u_ptr<Exp>& node, s_ptr<SymbolType>& type);
+        void _visitRelExp(const u_ptr<RelExp>& node, s_ptr<SymbolType>& type);
+        void _visitEqExp(const u_ptr<EqExp>& node, s_ptr<SymbolType>& type);
+        void _visitLAndExp(const u_ptr<LAndExp>& node, s_ptr<SymbolType>& type);
+        void _visitLOrExp(const u_ptr<LOrExp>& node, s_ptr<SymbolType>& type);
+        void _visitCond(const u_ptr<Cond>& node, s_ptr<SymbolType>& type);
         void _visitAssignStmt(const u_ptr<AssignStmt>& node);
         void _visitStmt(const u_ptr<Stmt>& node);
         void _visitFuncDef(const u_ptr<FuncDef>& node);

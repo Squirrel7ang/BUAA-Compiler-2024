@@ -199,7 +199,7 @@ namespace tang {
             _argType.push_back(argType);
         }
         bool isConst() override {
-            assert(0);
+            return true; // TODO
         }
         RawSymbolType toRawType() override {
             auto rawType = _returnType->toRawType();
@@ -243,7 +243,7 @@ namespace tang {
         std::ostream& _out;
         ErrorReporter& _reporter;
         unsigned int _curPtr;
-        bool _checkDuplicatedSymbol(unsigned int, Symbol& );
+        bool _isDuplicatedSymbol(unsigned int, Symbol& );
     public:
         explicit SymbolTable(std::ostream& out, ErrorReporter& reporter) 
             : _out(out), _reporter(reporter), _curPtr(0) {

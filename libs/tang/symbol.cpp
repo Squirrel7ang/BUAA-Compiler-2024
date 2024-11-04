@@ -5,17 +5,17 @@
 #include "symbol.hpp"
 
 namespace tang {
-    bool SymbolTable::_checkDuplicatedSymbol(const unsigned int lin, Symbol& s) {
+    bool SymbolTable::_isDuplicatedSymbol(const unsigned int lin, Symbol& s) {
         Symbol _s = Symbol();;
-        if (!findSymbolLocal(_s, s.getName())) {
+        if (findSymbolLocal(_s, s.getName())) {
             _reporter.report(lin, 'b');
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
     void SymbolTable::addSymbol(const unsigned int lin, Symbol& s) {
-        if (!_checkDuplicatedSymbol(lin, s)) {
+        if (!_isDuplicatedSymbol(lin, s)) {
             _symbolStack.push_back(s);
         }
     }
@@ -55,9 +55,6 @@ namespace tang {
     }
 
     bool SymbolTable::findSymbolGlobal(Symbol& s, const std::string& name) {
-        if (name == "a4") {
-            int halt = 0;
-        }
         for (auto& _s: _symbolStack) {
             if (name == _s.getName()) {
                 s = _s;

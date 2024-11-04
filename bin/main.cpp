@@ -38,6 +38,8 @@ int main(int argc, char *argv[]) {
     auto compUnitPtr = parser.parse();
     auto visitor = Visitor(compUnitPtr, visitorStream, reporter);
     visitor.visit();
+    reporter.printAll();
+
 
     return 0;
 }

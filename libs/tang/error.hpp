@@ -6,16 +6,33 @@
 #define ERROR_HPP
 
 #include <iostream>
+#include <vector>
+#include <algorithm>
 
 namespace tang {
+    class ErrorMessage {
+        unsigned int _lin;
+        char _errorType;
+    public:
+        explicit ErrorMessage(unsigned int lin, char type):
+            _lin(lin), _errorType(type) { }
+        bool operator<(const ErrorMessage & op) const {
+            return this->_lin < op._lin;
+        }
+        friend std::ostream& operator<<(std::ostream& out, const ErrorMessage& msg) {
+            out << msg._lin << " " << msg._errorType << std::endl;
+            return out;
+        }
+    };
 
     class ErrorReporter {
         std::ostream& _errOutput;
+        std::vector<ErrorMessage> errorMessages;
+        void _printOneMessage(ErrorMessage& msg);
     public:
         explicit ErrorReporter(std::ostream& errorOutput) : _errOutput(errorOutput) {}
-        void report(const unsigned int lineNumber, const char errorType) {
-            _errOutput << lineNumber << " " << errorType << std::endl;
-        }
+        void report(unsigned int lineNumber, char errorType);
+        void printAll();
     };
 } // namespace tang
 
