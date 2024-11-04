@@ -101,12 +101,12 @@ namespace tang {
     }
 
     void Visitor::_visitGetcharStmt(const u_ptr<GetcharStmt>& node) {
-        _visitLVal(node->lVal);
+        _visitLVal(node->lVal, true);
         // TODO
     }
 
     void Visitor::_visitGetintStmt(const u_ptr<GetintStmt>& node) {
-        _visitLVal(node->lVal);
+        _visitLVal(node->lVal, true);
         // TODO
     } 
 
@@ -128,14 +128,18 @@ namespace tang {
         _loopStack.checkBreakContinue(node->getLin());
     }
 
-    void Visitor::_visitLVal(const u_ptr<LVal>& node, s_ptr<SymbolType>& type) {
+    void Visitor::_visitLVal(const u_ptr<LVal>& node,
+                             s_ptr<SymbolType>& type,
+                             bool constIsUnassignable) {
         Symbol s;
 
         bool found = _symbolTable.findSymbolGlobal(s, node->ident->str);
         if (!found) {
             _reporter.report(node->ident->getLin(), 'c');
+            type = nullptr;
+            return;
         }
-        else if (!s.getType()->isFunc() && s.getType()->isConst()) { // TODO: when s is funcSymbol
+        else if (constIsUnassignable && !s.getType()->isFunc() && s.getType()->isConst()) { // TODO: when s is funcSymbol
             _reporter.report(node->getLin(), 'h');
         }
 
@@ -154,16 +158,22 @@ namespace tang {
                 type = std::make_shared<CharSymbolType>(true);
             }
         }
+        else if (!s.getType()->isFunc()) {
+            type = s.getType();
+        }
+        else {
+            type = nullptr;
+        }
     }
 
-    void Visitor::_visitLVal(const u_ptr<LVal>& node) {
+    void Visitor::_visitLVal(const u_ptr<LVal>& node, bool unAssignable) {
         Symbol s;
 
         bool found = _symbolTable.findSymbolGlobal(s, node->ident->str);
         if (!found) {
             _reporter.report(node->ident->getLin(), 'c');
         }
-        else if (!s.getType()->isFunc() && s.getType()->isConst()) { // TODO: when s is funcSymbol
+        else if (unAssignable && !s.getType()->isFunc() && s.getType()->isConst()) { // TODO: when s is funcSymbol
             _reporter.report(node->getLin(), 'h');
         }
     }
@@ -171,7 +181,7 @@ namespace tang {
     void Visitor::_visitAssignment(const u_ptr<Assignment>& node) {
         Symbol s;
 
-        _visitLVal(node->lVal);
+        _visitLVal(node->lVal, true);
 
         s_ptr<SymbolType> _;
         _visitExp(node->exp, _);
@@ -272,7 +282,7 @@ namespace tang {
             if constexpr (std::is_same_v<T, u_ptr<Exp>>)
                 _visitExp(arg, type);
             else if constexpr (std::is_same_v<T, u_ptr<LVal>>) {
-                _visitLVal(arg, type);
+                _visitLVal(arg, type, false);
             }
             else if constexpr (std::is_same_v<T, u_ptr<Number>>) {
                 type = std::make_shared<IntSymbolType>(false);
@@ -367,7 +377,7 @@ namespace tang {
     void Visitor::_visitAssignStmt(const u_ptr<AssignStmt>& node) {
         // TODO
         s_ptr<SymbolType> _;
-        _visitLVal(node->lVal);
+        _visitLVal(node->lVal, true);
         _visitExp(node->exp, _);
     }
 

@@ -38,8 +38,8 @@ namespace tang {
         void _visitReturnStmt(const u_ptr<ReturnStmt>& node);
         void _visitContinueStmt(const u_ptr<ContinueStmt>& node);
         void _visitBreakStmt(const u_ptr<BreakStmt>& node);
-        void _visitLVal(const u_ptr<LVal>& node);
-        void _visitLVal(const u_ptr<LVal>& node, s_ptr<SymbolType>& type);
+        void _visitLVal(const u_ptr<LVal>& node, bool unAssignable);
+        void _visitLVal(const u_ptr<LVal>& node, s_ptr<SymbolType>& type, bool constIsUnassignable);
         void _visitAssignment(const u_ptr<Assignment>& node);
         void _visitForStmt(const u_ptr<ForStmt>& node);
         void _visitIfStmt(const u_ptr<IfStmt>& node);
