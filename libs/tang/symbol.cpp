@@ -55,7 +55,8 @@ namespace tang {
     }
 
     bool SymbolTable::findSymbolGlobal(Symbol& s, const std::string& name) {
-        for (auto& _s: _symbolStack) {
+        for (int i = _symbolStack.size() - 1; i >= 0; i--) {
+            auto& _s = _symbolStack.at(i);
             if (name == _s.getName()) {
                 s = _s;
                 return true;

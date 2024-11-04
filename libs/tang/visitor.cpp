@@ -101,10 +101,12 @@ namespace tang {
     }
 
     void Visitor::_visitGetcharStmt(const u_ptr<GetcharStmt>& node) {
+        _visitLVal(node->lVal);
         // TODO
-    } 
+    }
 
     void Visitor::_visitGetintStmt(const u_ptr<GetintStmt>& node) {
+        _visitLVal(node->lVal);
         // TODO
     } 
 
@@ -126,16 +128,50 @@ namespace tang {
         _loopStack.checkBreakContinue(node->getLin());
     }
 
+    void Visitor::_visitLVal(const u_ptr<LVal>& node, s_ptr<SymbolType>& type) {
+        Symbol s;
+
+        bool found = _symbolTable.findSymbolGlobal(s, node->ident->str);
+        if (!found) {
+            _reporter.report(node->ident->getLin(), 'c');
+        }
+        else if (!s.getType()->isFunc() && s.getType()->isConst()) { // TODO: when s is funcSymbol
+            _reporter.report(node->getLin(), 'h');
+        }
+
+        if (s.getType()->isArray() && node->exp != nullptr) {
+            // this is like a[0]
+            if (s.getType()->toRawType() == INT_ARRAY_ST) {
+                type = std::make_shared<IntSymbolType>(false);
+            }
+            else if (s.getType()->toRawType() == CONST_INT_ARRAY_ST) {
+                type = std::make_shared<IntSymbolType>(true);
+            }
+            else if (s.getType()->toRawType() == CHAR_ARRAY_ST) {
+                type = std::make_shared<CharSymbolType>(false);
+            }
+            else if (s.getType()->toRawType() == CONST_CHAR_ARRAY_ST) {
+                type = std::make_shared<CharSymbolType>(true);
+            }
+        }
+    }
+
+    void Visitor::_visitLVal(const u_ptr<LVal>& node) {
+        Symbol s;
+
+        bool found = _symbolTable.findSymbolGlobal(s, node->ident->str);
+        if (!found) {
+            _reporter.report(node->ident->getLin(), 'c');
+        }
+        else if (!s.getType()->isFunc() && s.getType()->isConst()) { // TODO: when s is funcSymbol
+            _reporter.report(node->getLin(), 'h');
+        }
+    }
+
     void Visitor::_visitAssignment(const u_ptr<Assignment>& node) {
         Symbol s;
 
-        bool found = _symbolTable.findSymbolGlobal(s, node->lVal->ident->str);
-        if (!found) {
-            _reporter.report(node->lVal->ident->getLin(), 'c');
-        }
-        else if (!s.getType()->isFunc() && s.getType()->isConst()) { // TODO: when s is funcSymbol
-            _reporter.report(node->lVal->getLin(), 'h');
-        }
+        _visitLVal(node->lVal);
 
         s_ptr<SymbolType> _;
         _visitExp(node->exp, _);
@@ -194,34 +230,37 @@ namespace tang {
         auto rparamSize = node->funcRParams == nullptr ? 0 : rparamExps.size();
         if (rparamSize != args.size()) {
             _reporter.report(node->ident->getLin(), 'd');
-            return; // TODO
+            // return; // TODO
         }
         for (int i = 0; i < rparamSize; i++) {
             auto& exp = rparamExps.at(i);
-            s_ptr<SymbolType> pArgType;
-            _visitExp(exp, pArgType);
-            if (pArgType == nullptr) {
-                break;
+            s_ptr<SymbolType> rArgType;
+            _visitExp(exp, rArgType);
+            if (rArgType == nullptr) {
+                continue; // TODO
+            }
+            if (i >= funcSymbolTypePtr->_argType.size()) {
+                continue; // TODO
             }
 
             auto& fArgType = funcSymbolTypePtr->_argType.at(i);
-            if (fArgType->isArray() != pArgType->isArray()) {
+            if (fArgType->isArray() != rArgType->isArray()) {
                 _reporter.report(node->ident->getLin(), 'e');
-                break;
+                // break; // TODO
             }
-            else if (fArgType->isArray() && pArgType->isArray()) {
+            else if (fArgType->isArray() && rArgType->isArray()) {
                 // both array but with different array type
                 RawSymbolType fType = fArgType->toRawType();
-                RawSymbolType pType = pArgType->toRawType();
+                RawSymbolType pType = rArgType->toRawType();
                 if ((fType == INT_ARRAY_ST || fType == CONST_INT_ARRAY_ST) &&
                     (pType == CHAR_ARRAY_ST || pType == CONST_CHAR_ARRAY_ST)) {
                     _reporter.report(node->ident->getLin(), 'e');
-                    break;
+                    // break; // TODO
                 }
                 else if ((fType == CHAR_ARRAY_ST || fType == CONST_CHAR_ARRAY_ST) &&
                     (pType == INT_ARRAY_ST || pType == CONST_INT_ARRAY_ST)) {
                     _reporter.report(node->ident->getLin(), 'e');
-                    break;
+                    // break; // TODO
                 }
             }
         }
@@ -233,16 +272,7 @@ namespace tang {
             if constexpr (std::is_same_v<T, u_ptr<Exp>>)
                 _visitExp(arg, type);
             else if constexpr (std::is_same_v<T, u_ptr<LVal>>) {
-                Symbol s;
-                bool found = _symbolTable.findSymbolGlobal(s, arg->ident->str);
-                type = s.getType();
-                if (found) {
-                    type = s.getType();
-                }
-                else {
-                    _reporter.report(arg->ident->getLin(), 'c');
-                    type = nullptr;
-                }
+                _visitLVal(arg, type);
             }
             else if constexpr (std::is_same_v<T, u_ptr<Number>>) {
                 type = std::make_shared<IntSymbolType>(false);
@@ -336,14 +366,9 @@ namespace tang {
 
     void Visitor::_visitAssignStmt(const u_ptr<AssignStmt>& node) {
         // TODO
-        Symbol s;
-        bool found = _symbolTable.findSymbolGlobal(s, node->lVal->ident->str);
-        if (!found) {
-            _reporter.report(node->lVal->ident->getLin(), 'c');
-        }
-        else if (!s.getType()->isFunc() && s.getType()->isConst()) { // TODO: when s is funcSymbol
-            _reporter.report(node->lVal->getLin(), 'h');
-        }
+        s_ptr<SymbolType> _;
+        _visitLVal(node->lVal);
+        _visitExp(node->exp, _);
     }
 
     void Visitor::_visitStmt(const u_ptr<Stmt>& node) {

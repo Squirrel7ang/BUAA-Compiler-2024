@@ -16,8 +16,19 @@ namespace tang {
 
     void ErrorReporter::printAll() {
         std::stable_sort(errorMessages.begin(), errorMessages.end());
-        for (auto msg: errorMessages) {
-            _printOneMessage(msg);
+
+        if (errorMessages.size() > 0) {
+            _printOneMessage(errorMessages.at(0));
+        }
+        if (errorMessages.size() > 1) {
+            for (int i = 0; i < errorMessages.size()-1; i++) {
+                int j = i+1;
+                auto& msg1 = errorMessages.at(i);
+                auto& msg2 = errorMessages.at(j);
+                if (msg1 != msg2) {
+                    _printOneMessage(msg2);
+                }
+            }
         }
     }
 } // namespace tang
