@@ -29,6 +29,9 @@ namespace tang {
               _symbolTable(out, reporter), _reporter(reporter) { }
         void visit();
     private:
+        void _visitConstExp(const u_ptr<ConstExp>& node);
+        void _visitInitVal(const u_ptr<InitVal>& node);
+        void _visitConstInitVal(const u_ptr<ConstInitVal>& node);
         void _visitVarDecl(const u_ptr<VarDecl>& node);
         void _visitConstDecl(const u_ptr<ConstDecl>& node);
         void _visitDecl(const u_ptr<Decl>& node);

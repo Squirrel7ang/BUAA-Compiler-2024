@@ -94,8 +94,8 @@ namespace tang {
     };
 
     class ConstInitVal: public Node {
-        vector<u_ptr<ConstExp>> constExps;
     public:
+        vector<u_ptr<ConstExp>> constExps;
         explicit ConstInitVal(const Token& t) : Node(t) {}
         u_ptr<StringConst> stringConst;
         void addConstExp(u_ptr<ConstExp>& constExp) {
@@ -158,10 +158,10 @@ namespace tang {
     };
 
     class InitVal: public Node {
-        vector<u_ptr<Exp>> exps;
     public:
-        explicit InitVal(const Token& t) : Node(t) {}
+        vector<u_ptr<Exp>> exps;
         u_ptr<StringConst> stringConst;
+        explicit InitVal(const Token& t) : Node(t) {}
         void addExp(u_ptr<Exp>& exp) {
             exps.push_back(std::move(exp));
             stringConst = nullptr;

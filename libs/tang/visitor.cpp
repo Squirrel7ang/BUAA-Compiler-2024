@@ -12,6 +12,31 @@ namespace tang {
     // template<class... Ts>
     // overloaded(Ts...) -> overloaded<Ts...>;
 
+    void Visitor::_visitConstExp(const u_ptr<ConstExp>& node) {
+        s_ptr<SymbolType> _;
+        _visitAddExp(node->addExp, _);
+    }
+
+    void Visitor::_visitInitVal(const u_ptr<InitVal>& node) {
+        s_ptr<SymbolType> _;
+        for (auto& exp: node->exps) {
+            _visitExp(exp, _);
+        }
+        if (node->stringConst != nullptr) {
+            // TODO: visitStringConst
+        }
+    }
+
+    void Visitor::_visitConstInitVal(const u_ptr<ConstInitVal>& node) {
+        s_ptr<SymbolType> _;
+        for (auto& constExp: node->constExps) {
+            _visitConstExp(constExp);
+        }
+        if (node->stringConst != nullptr) {
+            // TODO: visitStringConst
+        }
+    }
+
     void Visitor::_visitVarDecl(const u_ptr<VarDecl>& node) {
         constexpr bool isConst = false;
         if (node->bType->isInt) {
@@ -26,6 +51,13 @@ namespace tang {
                     Symbol s(st, vardef->ident->str);
                     _symbolTable.addSymbol(vardef->ident->getLin(), s);
                 }
+
+                if (vardef->constExp != nullptr) {
+                    _visitConstExp(vardef->constExp);
+                }
+                if (vardef->initVal != nullptr) {
+                    _visitInitVal(vardef->initVal);
+                }
             }
         }
         else if (node->bType->isChar) {
@@ -39,6 +71,13 @@ namespace tang {
                     auto st = std::make_shared<CharSymbolType>(isConst);
                     Symbol s(st, vardef->ident->str);
                     _symbolTable.addSymbol(vardef->ident->getLin(), s);
+                }
+
+                if (vardef->constExp != nullptr) {
+                    _visitConstExp(vardef->constExp);
+                }
+                if (vardef->initVal != nullptr) {
+                    _visitInitVal(vardef->initVal);
                 }
             }
         }
@@ -58,6 +97,13 @@ namespace tang {
                     Symbol s(st, constdef->ident->str);
                     _symbolTable.addSymbol(constdef->ident->getLin(), s);
                 }
+
+                if (constdef->constExp != nullptr) {
+                    _visitConstExp(constdef->constExp);
+                }
+                if (constdef->constInitVal != nullptr) {
+                    _visitConstInitVal(constdef->constInitVal);
+                }
             }
         }
         else if (node->bType->isChar) {
@@ -71,6 +117,13 @@ namespace tang {
                     auto st = std::make_shared<CharSymbolType>(isConst);
                     Symbol s(st, constdef->ident->str);
                     _symbolTable.addSymbol(constdef->ident->getLin(), s);
+                }
+
+                if (constdef->constExp != nullptr) {
+                    _visitConstExp(constdef->constExp);
+                }
+                if (constdef->constInitVal != nullptr) {
+                    _visitConstInitVal(constdef->constInitVal);
                 }
             }
         }
