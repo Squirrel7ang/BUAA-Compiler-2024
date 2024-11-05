@@ -26,8 +26,7 @@ namespace tang {
             loops.push_back(l);
         }
         void popLoop() {
-            auto l = Loop();
-            loops.push_back(l);
+            loops.pop_back();
         }
         bool checkBreakContinue(const unsigned int lin) {
             if (loops.empty()) {
