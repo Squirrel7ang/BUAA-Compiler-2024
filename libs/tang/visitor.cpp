@@ -261,8 +261,6 @@ namespace tang {
     }
 
     void Visitor::_visitIfStmt(const u_ptr<IfStmt>& node) {
-        _loopStack.pushLoop();
-
         s_ptr<SymbolType> _;
         if (node->cond != nullptr) {
             _visitCond(node->cond, _);
@@ -273,8 +271,6 @@ namespace tang {
         if (node->elseStmt != nullptr) {
             _visitStmt(node->elseStmt);
         }
-
-        _loopStack.popLoop();
     }
 
     void Visitor::_visitFuncCall(const u_ptr<FuncCall>& node, s_ptr<SymbolType> & type) {
