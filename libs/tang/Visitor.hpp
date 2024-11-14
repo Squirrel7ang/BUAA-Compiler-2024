@@ -6,33 +6,53 @@
 #define VISITOR_HPP
 #include <iostream>
 
-#include "ast.hpp"
-#include "codeGen.hpp"
-#include "loopStack.hpp"
-#include "symbol.hpp"
-#include "error.hpp"
+#include "Ast.hpp"
+#include "LoopStack.hpp"
+#include "Symbol.hpp"
+#include "ErrorReporter.hpp"
+#include "IR/Common.hpp"
+#include "IR/Module.hpp"
+#include "IR/BasicBlock.hpp"
 
 namespace tang {
-    using namespace llvm;
-
     class Visitor {
-        // CodeGen _codeGen;
+        // tang related member
         SymbolTable _symbolTable;
         LoopStack _loopStack;
         u_ptr<CompUnit> _compUnit;
         ErrorReporter& _reporter;
         s_ptr<FuncSymbolType> _curFuncType; // TODO
+
+        // LLVM related member
+        llvm::ModulePtr _modulePtr;
+        llvm::FunctionPtr _curFunction;
+        llvm::BasicBlockPtr _curBlock;
     public:
         explicit Visitor(u_ptr<CompUnit>& compUnit, std::ostream& out,
                          ErrorReporter& reporter)
             : _compUnit(std::move(compUnit)), _loopStack(reporter),
-              _symbolTable(out, reporter), _reporter(reporter) { }
+              _symbolTable(out, reporter), _reporter(reporter) {
+            _modulePtr = std::make_shared<llvm::Module>();
+        }
         void visit();
+
     private:
+        int evaluate(u_ptr<PrimaryExp> &node);
+        int evaluate(u_ptr<UnaryExp> &node);
+        int evaluate(u_ptr<MulExp> &node);
+        int evaluate(u_ptr<AddExp> &node);
+        int evaluate(u_ptr<Exp> &node);
+        int evaluate(u_ptr<LVal> &node);
+        int evaluate(u_ptr<Number> &node);
+        int evaluate(u_ptr<Character> &node);
+        int evaluate(u_ptr<ConstExp> &node);
+
         void _visitConstExp(const u_ptr<ConstExp>& node);
         void _visitInitVal(const u_ptr<InitVal>& node);
         void _visitConstInitVal(const u_ptr<ConstInitVal>& node);
+        void _visitVarDef(const u_ptr<VarDef> &node, bool isInt, bool isChar);
         void _visitVarDecl(const u_ptr<VarDecl>& node);
+        void _visitConstDef(const u_ptr<ConstDef> &constdef, bool isInt, bool isChar);
         void _visitConstDecl(const u_ptr<ConstDecl>& node);
         void _visitDecl(const u_ptr<Decl>& node);
         void _visitPrintfStmt(const u_ptr<PrintfStmt>& node);
@@ -63,6 +83,28 @@ namespace tang {
         void _visitFuncDef(const u_ptr<FuncDef>& node);
         void _visitMainFuncDef(const u_ptr<MainFuncDef>& node);
         void _visitCompUnit(const u_ptr<CompUnit>& node);
+
+        void defineGlobalVariable(Symbol &s);
+        void defineLocalVariable(u_ptr<VarDef>&, Symbol &s);
+        llvm::ValuePtr genExpIR(u_ptr<Exp> &node);
+        llvm::ValuePtr genAddExpIR(u_ptr<AddExp> &node);
+        llvm::ValuePtr genMulExpIR(u_ptr<MulExp> &node);
+        llvm::ValuePtr genUnaryExpIR(u_ptr<UnaryExp> &node);
+        llvm::ValuePtr genPrimaryExp(u_ptr<PrimaryExp> &node);
+        llvm::CallInstPtr genFuncCallIR(u_ptr<FuncCall> &node);
+        llvm::ConstantDataPtr genNumberIR(u_ptr<Number> &node);
+        llvm::ConstantDataPtr genCharacterIR(u_ptr<Character> &node);
+        llvm::LoadInstPtr genLValIR(u_ptr<LVal> &node);
+        void initLocalVariable(Symbol &s, llvm::ValuePtr ptr);
+        void InitLocalVariable(Symbol &s);
+        void initLocalArray(Symbol &s);
+        void assignLocalVariable(Symbol &s);
+        void loadLocalVariable(Symbol &s);
+        void loadLocalArray(Symbol &s);
+
+    private:
+        bool isGlobal() { return _symbolTable.isGlobal(); }
+
     };
 } // namespace tang
 

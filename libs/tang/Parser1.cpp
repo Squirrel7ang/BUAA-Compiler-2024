@@ -2,8 +2,8 @@
 // Created by tang on 10/16/24.
 //
 
-#include "parser1.hpp"
-#include "ast.hpp"
+#include "Parser1.hpp"
+#include "Ast.hpp"
 #include <cassert>
 #include <iostream>
 

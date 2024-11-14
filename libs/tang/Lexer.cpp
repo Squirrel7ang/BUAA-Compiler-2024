@@ -1,9 +1,8 @@
-#include "lexer.hpp"
-
 #include <cassert>
-
-#include "token.hpp"
 #include <istream>
+
+#include "Lexer.hpp"
+#include "Token.hpp"
 
 namespace tang {
     Lexer::Lexer(std::istream& input, std::string& filename,

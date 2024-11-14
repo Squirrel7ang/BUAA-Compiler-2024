@@ -7,9 +7,9 @@
 
 #include <memory>
 #include <iostream>
-#include "lexer.hpp"
-#include "ast.hpp"
-#include "error.hpp"
+#include "Lexer.hpp"
+#include "Ast.hpp"
+#include "ErrorReporter.hpp"
 
 namespace tang {
 

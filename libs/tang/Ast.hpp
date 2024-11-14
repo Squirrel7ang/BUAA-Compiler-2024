@@ -5,10 +5,13 @@
 #ifndef AST_HPP
 #define AST_HPP
 
+#include <cassert>
 #include <memory>
 #include <variant>
 #include <vector>
-#include "token.hpp"
+
+#include "Symbol.hpp"
+#include "Token.hpp"
 
 namespace tang {
     class Cond;
@@ -60,6 +63,54 @@ namespace tang {
         void setCol(const unsigned int col) { _col = col; }
 
         static void print(std::ostream& out);
+    };
+
+    class Ident: public Node {
+    public:
+        explicit Ident(const Token& t) : Node(t) {}
+        std::string str;
+        static void print(std::ostream& out) {
+            // nothing
+        }
+    };
+
+    class IntConst: public Node {
+    public:
+        explicit IntConst(const Token& t) : Node(t) {}
+        int val;
+        static void print(std::ostream& out) {
+            // nothing
+        }
+    };
+
+    class CharConst: public Node {
+    public:
+        explicit CharConst(const Token& t) : Node(t) {}
+        char ch;
+        static void print(std::ostream& out) {
+            // nothing
+        }
+    };
+
+    class StringConst: public Node {
+    public:
+        explicit StringConst(const Token& t) : Node(t) {}
+        u_ptr<std::string> str;
+        static void print(std::ostream& out) {
+            // nothing
+        }
+        unsigned int getFormatNum() {
+            unsigned int ret = 0;
+            for (int i = 0; i < str->length()-1; i++) {
+                char ch1 = (*str)[i];
+                char ch2 = (*str)[i+1];
+                if ((ch1 == '%' && ch2 == 'd') ||
+                    (ch1 == '%' && ch2 == 'c')) {
+                    ret++;
+                }
+            }
+            return ret;
+        }
     };
 
     using DeclVariant = variant<u_ptr<ConstDecl>, u_ptr<VarDecl>>;
@@ -133,16 +184,6 @@ namespace tang {
         bool has_initVal() { return constInitVal == nullptr; }
     };
 
-    class VarDecl: public Node {
-    public:
-        explicit VarDecl(const Token& t) : Node(t) {}
-        u_ptr<BType> bType;
-        vector<u_ptr<VarDef>> varDefs;
-        static void print(std::ostream& out) {
-            out << "<VarDecl>" << std::endl;
-        }
-    };
-
     class VarDef: public Node {
     public:
         explicit VarDef(const Token& t) : Node(t) {}
@@ -155,6 +196,16 @@ namespace tang {
         }
         bool is_array() { return isArray; }
         bool has_initVal() { return initVal != nullptr; }
+    };
+
+    class VarDecl: public Node {
+    public:
+        explicit VarDecl(const Token& t) : Node(t) {}
+        u_ptr<BType> bType;
+        vector<u_ptr<VarDef>> varDefs;
+        static void print(std::ostream& out) {
+            out << "<VarDecl>" << std::endl;
+        }
     };
 
     class InitVal: public Node {
@@ -365,6 +416,71 @@ namespace tang {
         }
     };
 
+    using PrimaryExpVariant = variant<u_ptr<Exp>, u_ptr<LVal>, u_ptr<Number>, u_ptr<Character>>;
+    class PrimaryExp: public Node {
+    public:
+        explicit PrimaryExp(const Token& t) : Node(t) {}
+        u_ptr<PrimaryExpVariant> primaryExp;
+        static void print(std::ostream& out) {
+            out << "<PrimaryExp>" << std::endl;
+        }
+    };
+
+    class FuncCall: public Node {
+    public:
+        explicit FuncCall(const Token& t) : Node(t) {}
+        u_ptr<Ident> ident;
+        u_ptr<FuncRParams> funcRParams;
+        static void print(std::ostream& out) {
+            // nothing
+        }
+    };
+
+    class UnaryOp: public Node {
+    public:
+        explicit UnaryOp(const Token& t) : Node(t) {}
+        bool isPlus;
+        bool isMinus;
+        bool isExc;
+        void setPlus() { isPlus = true; isMinus = isExc = false; }
+        void setMinus() { isMinus = true; isPlus = isExc = false; }
+        void setExc() { isExc = true; isMinus = isPlus = false; }
+        static void print(std::ostream& out) {
+            out << "<UnaryOp>" << std::endl;
+        }
+    };
+
+    using UnaryExpVariant = variant<u_ptr<PrimaryExp>, u_ptr<FuncCall>>;
+    class UnaryExp: public Node {
+    public:
+        explicit UnaryExp(const Token& t) : Node(t) {}
+        vector<u_ptr<UnaryOp>> unaryOps;
+        u_ptr<UnaryExpVariant> unaryExp;
+        static void print(std::ostream& out) {
+            out << "<UnaryExp>" << std::endl;
+        }
+    };
+
+    class MulExp: public Node {
+    public:
+        explicit MulExp(const Token& t) : Node(t) {}
+        vector<u_ptr<UnaryExp>> unaryExps;
+        vector<Token> ops;
+        static void print(std::ostream& out) {
+            out << "<MulExp>" << std::endl;
+        }
+    };
+
+    class AddExp: public Node {
+    public:
+        explicit AddExp(const Token& t) : Node(t) {}
+        vector<u_ptr<MulExp>> mulExps;
+        vector<Token> ops;
+        static void print(std::ostream& out) {
+            out << "<AddExp>" << std::endl;
+        }
+    };
+
     class Exp: public Node {
     public:
         explicit Exp(const Token& t) : Node(t) {}
@@ -393,16 +509,6 @@ namespace tang {
         }
     };
 
-    using PrimaryExpVariant = variant<u_ptr<Exp>, u_ptr<LVal>, u_ptr<Number>, u_ptr<Character>>;
-    class PrimaryExp: public Node {
-    public:
-        explicit PrimaryExp(const Token& t) : Node(t) {}
-        u_ptr<PrimaryExpVariant> primaryExp;
-        static void print(std::ostream& out) {
-            out << "<PrimaryExp>" << std::endl;
-        }
-    };
-
     class Number: public Node {
     public:
         explicit Number(const Token& t) : Node(t) {}
@@ -421,67 +527,12 @@ namespace tang {
         }
     };
 
-    class FuncCall: public Node {
-    public:
-        explicit FuncCall(const Token& t) : Node(t) {}
-        u_ptr<Ident> ident;
-        u_ptr<FuncRParams> funcRParams;
-        static void print(std::ostream& out) {
-            // nothing
-        }
-    };
-
-    using UnaryExpVariant = variant<u_ptr<PrimaryExp>, u_ptr<FuncCall>>;
-    class UnaryExp: public Node {
-    public:
-        explicit UnaryExp(const Token& t) : Node(t) {}
-        vector<u_ptr<UnaryOp>> unaryOps;
-        u_ptr<UnaryExpVariant> unaryExp;
-        static void print(std::ostream& out) {
-            out << "<UnaryExp>" << std::endl;
-        }
-    };
-
-    class UnaryOp: public Node {
-    public:
-        explicit UnaryOp(const Token& t) : Node(t) {}
-        bool isPlus;
-        bool isMinus;
-        bool isExc;
-        void setPlus() { isPlus = true; isMinus = isExc = false; }
-        void setMinus() { isMinus = true; isPlus = isExc = false; }
-        void setExc() { isExc = true; isMinus = isPlus = false; }
-        static void print(std::ostream& out) {
-            out << "<UnaryOp>" << std::endl;
-        }
-    };
-
     class FuncRParams: public Node {
     public:
         explicit FuncRParams(const Token& t) : Node(t) {}
         vector<u_ptr<Exp>> exps;
         static void print(std::ostream& out) {
             out << "<FuncRParams>" << std::endl;
-        }
-    };
-
-    class MulExp: public Node {
-    public:
-        explicit MulExp(const Token& t) : Node(t) {}
-        vector<u_ptr<UnaryExp>> unaryExps;
-        vector<Token> ops;
-        static void print(std::ostream& out) {
-            out << "<MulExp>" << std::endl;
-        }
-    };
-
-    class AddExp: public Node {
-    public:
-        explicit AddExp(const Token& t) : Node(t) {}
-        vector<u_ptr<MulExp>> mulExps;
-        vector<Token> ops;
-        static void print(std::ostream& out) {
-            out << "<AddExp>" << std::endl;
         }
     };
 
@@ -529,58 +580,6 @@ namespace tang {
         u_ptr<AddExp> addExp;
         static void print(std::ostream& out) {
             out << "<ConstExp>" << std::endl;
-        }
-        int evaluate() {
-            /* !!! TODO !!! */
-            return 0;
-        }
-    };
-
-    class Ident: public Node {
-    public:
-        explicit Ident(const Token& t) : Node(t) {}
-        std::string str;
-        static void print(std::ostream& out) {
-            // nothing
-        }
-    };
-
-    class IntConst: public Node {
-    public:
-        explicit IntConst(const Token& t) : Node(t) {}
-        int val;
-        static void print(std::ostream& out) {
-            // nothing
-        }
-    };
-
-    class CharConst: public Node {
-    public:
-        explicit CharConst(const Token& t) : Node(t) {}
-        char ch;
-        static void print(std::ostream& out) {
-            // nothing
-        }
-    };
-
-    class StringConst: public Node {
-    public:
-        explicit StringConst(const Token& t) : Node(t) {}
-        u_ptr<std::string> str;
-        static void print(std::ostream& out) {
-            // nothing
-        }
-        unsigned int getFormatNum() {
-            unsigned int ret = 0;
-            for (int i = 0; i < str->length()-1; i++) {
-                char ch1 = (*str)[i];
-                char ch2 = (*str)[i+1];
-                if ((ch1 == '%' && ch2 == 'd') ||
-                    (ch1 == '%' && ch2 == 'c')) {
-                    ret++;
-                }
-            }
-            return ret;
         }
     };
 } // namespace tang

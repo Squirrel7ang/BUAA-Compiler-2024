@@ -1,10 +1,10 @@
 #include <fstream>
 #include <iostream>
 
-#include "libs/tang/lexer.hpp"
-#include "libs/tang/error.hpp"
-#include "libs/tang/parser1.hpp"
-#include "libs/tang/visitor.hpp"
+#include "libs/tang/Lexer.hpp"
+#include "libs/tang/ErrorReporter.hpp"
+#include "libs/tang/Parser1.hpp"
+#include "libs/tang/Visitor.hpp"
 #include <string>
 using namespace tang;
 

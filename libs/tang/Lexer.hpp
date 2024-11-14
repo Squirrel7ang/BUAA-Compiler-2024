@@ -8,8 +8,8 @@
 #include <istream>
 #include <vector>
 
-#include "token.hpp"
-#include "error.hpp"
+#include "Token.hpp"
+#include "ErrorReporter.hpp"
 
 namespace tang {
     // one Lexer for one Compile Unit

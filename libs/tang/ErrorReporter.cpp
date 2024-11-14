@@ -2,7 +2,7 @@
 // Created by tang on 10/16/24.
 //
 
-#include "error.hpp"
+#include "ErrorReporter.hpp"
 
 namespace tang {
 

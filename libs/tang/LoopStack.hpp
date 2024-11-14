@@ -6,8 +6,8 @@
 #define LOOPSTACK_HPP
 #include <vector>
 
-#include "ast.hpp"
-#include "error.hpp"
+#include "Ast.hpp"
+#include "ErrorReporter.hpp"
 
 namespace tang {
 

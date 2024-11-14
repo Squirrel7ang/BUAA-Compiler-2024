@@ -1,20 +1,24 @@
 set(LIBRARY_NAME tang)
 
 add_library(${LIBRARY_NAME}
-        lexer.hpp
-        lexer.cpp
-        token.hpp
-        token.cpp
-        parser1.hpp
-        parser1.cpp
-        visitor.hpp
-        visitor.cpp
-        error.hpp
-        error.cpp
-        ast.hpp
-        loopStack.hpp
-        symbol.hpp
-        symbol.cpp
+        Lexer.hpp
+        Lexer.cpp
+        Token.hpp
+        Token.cpp
+        Parser1.hpp
+        Parser1.cpp
+        Visitor.hpp
+        Visitor.cpp
+        ErrorReporter.hpp
+        ErrorReporter.cpp
+        Ast.hpp
+        LoopStack.hpp
+        Symbol.hpp
+        Symbol.cpp
+        Evaluate.cpp
+        LLVMVisitor.cpp
+        #        Symbol1.hpp
+#        Symbol1.cpp
 )
 target_link_libraries(${LIBRARY_NAME} PUBLIC llvm)
 

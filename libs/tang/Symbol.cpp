@@ -2,7 +2,7 @@
 // Created by tang on 10/23/24.
 //
 
-#include "symbol.hpp"
+#include "Symbol.hpp"
 
 namespace tang {
     bool SymbolTable::_isDuplicatedSymbol(const unsigned int lin, Symbol& s) {

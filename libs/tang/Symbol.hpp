@@ -11,7 +11,12 @@
 #include <utility>
 #include <vector>
 
-#include "error.hpp"
+#include "ErrorReporter.hpp"
+#include "IR/Common.hpp"
+#include "IR/ConstantData.hpp"
+#include "IR/GlobalVariable.hpp"
+#include "IR/Instructions.hpp"
+#include "IR/Type.hpp"
 
 namespace tang {
     template <typename T>
@@ -41,6 +46,7 @@ namespace tang {
     class SymbolType {
     public:
         virtual unsigned int getSize() = 0;
+        virtual unsigned int getLength() = 0;
         virtual std::string toOutput() = 0;
         virtual bool isArray() = 0;
         virtual bool isFunc() = 0;
@@ -53,6 +59,7 @@ namespace tang {
                 this->getSize() == op.getSize() &&
                 this->isConst() == op.isConst();
         }
+        virtual llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) = 0;
     };
 
     class IntSymbolType: public SymbolType {
@@ -61,6 +68,10 @@ namespace tang {
         explicit IntSymbolType(): _isConst(false) {}
         explicit IntSymbolType(bool isConst): _isConst(isConst) {}
         unsigned int getSize() override {
+            return 4;
+        }
+        unsigned int getLength() override { return 1; }
+        static unsigned int size() {
             return 4;
         }
         std::string toOutput() override {
@@ -78,6 +89,10 @@ namespace tang {
         }
         bool isArray() override { return false; }
         bool isFunc() override { return false; }
+        llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) override {
+            auto ret = std::make_shared<llvm::IntegerType>(context, getSize());
+            return ret;
+        }
     };
 
     static IntSymbolType INT_TYPE = IntSymbolType(false);
@@ -88,9 +103,9 @@ namespace tang {
     public:
         explicit CharSymbolType(): _isConst(false) {}
         explicit CharSymbolType(bool isConst): _isConst(isConst) {}
-        unsigned int getSize() override {
-            return 1;
-        }
+        unsigned int getSize() override { return 1; }
+        unsigned int getLength() override { return 1; }
+        static unsigned int size() { return 1; }
         std::string toOutput() override {
             if (_isConst)
                 return "ConstChar";
@@ -106,6 +121,10 @@ namespace tang {
         }
         bool isArray() override { return false; }
         bool isFunc() override { return false; }
+        llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) override {
+            auto ret = std::make_shared<llvm::IntegerType>(context, getSize());
+            return ret;
+        }
     };
 
     static CharSymbolType CHAR_TYPE = CharSymbolType(false);
@@ -113,20 +132,17 @@ namespace tang {
 
     class VoidSymbolType: public SymbolType {
     public:
-        unsigned int getSize() override {
-            return 0;
-        }
-        std::string toOutput() override {
-            return "Void";
-        }
-        bool isConst() override {
-            return false;
-        }
-        RawSymbolType toRawType() {
-            return VOID_ST;
-        }
+        unsigned int getSize() override { return 0; }
+        unsigned int getLength() override { return 1; }
+        std::string toOutput() override { return "Void"; }
+        bool isConst() override { return false; }
+        RawSymbolType toRawType() { return VOID_ST; }
         bool isArray() override { return false; }
         bool isFunc() override { return false; }
+        llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) override {
+            auto ret = std::make_shared<llvm::VoidType>(context);
+            return ret;
+        }
     };
 
     class IntArrayType: public SymbolType {
@@ -135,9 +151,8 @@ namespace tang {
         const unsigned int _len;
         explicit IntArrayType(bool isConst, const unsigned int len)
             : _isConst(isConst), _len(len) { }
-        unsigned int getSize() override {
-            return _len << 2;
-        }
+        unsigned int getSize() override { return _len << 2; }
+        unsigned int getLength() override { return _len; }
         std::string toOutput() override {
             if (_isConst)
                 return "ConstIntArray";
@@ -153,6 +168,12 @@ namespace tang {
         }
         bool isArray() override { return true; }
         bool isFunc() override { return false; }
+        llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) override {
+            auto intSymbol = IntSymbolType();
+            auto llvmBasicType = intSymbol.toLLVMType(context);
+            auto ret = std::make_shared<llvm::PointerType>(context, llvmBasicType);
+            return ret;
+        }
     };
 
     class CharArrayType: public SymbolType {
@@ -161,9 +182,8 @@ namespace tang {
         const unsigned int _len;
         explicit CharArrayType(const bool isConst, const unsigned int len) 
             : _isConst(isConst), _len(len) {}
-        unsigned int getSize() override {
-            return _len << 2;
-        }
+        unsigned int getSize() override { return _len; }
+        unsigned int getLength() override { return _len; }
         std::string toOutput() override {
             if (_isConst)
                 return "ConstCharArray";
@@ -179,17 +199,25 @@ namespace tang {
         }
         bool isArray() override { return true; }
         bool isFunc() override { return false; }
+        llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) override {
+            auto charSymbol = CharSymbolType();
+            auto llvmBasicType = charSymbol.toLLVMType(context);
+            auto ret = std::make_shared<llvm::PointerType>(context, llvmBasicType);
+            return ret;
+        }
     };
 
     class FuncSymbolType: public SymbolType {
     public:
-        explicit FuncSymbolType() = default;
-        explicit FuncSymbolType(s_ptr<SymbolType> returnType) :_returnType(std::move(returnType)) {}
         s_ptr<SymbolType> _returnType;
         std::vector<s_ptr<SymbolType>> _argType;
+
+        explicit FuncSymbolType() = default;
+        explicit FuncSymbolType(s_ptr<SymbolType> returnType) :_returnType(std::move(returnType)) {}
         unsigned int getSize() override {
             return 8;
         }
+        unsigned int getLength() override { return 1; }
         std::string toOutput() override {
             std::string s;
             s = _returnType->toOutput();
@@ -218,20 +246,55 @@ namespace tang {
         }
         bool isArray() override { return false; }
         bool isFunc() override { return true; }
+        llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) override {
+            auto retLlvmType = _returnType->toLLVMType(context);
+            std::vector<llvm::TypePtr> argLlvmType;
+            for (auto& ptr: _argType) {
+                argLlvmType.push_back(ptr->toLLVMType(context));
+            }
+            auto ret = std::make_shared<llvm::FunctionType>(context, retLlvmType, argLlvmType);
+            return ret;
+        }
     };
 
     class Symbol {
         s_ptr<SymbolType> _type;
         std::string _name;
+        bool _hasInitVal;
+        std::vector<int> initVals;
+        llvm::ValuePtr _vp; // the Value where the Symbol is defined;
     public:
         explicit Symbol() = default;
         explicit Symbol(const s_ptr<SymbolType>& type, std::string  name)
-            :_type(type), _name(std::move(name)) { }
-        s_ptr<SymbolType> getType() {
-            return _type;
+            :_type(type), _name(std::move(name)), _hasInitVal(false) { }
+        s_ptr<SymbolType> getType() { return _type; }
+        std::string getName() { return _name; }
+        bool hasInitVal() { return _hasInitVal; }
+        void addInitVal(int val) {
+            _hasInitVal = true;
+            initVals.push_back(val);
         }
-        std::string getName() {
-            return _name;
+        int initValAt(int index) {
+            return initVals.at(index);
+        }
+        llvm::ValuePtr getLLVMValue() { return _vp; }
+        llvm::GlobalVariablePtr toGlobalVariable(llvm::LLVMContextPtr context) {
+            llvm::GlobalVariablePtr gvp;
+            llvm::ConstantDataPtr cdp;
+            llvm::TypePtr ty = _type->toLLVMType(context);
+            if (_hasInitVal) {
+                cdp = std::make_shared<llvm::ConstantData>(
+                    context, ty, initVals, _type->getLength());
+            }
+            gvp = std::make_shared<llvm::GlobalVariable>(context, ty, cdp, (cdp==nullptr), _name);
+            _vp = gvp;
+            return gvp;
+        }
+        llvm::AllocaInstPtr toAllocaInst(llvm::LLVMContextPtr context) {
+            auto ptrTy = std::make_shared<llvm::PointerType>(context, _type->toLLVMType(context));
+            auto _aip = std::make_shared<llvm::AllocaInst>(context, ptrTy, _type->toLLVMType(context));
+            _vp = _aip;
+            return _aip;
         }
     };
 
@@ -260,6 +323,7 @@ namespace tang {
         bool findSymbolGlobal(Symbol& s, const std::string& name);
         bool findSymbolLocal(Symbol &s, const std::string &name);
         void print();
+        bool isGlobal() { return _scopePtrs.size() == 1; }
     };
 } // namespace tang
 

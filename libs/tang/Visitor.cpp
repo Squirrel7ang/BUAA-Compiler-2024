@@ -2,8 +2,10 @@
 // Created by tang on 10/19/24.
 //
 
-#include "visitor.hpp"
-#include "ast.hpp"
+#include "Visitor.hpp"
+#include "Ast.hpp"
+#include "IR/Common.hpp"
+#include "IR/Function.hpp"
 #include <cassert>
 
 namespace tang {
@@ -37,95 +39,168 @@ namespace tang {
         }
     }
 
-    void Visitor::_visitVarDecl(const u_ptr<VarDecl>& node) {
+    void Visitor::_visitVarDef(const u_ptr<VarDef>& vardef, bool isInt, bool isChar) {
+        auto context = _modulePtr->context();
         constexpr bool isConst = false;
-        if (node->bType->isInt) {
-            for (auto& vardef: node->varDefs) {
-                if (vardef->is_array()) {
-                    auto st = std::make_shared<IntArrayType>(isConst, vardef->constExp->evaluate());
-                    Symbol s(st, vardef->ident->str);
-                    _symbolTable.addSymbol(vardef->ident->getLin(), s);
-                }
-                else {
-                    auto st = std::make_shared<IntSymbolType>(isConst);
-                    Symbol s(st, vardef->ident->str);
-                    _symbolTable.addSymbol(vardef->ident->getLin(), s);
+        if (isInt) {
+            if (vardef->is_array()) {
+                _visitConstExp(vardef->constExp);
+                int length = evaluate(vardef->constExp);
+
+                auto st = std::make_shared<IntArrayType>(isConst, length);
+                Symbol s(st, vardef->ident->str);
+                if (vardef->has_initVal()) {
+                    for (auto& exp: vardef->initVal->exps) {
+                        s.addInitVal(evaluate(exp));
+                    }
                 }
 
-                if (vardef->constExp != nullptr) {
-                    _visitConstExp(vardef->constExp);
+                if (isGlobal()) {
+                    llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
+                    _modulePtr->addGlobalVariable(gv);
                 }
-                if (vardef->initVal != nullptr) {
-                    _visitInitVal(vardef->initVal);
+                _symbolTable.addSymbol(vardef->ident->getLin(), s);
+            }
+            else {
+                auto st = std::make_shared<IntSymbolType>(isConst);
+                Symbol s(st, vardef->ident->str);
+                if (vardef->has_initVal()) {
+                    assert(vardef->initVal->exps.size() == 1); // only one initVal;
+                    s.addInitVal(evaluate(vardef->initVal->exps.at(0)));
                 }
+
+                if (isGlobal()) {
+                    llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
+                    _modulePtr->addGlobalVariable(gv);
+                }
+                _symbolTable.addSymbol(vardef->ident->getLin(), s);
             }
         }
-        else if (node->bType->isChar) {
-            for (auto& vardef: node->varDefs) {
-                if (vardef->is_array()) {
-                    auto st = std::make_shared<CharArrayType>(isConst, vardef->constExp->evaluate());
-                    Symbol s(st, vardef->ident->str);
-                    _symbolTable.addSymbol(vardef->ident->getLin(), s);
-                }
-                else {
-                    auto st = std::make_shared<CharSymbolType>(isConst);
-                    Symbol s(st, vardef->ident->str);
-                    _symbolTable.addSymbol(vardef->ident->getLin(), s);
+        else if (isChar) {
+            if (vardef->is_array()) {
+                _visitConstExp(vardef->constExp);
+                int length = evaluate(vardef->constExp);
+
+                auto st = std::make_shared<CharArrayType>(isConst, length);
+                Symbol s(st, vardef->ident->str);
+                if (vardef->has_initVal()) {
+                    for (auto& exp: vardef->initVal->exps) {
+                        s.addInitVal(evaluate(exp));
+                    }
                 }
 
-                if (vardef->constExp != nullptr) {
-                    _visitConstExp(vardef->constExp);
+                if (isGlobal()) {
+                    llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
+                    _modulePtr->addGlobalVariable(gv);
                 }
-                if (vardef->initVal != nullptr) {
-                    _visitInitVal(vardef->initVal);
+                _symbolTable.addSymbol(vardef->ident->getLin(), s);
+            }
+            else {
+                auto st = std::make_shared<CharSymbolType>(isConst);
+                Symbol s(st, vardef->ident->str);
+                if (vardef->has_initVal()) {
+                    assert(vardef->initVal->exps.size() == 1); // only one initVal;
+                    s.addInitVal(evaluate(vardef->initVal->exps.at(0)));
                 }
+
+                if (isGlobal()) {
+                    llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
+                    _modulePtr->addGlobalVariable(gv);
+                }
+                _symbolTable.addSymbol(vardef->ident->getLin(), s);
+            }
+        }
+        else assert(0);
+    }
+
+    void Visitor::_visitVarDecl(const u_ptr<VarDecl>& node) {
+        bool isInt = node->bType->isInt;
+        bool isChar = node->bType->isChar;
+        for (auto& vardef: node->varDefs) {
+            _visitVarDef(vardef, isInt, isChar);
+        }
+    }
+
+    void Visitor::_visitConstDef(const u_ptr<ConstDef>& constdef, bool isInt, bool isChar) {
+        auto context = _modulePtr->context();
+        bool isConst = true;
+        if (isInt) {
+            if (constdef->is_array()) {
+                _visitConstExp(constdef->constExp);
+                int length = evaluate(constdef->constExp);
+                auto st = std::make_shared<IntArrayType>(isConst, length);
+
+                Symbol s(st, constdef->ident->str);
+                if (constdef->has_initVal()) {
+                    for (auto& exp: constdef->constInitVal->constExps) {
+                        s.addInitVal(evaluate(exp));
+                    }
+                }
+
+                if (isGlobal()) {
+                    llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
+                    _modulePtr->addGlobalVariable(gv);
+                }
+                _symbolTable.addSymbol(constdef->ident->getLin(), s);
+            }
+            else {
+                auto st = std::make_shared<IntSymbolType>(isConst);
+                Symbol s(st, constdef->ident->str);
+                if (constdef->has_initVal()) {
+                    assert(constdef->constInitVal->constExps.size() == 1); // only one initial value
+                    s.addInitVal(evaluate(constdef->constInitVal->constExps.at(0)));
+                }
+
+                if (isGlobal()) {
+                    llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
+                    _modulePtr->addGlobalVariable(gv);
+                }
+                _symbolTable.addSymbol(constdef->ident->getLin(), s);
+            }
+
+            llvm::GlobalValuePtr gv;
+        }
+        else if (isChar) {
+            if (constdef->is_array()) {
+                _visitConstExp(constdef->constExp);
+                int length = evaluate(constdef->constExp);
+                auto st = std::make_shared<CharArrayType>(isConst, length);
+
+                Symbol s(st, constdef->ident->str);
+                if (constdef->has_initVal()) {
+                    for (auto& exp: constdef->constInitVal->constExps) {
+                        s.addInitVal(evaluate(exp));
+                    }
+                }
+
+                if (isGlobal()) {
+                    llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
+                    _modulePtr->addGlobalVariable(gv);
+                }
+                _symbolTable.addSymbol(constdef->ident->getLin(), s);
+            }
+            else {
+                auto st = std::make_shared<CharSymbolType>(isConst);
+                Symbol s(st, constdef->ident->str);
+                if (constdef->has_initVal()) {
+                    assert(constdef->constInitVal->constExps.size() == 1); // only one initial value
+                    s.addInitVal(evaluate(constdef->constInitVal->constExps.at(0)));
+                }
+
+                if (isGlobal()) {
+                    llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
+                    _modulePtr->addGlobalVariable(gv);
+                }
+                _symbolTable.addSymbol(constdef->ident->getLin(), s);
             }
         }
     }
 
     void Visitor::_visitConstDecl(const u_ptr<ConstDecl>& node) {
-        bool isConst = true;
-        if (node->bType->isInt) {
-            for (auto& constdef: node->constDefs) {
-                if (constdef->is_array()) {
-                    auto st = std::make_shared<IntArrayType>(isConst, constdef->constExp->evaluate());
-                    Symbol s(st, constdef->ident->str);
-                    _symbolTable.addSymbol(constdef->ident->getLin(), s);
-                }
-                else {
-                    auto st = std::make_shared<IntSymbolType>(isConst);
-                    Symbol s(st, constdef->ident->str);
-                    _symbolTable.addSymbol(constdef->ident->getLin(), s);
-                }
-
-                if (constdef->constExp != nullptr) {
-                    _visitConstExp(constdef->constExp);
-                }
-                if (constdef->constInitVal != nullptr) {
-                    _visitConstInitVal(constdef->constInitVal);
-                }
-            }
-        }
-        else if (node->bType->isChar) {
-            for (auto& constdef: node->constDefs) {
-                if (constdef->is_array()) {
-                    auto st = std::make_shared<CharArrayType>(isConst, constdef->constExp->evaluate());
-                    Symbol s(st, constdef->ident->str);
-                    _symbolTable.addSymbol(constdef->ident->getLin(), s);
-                }
-                else {
-                    auto st = std::make_shared<CharSymbolType>(isConst);
-                    Symbol s(st, constdef->ident->str);
-                    _symbolTable.addSymbol(constdef->ident->getLin(), s);
-                }
-
-                if (constdef->constExp != nullptr) {
-                    _visitConstExp(constdef->constExp);
-                }
-                if (constdef->constInitVal != nullptr) {
-                    _visitConstInitVal(constdef->constInitVal);
-                }
-            }
+        bool isInt = node->bType->isInt;
+        bool isChar = node->bType->isChar;
+        for (auto& constdef: node->constDefs) {
+            _visitConstDef(constdef, isInt, isChar);
         }
     }
 
@@ -487,6 +562,8 @@ namespace tang {
 
     void Visitor::_visitFuncDef(const u_ptr<FuncDef>& node) {
         // get Function return Type and Identifier.
+        auto context = _modulePtr->context();
+
         s_ptr<SymbolType> rt;
         vector<Symbol> fparams;
         if (node->funcType->isInt) {
@@ -539,6 +616,15 @@ namespace tang {
         _curFuncType = ft;
         Symbol s = Symbol(ft, node->ident->str);
         _symbolTable.addSymbol(node->ident->getLin(), s);
+
+        // llvm
+        auto _type = ft->toLLVMType(context);
+        llvm::FunctionTypePtr funcType = std::static_pointer_cast<llvm::FunctionType>(_type);
+        llvm::FunctionPtr func = std::make_shared<llvm::Function>(context, funcType);
+        _modulePtr->addFunction(func);
+        _curFunction = func;
+        llvm::BasicBlockPtr block = std::make_shared<llvm::BasicBlock>();
+        _curFunction->addBasicBlock(block);
 
         // afterward, add FParams into symbolTable of a new scope
         auto scopeIndex = _symbolTable.enterScope();
@@ -594,6 +680,8 @@ namespace tang {
     }
 
     void Visitor::_visitCompUnit(const u_ptr<CompUnit>& node) {
+        auto context = _modulePtr->context();
+
         auto scopeIndex = _symbolTable.enterScope();
         for (auto& decl: node->decls) {
             _visitDecl(decl);

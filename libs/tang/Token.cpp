@@ -3,7 +3,7 @@
 //
 
 #include <string>
-#include "token.hpp"
+#include "Token.hpp"
 
 #include <cassert>
 #include <sstream>
