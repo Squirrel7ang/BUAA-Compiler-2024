@@ -35,6 +35,7 @@ namespace tang {
             _modulePtr = std::make_shared<llvm::Module>();
         }
         void visit();
+        llvm::ModulePtr getLLVMModule() { return _modulePtr; }
 
     private:
         int evaluate(u_ptr<PrimaryExp> &node);
@@ -85,22 +86,28 @@ namespace tang {
         void _visitCompUnit(const u_ptr<CompUnit>& node);
 
         void defineGlobalVariable(Symbol &s);
-        void defineLocalVariable(u_ptr<VarDef>&, Symbol &s);
-        llvm::ValuePtr genExpIR(u_ptr<Exp> &node);
-        llvm::ValuePtr genAddExpIR(u_ptr<AddExp> &node);
-        llvm::ValuePtr genMulExpIR(u_ptr<MulExp> &node);
-        llvm::ValuePtr genUnaryExpIR(u_ptr<UnaryExp> &node);
-        llvm::ValuePtr genPrimaryExp(u_ptr<PrimaryExp> &node);
-        llvm::CallInstPtr genFuncCallIR(u_ptr<FuncCall> &node);
-        llvm::ConstantDataPtr genNumberIR(u_ptr<Number> &node);
-        llvm::ConstantDataPtr genCharacterIR(u_ptr<Character> &node);
-        llvm::LoadInstPtr genLValIR(u_ptr<LVal> &node);
-        void initLocalVariable(Symbol &s, llvm::ValuePtr ptr);
-        void InitLocalVariable(Symbol &s);
-        void initLocalArray(Symbol &s);
-        void assignLocalVariable(Symbol &s);
-        void loadLocalVariable(Symbol &s);
-        void loadLocalArray(Symbol &s);
+
+        void defineLocalVariable(const u_ptr<ConstDef> &node, Symbol &s);
+
+        void defineLocalVariable(const u_ptr<VarDef>&, Symbol &s);
+
+        llvm::ValuePtr genConstExpIR(const u_ptr<ConstExp> &node);
+        llvm::ValuePtr genExpIR(const u_ptr<Exp> &node);
+        llvm::ValuePtr genAddExpIR(const u_ptr<AddExp> &node);
+        llvm::ValuePtr genMulExpIR(const u_ptr<MulExp> &node);
+        llvm::ValuePtr genUnaryExpIR(const u_ptr<UnaryExp> &node);
+        llvm::ValuePtr genPrimaryExp(const u_ptr<PrimaryExp> &node);
+        llvm::CallInstPtr genFuncCallIR(const u_ptr<FuncCall> &node);
+        llvm::ConstantDataPtr genNumberIR(const u_ptr<Number> &node);
+        llvm::ConstantDataPtr genCharacterIR(const u_ptr<Character> &node);
+        llvm::LoadInstPtr genLValIR(const u_ptr<LVal> &node);
+        void assignVariable(Symbol &s, llvm::ValuePtr value);
+
+        void returnValue(llvm::TypePtr ty, llvm::ValuePtr value);
+
+        void ReturnValue(llvm::ValuePtr value);
+
+        void returnVoid();
 
     private:
         bool isGlobal() { return _symbolTable.isGlobal(); }

@@ -60,6 +60,7 @@ namespace tang {
                 this->isConst() == op.isConst();
         }
         virtual llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) = 0;
+        virtual llvm::TypePtr toBasicLLVMType(llvm::LLVMContextPtr context) = 0;
     };
 
     class IntSymbolType: public SymbolType {
@@ -90,8 +91,10 @@ namespace tang {
         bool isArray() override { return false; }
         bool isFunc() override { return false; }
         llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) override {
-            auto ret = std::make_shared<llvm::IntegerType>(context, getSize());
-            return ret;
+            return context->I32_TY;
+        }
+        llvm::TypePtr toBasicLLVMType(llvm::LLVMContextPtr context) override {
+            return context->I32_TY;
         }
     };
 
@@ -122,8 +125,10 @@ namespace tang {
         bool isArray() override { return false; }
         bool isFunc() override { return false; }
         llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) override {
-            auto ret = std::make_shared<llvm::IntegerType>(context, getSize());
-            return ret;
+            return context->I8_TY;
+        }
+        llvm::TypePtr toBasicLLVMType(llvm::LLVMContextPtr context) override {
+            return context->I8_TY;
         }
     };
 
@@ -140,8 +145,10 @@ namespace tang {
         bool isArray() override { return false; }
         bool isFunc() override { return false; }
         llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) override {
-            auto ret = std::make_shared<llvm::VoidType>(context);
-            return ret;
+            return context->VOID_TY;
+        }
+        llvm::TypePtr toBasicLLVMType(llvm::LLVMContextPtr context) override {
+            return context->VOID_TY;
         }
     };
 
@@ -169,10 +176,10 @@ namespace tang {
         bool isArray() override { return true; }
         bool isFunc() override { return false; }
         llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) override {
-            auto intSymbol = IntSymbolType();
-            auto llvmBasicType = intSymbol.toLLVMType(context);
-            auto ret = std::make_shared<llvm::PointerType>(context, llvmBasicType);
-            return ret;
+            return context->I32_PTR_TY;
+        }
+        llvm::TypePtr toBasicLLVMType(llvm::LLVMContextPtr context) override {
+            return context->I32_TY;
         }
     };
 
@@ -200,10 +207,10 @@ namespace tang {
         bool isArray() override { return true; }
         bool isFunc() override { return false; }
         llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) override {
-            auto charSymbol = CharSymbolType();
-            auto llvmBasicType = charSymbol.toLLVMType(context);
-            auto ret = std::make_shared<llvm::PointerType>(context, llvmBasicType);
-            return ret;
+            return context->I8_PTR_TY;
+        }
+        llvm::TypePtr toBasicLLVMType(llvm::LLVMContextPtr context) override {
+            return context->I8_TY;
         }
     };
 
@@ -254,6 +261,9 @@ namespace tang {
             }
             auto ret = std::make_shared<llvm::FunctionType>(context, retLlvmType, argLlvmType);
             return ret;
+        }
+        llvm::TypePtr toBasicLLVMType(llvm::LLVMContextPtr context) override {
+            return _returnType->toLLVMType(context);
         }
     };
 

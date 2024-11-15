@@ -3,6 +3,7 @@
 //
 
 #include "User.hpp"
+#include "Use.hpp"
 
 namespace llvm {
     void User::createUse(ValuePtr val) {

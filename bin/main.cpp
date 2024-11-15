@@ -38,7 +38,13 @@ int main(int argc, char *argv[]) {
     auto compUnitPtr = parser.parse();
     auto visitor = Visitor(compUnitPtr, visitorStream, reporter);
     visitor.visit();
-    reporter.printAll();
+    if (reporter.error()) {
+        reporter.printAll();
+        return 0;
+    }
+    else {
+        auto llvmModule = visitor.getLLVMModule();
+    }
 
 
     return 0;

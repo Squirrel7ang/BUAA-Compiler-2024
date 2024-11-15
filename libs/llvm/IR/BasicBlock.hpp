@@ -8,9 +8,11 @@
 #include "Common.hpp"
 
 namespace llvm {
-    class BasicBlock {
+    class BasicBlock : public Value {
         vector<InstructionPtr> insts;
     public:
+        explicit BasicBlock(LLVMContextPtr context)
+                : Value(context, context->LABEL_TY, BASIC_BLOCK_T) { }
         void addInst(InstructionPtr inst) {
             insts.push_back(inst);
         }

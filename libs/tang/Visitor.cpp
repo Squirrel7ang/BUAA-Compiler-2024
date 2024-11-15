@@ -56,8 +56,10 @@ namespace tang {
                 }
 
                 if (isGlobal()) {
-                    llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
-                    _modulePtr->addGlobalVariable(gv);
+                    defineGlobalVariable(s);
+                }
+                else {
+                    defineLocalVariable(vardef, s);
                 }
                 _symbolTable.addSymbol(vardef->ident->getLin(), s);
             }
@@ -70,8 +72,10 @@ namespace tang {
                 }
 
                 if (isGlobal()) {
-                    llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
-                    _modulePtr->addGlobalVariable(gv);
+                    defineGlobalVariable(s);
+                }
+                else {
+                    defineLocalVariable(vardef, s);
                 }
                 _symbolTable.addSymbol(vardef->ident->getLin(), s);
             }
@@ -90,8 +94,10 @@ namespace tang {
                 }
 
                 if (isGlobal()) {
-                    llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
-                    _modulePtr->addGlobalVariable(gv);
+                    defineGlobalVariable(s);
+                }
+                else {
+                    defineLocalVariable(vardef, s);
                 }
                 _symbolTable.addSymbol(vardef->ident->getLin(), s);
             }
@@ -104,8 +110,10 @@ namespace tang {
                 }
 
                 if (isGlobal()) {
-                    llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
-                    _modulePtr->addGlobalVariable(gv);
+                    defineGlobalVariable(s);
+                }
+                else {
+                    defineLocalVariable(vardef, s);
                 }
                 _symbolTable.addSymbol(vardef->ident->getLin(), s);
             }
@@ -138,8 +146,10 @@ namespace tang {
                 }
 
                 if (isGlobal()) {
-                    llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
-                    _modulePtr->addGlobalVariable(gv);
+                    defineGlobalVariable(s);
+                }
+                else {
+                    defineLocalVariable(constdef, s);
                 }
                 _symbolTable.addSymbol(constdef->ident->getLin(), s);
             }
@@ -242,9 +252,14 @@ namespace tang {
         if (_curFuncType->toRawType() == VOID_FUNC_ST && node->exp != nullptr) {
             _reporter.report(node->returnToken.getLin(), 'f');
         }
-        s_ptr<SymbolType> _;
+        s_ptr<SymbolType> sty;
         if (node->exp != nullptr) {
-            _visitExp(node->exp, _);
+            _visitExp(node->exp, sty);
+            auto val = genExpIR(node->exp);
+            returnValue(sty->toLLVMType(_modulePtr->context()), val);
+        }
+        else {
+            returnVoid();
         }
     }
 
@@ -503,6 +518,13 @@ namespace tang {
         s_ptr<SymbolType> _;
         _visitLVal(node->lVal, true);
         _visitExp(node->exp, _);
+
+        // llvm
+        auto val = genExpIR(node->exp);
+        Symbol s;
+        _symbolTable.findSymbolGlobal(s, node->lVal->ident->str);
+        assignVariable(s, val);
+
     }
 
     void Visitor::_visitStmt(const u_ptr<Stmt>& node) {
@@ -511,11 +533,12 @@ namespace tang {
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, u_ptr<AssignStmt>>)
                 _visitAssignStmt(arg);
-            else if constexpr (std::is_same_v<T, u_ptr<Exp>>)
+            else if constexpr (std::is_same_v<T, u_ptr<Exp>>) {
                 _visitExp(arg, p);
-            else if constexpr (std::is_same_v<T, u_ptr<Block>>) {
-                _visitBlock(arg, true, 0);
+                genExpIR(arg);
             }
+            else if constexpr (std::is_same_v<T, u_ptr<Block>>)
+                _visitBlock(arg, true, 0);
             else if constexpr (std::is_same_v<T, u_ptr<IfStmt>>)
                 _visitIfStmt(arg);
             else if constexpr (std::is_same_v<T, u_ptr<ForStmt>>)
@@ -623,7 +646,7 @@ namespace tang {
         llvm::FunctionPtr func = std::make_shared<llvm::Function>(context, funcType);
         _modulePtr->addFunction(func);
         _curFunction = func;
-        llvm::BasicBlockPtr block = std::make_shared<llvm::BasicBlock>();
+        llvm::BasicBlockPtr block = std::make_shared<llvm::BasicBlock>(context);
         _curFunction->addBasicBlock(block);
 
         // afterward, add FParams into symbolTable of a new scope
@@ -658,6 +681,17 @@ namespace tang {
         auto rt = std::make_shared<IntSymbolType>();
         auto ft = std::make_shared<FuncSymbolType>(rt);
         _curFuncType = ft;
+
+        // llvm
+        auto context = _modulePtr->context();
+        llvm::FunctionPtr fp = std::make_shared<llvm::Function>(context, context->I32_TY);
+        _modulePtr->addFunction(fp);
+        _curFunction = fp;
+        llvm::BasicBlockPtr bbp = std::make_shared<llvm::BasicBlock>(context);
+        _curFunction->addBasicBlock(bbp);
+        _curBlock = bbp;
+
+
         _visitBlock(node->block, true, 0);
 
         // check if there is return in the inside;

@@ -95,7 +95,7 @@ namespace tang {
     class StringConst: public Node {
     public:
         explicit StringConst(const Token& t) : Node(t) {}
-        u_ptr<std::string> str;
+        u_ptr<std::string> str; // escape is already char
         static void print(std::ostream& out) {
             // nothing
         }

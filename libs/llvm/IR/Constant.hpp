@@ -10,7 +10,7 @@
 #include "User.hpp"
 
 namespace llvm {
-    class Constant: public User{
+    class Constant: public User {
     public:
         explicit Constant(LLVMContextPtr context, TypePtr ty, ValueType vty)
                 : User(context, ty, vty) {}

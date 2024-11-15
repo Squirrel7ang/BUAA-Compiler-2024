@@ -56,6 +56,9 @@ namespace llvm {
     class PointerType;
     using PointerTypePtr = s_ptr<PointerType>;
 
+    class LabelType;
+    using LabelTypePtr = s_ptr<LabelType>;
+
     class FunctionType;
     using FunctionTypePtr = s_ptr<FunctionType>;
 
@@ -113,8 +116,8 @@ namespace llvm {
     class ReturnInst;
     using ReturnInstPtr = s_ptr<ReturnInst>;
 
-    class OutputInst;
-    using OutputInstPtr = s_ptr<OutputInst>;
+    class PrintfInst;
+    using PrintfInstPtr = s_ptr<PrintfInst>;
 
     class GetintInst;
     using GetIntInstPtr = s_ptr<GetintInst>;

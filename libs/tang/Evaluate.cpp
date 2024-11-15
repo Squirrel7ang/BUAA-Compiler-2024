@@ -67,6 +67,8 @@ namespace tang {
                 ret *= evaluate(node->unaryExps[i]);
             else if (op.getType() == TK_DIV)
                 ret /= evaluate(node->unaryExps[i]);
+            else if (op.getType() == TK_MOD)
+                ret %= evaluate(node->unaryExps[i]);
             else assert(0);
 
             i++;
@@ -78,9 +80,9 @@ namespace tang {
         int ret = evaluate(node->mulExps[0]);
         int i = 1;
         for (auto op: node->ops) {
-            if (op.getType() == TK_MULT)
+            if (op.getType() == TK_PLUS)
                 ret += evaluate(node->mulExps[i]);
-            else if (op.getType() == TK_DIV)
+            else if (op.getType() == TK_MINU)
                 ret -= evaluate(node->mulExps[i]);
             else assert(0);
 

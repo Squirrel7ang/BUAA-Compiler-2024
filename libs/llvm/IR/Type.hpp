@@ -37,14 +37,19 @@ namespace llvm {
         explicit Type(LLVMContextPtr context, TypeID typeId)
                 : _context(context), _typeID(typeId) {}
         virtual std::string output() = 0;
-    private:
+    protected:
         TypeID _typeID;
         LLVMContextPtr _context;
     };
 
+    class LabelType : public Type {
+    public:
+        explicit LabelType(LLVMContextPtr& context): Type(context, LABEL_TYPE_ID) {}
+    };
+
     class VoidType : public Type {
     public:
-        explicit VoidType(LLVMContextPtr context): Type(context, INTEGER_TYPE_ID) {}
+        explicit VoidType(LLVMContextPtr& context): Type(context, INTEGER_TYPE_ID) {}
         std::string output() override {
             return "";
         }
@@ -53,7 +58,7 @@ namespace llvm {
     class IntegerType : public Type {
         unsigned int bitwidth;
     public:
-        explicit IntegerType(LLVMContextPtr context, unsigned int bytes)
+        explicit IntegerType(LLVMContextPtr& context, unsigned int bytes)
                : Type(context, INTEGER_TYPE_ID), bitwidth(bytes) {}
         std::string output() override {
             return "";
@@ -63,7 +68,7 @@ namespace llvm {
     class PointerType: public Type {
         TypePtr _basicType;
     public:
-        explicit PointerType(LLVMContextPtr context, TypePtr basicType)
+        explicit PointerType(LLVMContextPtr& context, TypePtr basicType)
                : Type(context, POINTER_TYPE_ID), _basicType(basicType) {}
         std::string output() override {
             return "";
@@ -74,7 +79,7 @@ namespace llvm {
         TypePtr _retType;
         std::vector<TypePtr> _argTypes;
     public:
-        explicit FunctionType(LLVMContextPtr context, TypePtr retType, std::vector<TypePtr>& argTypes)
+        explicit FunctionType(LLVMContextPtr& context, TypePtr retType, std::vector<TypePtr>& argTypes)
                 : Type(context, FUNCTION_TYPE_ID), _retType(retType), _argTypes(argTypes) {}
         std::string output() override {
             return "";

@@ -59,7 +59,7 @@ namespace llvm {
     private:
         BinaryOpID _boid;
     public:
-        explicit BinaryOperator(LLVMContextPtr context, TypePtr ty,
+        explicit BinaryOperator(LLVMContextPtr& context, TypePtr ty,
                             ValuePtr vp1, ValuePtr vp2,
                             BinaryOpID boid)
                 : BinaryInst(context, ty, BINARY_OPERATOR_T, vp1, vp2), _boid(boid) {
@@ -68,7 +68,7 @@ namespace llvm {
 
     class CompareInst : public BinaryInst {
     public:
-        explicit CompareInst(LLVMContextPtr context, TypePtr ty,
+        explicit CompareInst(LLVMContextPtr& context, TypePtr ty,
                             ValuePtr vp1, ValuePtr vp2)
                 : BinaryInst(context, ty, COMPARE_INST_T, vp1, vp2) {
         }
@@ -77,7 +77,7 @@ namespace llvm {
     class AllocaInst : public Instruction {
         TypePtr _allocaType;
     public:
-        explicit AllocaInst(LLVMContextPtr context, TypePtr ty, TypePtr allocaType)
+        explicit AllocaInst(LLVMContextPtr& context, TypePtr ty, TypePtr allocaType)
                 : Instruction(context, ty, ALLOCA_INST_T), _allocaType(allocaType) { }
         std::string output() {
             std::string ret;
@@ -92,7 +92,7 @@ namespace llvm {
         ValuePtr _ptr;
         ValuePtr _offset;
     public:
-        explicit GetElePtrInst(LLVMContextPtr context, TypePtr ty,
+        explicit GetElePtrInst(LLVMContextPtr& context, TypePtr ty,
                                TypePtr basicTy, ValuePtr ptr, ValuePtr offset)
             : Instruction(context, ty, GETELEPTR_INST_T),
             _basicTy(basicTy), _ptr(ptr), _offset(offset){ }
@@ -100,14 +100,14 @@ namespace llvm {
 
     class LoadInst : public UnaryInst {
     public:
-        explicit LoadInst(LLVMContextPtr context, TypePtr ty,
+        explicit LoadInst(LLVMContextPtr& context, TypePtr ty,
                           ValuePtr vp)
                 : UnaryInst(context, ty, LOAD_INST_T, vp) { }
     };
 
     class StoreInst : public BinaryInst {
     public:
-        explicit StoreInst(LLVMContextPtr context, TypePtr ty,
+        explicit StoreInst(LLVMContextPtr& context, TypePtr ty,
                         ValuePtr value, ValuePtr ptr)
                 :BinaryInst(context, ty, STORE_INST_T, value, ptr) {
         }
@@ -115,19 +115,19 @@ namespace llvm {
 
     class CallInst : public Instruction {
     public:
-        explicit CallInst(LLVMContextPtr context, TypePtr ty, vector<ValuePtr> & args)
+        explicit CallInst(LLVMContextPtr& context, TypePtr ty, vector<ValuePtr> & args)
                 : Instruction(context, ty, CALL_INST_T) {
             for (auto value: args) {
                 createUse(value);
             }
         }
-        explicit CallInst(LLVMContextPtr context, TypePtr ty)
+        explicit CallInst(LLVMContextPtr& context, TypePtr ty)
                 : Instruction(context, ty, CALL_INST_T) { }
     };
 
     class BranchInst : public Instruction {
     public:
-        explicit BranchInst(LLVMContextPtr context, TypePtr ty,
+        explicit BranchInst(LLVMContextPtr& context, TypePtr ty,
                             ValuePtr cond, ValuePtr ifPtr, ValuePtr elsePtr)
                 : Instruction(context, ty, BRANCH_INST_T){
             createUse(cond);
@@ -142,22 +142,28 @@ namespace llvm {
      */
     class JumpInst : public Instruction {
     public:
-        explicit JumpInst(LLVMContextPtr context, TypePtr ty,
+        explicit JumpInst(LLVMContextPtr& context, TypePtr ty,
                             ValuePtr targetPtr)
                 : Instruction(context, ty, JUMP_INST_T){
             createUse(targetPtr);
         }
     };
 
-    class ReturnInst : public UnaryInst {
+    class ReturnInst : public Instruction {
     public:
-        explicit ReturnInst(LLVMContextPtr context, TypePtr ty,
+        // return value;
+        explicit ReturnInst(LLVMContextPtr& context, TypePtr ty,
                             ValuePtr ret)
-                : UnaryInst(context, ty, RETURN_INST_T, ret){
+                : Instruction(context, ty, RETURN_INST_T){
+            createUse(ret);
+        }
+        // return void;
+        explicit ReturnInst(LLVMContextPtr& context)
+                : Instruction(context, context->VOID_TY, RETURN_INST_T){
         }
     };
 
-    class OutputInst : public Instruction {
+    class PrintfInst : public Instruction {
 
     };
 

@@ -32,6 +32,7 @@ add_library(${LIBRARY_NAME}
         IR/Common.hpp
         IR/ConstantData.cpp
         IR/ConstantData.hpp
+        IR/IRPrinter.hpp
 
 )
 

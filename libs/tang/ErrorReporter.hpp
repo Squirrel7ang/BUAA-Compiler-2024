@@ -40,6 +40,7 @@ namespace tang {
         explicit ErrorReporter(std::ostream& errorOutput) : _errOutput(errorOutput) {}
         void report(unsigned int lineNumber, char errorType);
         void printAll();
+        bool error() { return !errorMessages.empty(); }
     };
 } // namespace tang
 
