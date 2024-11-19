@@ -19,8 +19,11 @@ namespace llvm {
         UserPtr _user;
         ValuePtr _value;
     public:
-        explicit Use(LLVMContextPtr context, UserPtr user, ValuePtr value)
+        explicit Use(LLVMContextPtr& context, UserPtr user, ValuePtr value)
                 :_context(context), _user(user), _value(value) { }
+        UserPtr user() { return _user; }
+        ValuePtr usee() { return _value; }
+        ValuePtr value() { return _value; }
     };
 }
 

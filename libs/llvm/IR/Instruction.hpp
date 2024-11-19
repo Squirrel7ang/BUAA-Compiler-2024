@@ -9,12 +9,6 @@
 #include "User.hpp"
 
 namespace llvm {
-    class Instruction : public User {
-    public:
-        explicit Instruction(LLVMContextPtr context, TypePtr ty, ValueType vty)
-                :User(context, ty, vty) { }
-
-    };
 }
 
 #endif //INSTRUCTION_HPP

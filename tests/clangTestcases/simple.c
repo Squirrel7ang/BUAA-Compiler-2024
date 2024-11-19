@@ -1,4 +1,11 @@
-int gb;
+const int gb = 1;
+const char gb1 = gb;
+int gb2 = gb1;
+const int gb3 = gb1;
+char gb4 = gb1;
+char gb5 = gb1 + gb1;
+
+
 
 int main() {
   char ch = 'a';
@@ -8,7 +15,6 @@ int main() {
   b = 1;
   b = a + a;
   a = b + 1;
-  gb = a;
   b = gb + 2;
   return a;
 }

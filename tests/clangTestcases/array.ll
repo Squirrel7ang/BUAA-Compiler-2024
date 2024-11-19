@@ -4,7 +4,7 @@ target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:
 target triple = "x86_64-pc-linux-gnu"
 
 @gbIntArrInit = dso_local global [4 x i32] [i32 0, i32 1, i32 2, i32 3], align 16
-@gbCharArrInit = dso_local global [4 x i8] c"012\00", align 1
+@gbCharArrInit = dso_local global [4 x i8] c"01\10~", align 1
 @gbConstIntArr = dso_local constant [4 x i32] [i32 4, i32 5, i32 6, i32 0], align 16
 @gbConstCharArr = dso_local constant [4 x i8] c"321\00", align 1
 @gbIntInit = dso_local global i32 1, align 4

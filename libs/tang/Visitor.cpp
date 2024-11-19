@@ -641,9 +641,11 @@ namespace tang {
         _symbolTable.addSymbol(node->ident->getLin(), s);
 
         // llvm
-        auto _type = ft->toLLVMType(context);
-        llvm::FunctionTypePtr funcType = std::static_pointer_cast<llvm::FunctionType>(_type);
-        llvm::FunctionPtr func = std::make_shared<llvm::Function>(context, funcType);
+        auto _returnTypePtr  = rt->toLLVMType(context);
+        std::vector<llvm::TypePtr> argTypes;
+        for (const auto& arg: ft->_argType)
+            argTypes.push_back(arg->toLLVMType(context));
+        llvm::FunctionPtr func = std::make_shared<llvm::Function>(context, _returnTypePtr, argTypes, s.getName());
         _modulePtr->addFunction(func);
         _curFunction = func;
         llvm::BasicBlockPtr block = std::make_shared<llvm::BasicBlock>(context);
@@ -684,7 +686,7 @@ namespace tang {
 
         // llvm
         auto context = _modulePtr->context();
-        llvm::FunctionPtr fp = std::make_shared<llvm::Function>(context, context->I32_TY);
+        llvm::FunctionPtr fp = std::make_shared<llvm::Function>(context, context->I32_TY, "main");
         _modulePtr->addFunction(fp);
         _curFunction = fp;
         llvm::BasicBlockPtr bbp = std::make_shared<llvm::BasicBlock>(context);

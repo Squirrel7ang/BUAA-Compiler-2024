@@ -9,6 +9,8 @@
 #include <vector>
 
 #include "Common.hpp"
+#include "Function.hpp"
+#include "GlobalVariable.hpp"
 #include "LLVMContext.hpp"
 
 namespace llvm {
@@ -22,8 +24,8 @@ namespace llvm {
      */
     class Module {
         LLVMContextPtr _context;
-        std::vector<FunctionPtr> _functions;
         std::vector<GlobalVariablePtr> _globalVariables;
+        std::vector<FunctionPtr> _functions;
     public:
         explicit Module();
         LLVMContextPtr context();
@@ -32,6 +34,25 @@ namespace llvm {
         // 'functions' related functions
         void addFunction(FunctionPtr);
         void addGlobalVariable(GlobalVariablePtr);
+
+        // Printer
+        std::string getSourceName() { return _context->getSourceName(); }
+        void print(std::ostream& out) {
+            auto sourceName = _context->getSourceName();
+            out << "; ModuleID = '" + sourceName + "'" << std::endl;
+            out << "source_filename = \"" + sourceName + "\"" << std::endl;
+            out << std::endl;
+
+            // GlobalVaraibles
+            for (auto gvp: _globalVariables) {
+                gvp->print(out);
+            }
+
+            // Function
+            for (auto fp: _functions) {
+                fp->print(out);
+            }
+        }
     };
     using ModulePtr = std::shared_ptr<Module>;
 }

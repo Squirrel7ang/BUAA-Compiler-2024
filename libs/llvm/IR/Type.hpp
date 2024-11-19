@@ -34,9 +34,10 @@ namespace llvm {
         bool isArray() { return _typeID == ARRAY_TYPE_ID; }
         bool isFunction() { return _typeID == FUNCTION_TYPE_ID; }
         bool isPointer() { return _typeID == POINTER_TYPE_ID; }
-        explicit Type(LLVMContextPtr context, TypeID typeId)
+        explicit Type(LLVMContextPtr& context, TypeID typeId)
                 : _context(context), _typeID(typeId) {}
-        virtual std::string output() = 0;
+        virtual void print(std::ostream& out) = 0;
+
     protected:
         TypeID _typeID;
         LLVMContextPtr _context;
@@ -45,23 +46,39 @@ namespace llvm {
     class LabelType : public Type {
     public:
         explicit LabelType(LLVMContextPtr& context): Type(context, LABEL_TYPE_ID) {}
+        void print(std::ostream& out) override {
+            out << "label";
+        }
     };
 
     class VoidType : public Type {
     public:
         explicit VoidType(LLVMContextPtr& context): Type(context, INTEGER_TYPE_ID) {}
-        std::string output() override {
-            return "";
+        void print(std::ostream& out) override {
+            out << "void";
         }
     };
 
     class IntegerType : public Type {
         unsigned int bitwidth;
     public:
-        explicit IntegerType(LLVMContextPtr& context, unsigned int bytes)
-               : Type(context, INTEGER_TYPE_ID), bitwidth(bytes) {}
-        std::string output() override {
-            return "";
+        explicit IntegerType(LLVMContextPtr& context, unsigned int bits)
+               : Type(context, INTEGER_TYPE_ID), bitwidth(bits) {}
+        void print(std::ostream& out) override {
+            out << 'i' << bitwidth;
+        }
+    };
+
+    class ArrayType: public Type {
+        TypePtr _basicType;
+        unsigned int _length;
+    public:
+        explicit ArrayType(LLVMContextPtr& context, TypePtr basicType, int length)
+                : Type(context, ARRAY_TYPE_ID), _basicType(basicType) { }
+        void print(std::ostream& out) override {
+            out << "[" << _length << " x ";
+            _basicType->print(out);
+            out << "]";
         }
     };
 
@@ -70,19 +87,20 @@ namespace llvm {
     public:
         explicit PointerType(LLVMContextPtr& context, TypePtr basicType)
                : Type(context, POINTER_TYPE_ID), _basicType(basicType) {}
-        std::string output() override {
-            return "";
+        void print(std::ostream& out ) override {
+            out << "ptr";
         }
     };
 
     class FunctionType: public Type {
+    public:
         TypePtr _retType;
         std::vector<TypePtr> _argTypes;
     public:
         explicit FunctionType(LLVMContextPtr& context, TypePtr retType, std::vector<TypePtr>& argTypes)
                 : Type(context, FUNCTION_TYPE_ID), _retType(retType), _argTypes(argTypes) {}
-        std::string output() override {
-            return "";
+        void print(std::ostream& out) override {
+            out << "FunctionType";
         }
     };
 }

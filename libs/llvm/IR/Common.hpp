@@ -22,6 +22,8 @@ namespace llvm {
     template <typename T>
     using vector = std::vector<T>;
 
+    /******* VALUE & USES *******/
+
     class Value;
     using ValuePtr = s_ptr<Value>;
 
@@ -44,8 +46,10 @@ namespace llvm {
     class BasicBlock;
     using BasicBlockPtr = s_ptr<BasicBlock>;
 
-    class Instruction;
-    using InstructionPtr = s_ptr<Instruction>;
+    class Argument;
+    using ArgumentPtr = s_ptr<Argument>;
+
+    /******* TYPES *******/
 
     class VoidType;
     using VoidTypePtr = s_ptr<VoidType>;
@@ -56,6 +60,9 @@ namespace llvm {
     class PointerType;
     using PointerTypePtr = s_ptr<PointerType>;
 
+    class ArrayType;
+    using ArrayTypePtr = s_ptr<ArrayType>;
+
     class LabelType;
     using LabelTypePtr = s_ptr<LabelType>;
 
@@ -64,6 +71,8 @@ namespace llvm {
 
     class Type;
     using TypePtr = s_ptr<Type>;
+
+    /******* CONSTANTS *******/
 
     class GlobalVariable;
     using GlobalVariablePtr = s_ptr<GlobalVariable>;
@@ -76,6 +85,11 @@ namespace llvm {
 
     class ConstantData;
     using ConstantDataPtr = s_ptr<ConstantData>;
+
+    /******* INSTRUCTIONS *******/
+
+    class Instruction;
+    using InstructionPtr = s_ptr<Instruction>;
 
     class UnaryInst;
     using UnaryInstPtr = s_ptr<UnaryInst>;

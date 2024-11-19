@@ -6,6 +6,8 @@
 #include "libs/tang/Parser1.hpp"
 #include "libs/tang/Visitor.hpp"
 #include <string>
+
+#include "IR/IRPrinter.hpp"
 using namespace tang;
 
 int main(int argc, char *argv[]) {
@@ -44,6 +46,7 @@ int main(int argc, char *argv[]) {
     }
     else {
         auto llvmModule = visitor.getLLVMModule();
+        // llvm::IRPrinter printer = llvm::IRPrinter(llvmModule);
     }
 
 

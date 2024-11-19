@@ -6,6 +6,27 @@ int main() {
     int a = 0;
     int b = a + 1;
     int arr[1] = {12};
+    int z;
+    z = a+b;
+    z = a-b;
+    z = a*b;
+    z = a/b;
+    z = a%b;
+    z = -a;
+    z = !a;
+    z = +z;
+    z = a&&b;
+    z = a||b;
+    z = (a!=b);
+    z = (a==b);
+    z = (a< b);
+    z = (a<=b);
+    z = (a> b);
+    z = (a>=b);
+    char zx;
+    zx = a;
+    a = zx;
+
 
     a = (a - b*a) + 2 * (a+1) / b;
     b = (-f(-b) + a + arr[0] - 4) / (a + 2);

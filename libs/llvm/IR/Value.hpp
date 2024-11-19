@@ -9,11 +9,12 @@
 
 #include "Common.hpp"
 #include "LLVMContext.hpp"
+#include "Use.hpp"
 
 namespace llvm {
     class LLVMContext;
     enum ValueType {
-        ARG_T,
+        ARGUMENT_T,
         BASIC_BLOCK_T,
 
         CONSTANT_T,
@@ -45,11 +46,18 @@ namespace llvm {
         TypePtr _type;
         ValueType _valueType;
         vector<UsePtr> _users;
+        int index = -1; // the tmp variable's index
     public:
-        explicit Value(LLVMContextPtr context, TypePtr ty, ValueType valueType)
+        explicit Value(LLVMContextPtr& context, TypePtr ty, ValueType valueType)
                 : _context(context), _valueType(valueType) {}
-        std::string output();
+        virtual void print(std::ostream&) { }
+        virtual void printRef(std::ostream&) { }
         void _addUser(UsePtr use);
+
+    protected:
+        UserPtr getUser(unsigned int i) {
+            return _users.at(i)->user();
+        }
 
     protected:
     };

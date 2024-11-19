@@ -176,7 +176,8 @@ namespace tang {
         bool isArray() override { return true; }
         bool isFunc() override { return false; }
         llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) override {
-            return context->I32_PTR_TY;
+            auto ty = std::make_shared<llvm::ArrayType>(context, context->I32_TY, _len);
+            return ty;
         }
         llvm::TypePtr toBasicLLVMType(llvm::LLVMContextPtr context) override {
             return context->I32_TY;
@@ -207,7 +208,8 @@ namespace tang {
         bool isArray() override { return true; }
         bool isFunc() override { return false; }
         llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) override {
-            return context->I8_PTR_TY;
+            auto ty = std::make_shared<llvm::ArrayType>(context, context->I8_TY, _len);
+            return ty;
         }
         llvm::TypePtr toBasicLLVMType(llvm::LLVMContextPtr context) override {
             return context->I8_TY;
@@ -301,7 +303,7 @@ namespace tang {
             return gvp;
         }
         llvm::AllocaInstPtr toAllocaInst(llvm::LLVMContextPtr context) {
-            auto ptrTy = std::make_shared<llvm::PointerType>(context, _type->toLLVMType(context));
+            auto ptrTy = std::make_shared<llvm::PointerType>(context, _type->toBasicLLVMType(context));
             auto _aip = std::make_shared<llvm::AllocaInst>(context, ptrTy, _type->toLLVMType(context));
             _vp = _aip;
             return _aip;

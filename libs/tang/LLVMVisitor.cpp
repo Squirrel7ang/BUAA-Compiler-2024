@@ -173,7 +173,7 @@ namespace tang {
             else assert(0);
         }, *(node->unaryExp));
 
-        llvm::UnaryOperatorPtr uop;
+        llvm::UnaryOperatorPtr uop; //  TODO: there are no unary instructions
         for (auto& op: node->unaryOps) {
             if (op->isMinus) {
                 uop = std::make_shared<llvm::UnaryOperator>(

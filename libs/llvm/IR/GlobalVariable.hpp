@@ -10,30 +10,29 @@
 #include "GlobalValue.hpp"
 #include "LLVMContext.hpp"
 #include "Type.hpp"
+#include "ConstantData.hpp"
 
 namespace llvm {
     class GlobalVariable : public GlobalValue {
     private:
-        ConstantPtr _initVal;
+        ConstantDataPtr _initVal;
         bool _isConst;
         TypePtr _type;
         std::string _name;
     public:
-        explicit GlobalVariable(LLVMContextPtr context, TypePtr ty,
-                                ConstantPtr initVal, bool constant, std::string& name)
+        explicit GlobalVariable(LLVMContextPtr& context, TypePtr ty,
+                                ConstantDataPtr initVal, bool constant, std::string& name)
                 : GlobalValue(context, ty, GLOBAL_VARIABLE_T), _initVal(initVal),
                   _isConst(constant), _name(name) { }
-        std::string output() {
-            std::string ret;
-            ret += '@';
-            ret += _name;
-            ret += " = dso_local";
-            ret += _isConst ? " constant" : " global";
-            ret += ' ';
-            ret += _type->output();
-            ret += ' ';
-            ret += _initVal->output();
-            return ret;
+        void print(std::ostream& out) {
+            out << "@" << _name << " = dso_local";
+            out << (_isConst ? " constant " : " global ");
+            _type->print(out);
+            out << " ";
+            _initVal->print(out);
+        }
+        void printRef(std::ostream& out) {
+            out << "@" << _name;
         }
     };
     using GlobalVariablePtr = std::shared_ptr<GlobalVariable>;

@@ -2,6 +2,8 @@
 // Created by tang on 11/7/24.
 //
 
+#include <cassert>
+
 #include "User.hpp"
 #include "Use.hpp"
 
@@ -19,4 +21,9 @@ namespace llvm {
         // push into Global Uselist;
         _context->addUse(use);
     }
+
+    ValuePtr User::OpAt(unsigned int i) {
+        return _usees.at(i)->usee();
+    }
+
 }
