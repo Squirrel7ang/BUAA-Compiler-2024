@@ -5,12 +5,8 @@ int f1(int a, char b) {
 
 void f2(int a[], char b[], int na, int nb) {
     int i = 0;
-//    for (i=0; i<na; i=i+1) {
-//        printf("a[i] = %d\n", a[i]);
-//    }
-//    for (i=0; i<nb; i=i+1) {
-//        printf("b[i] = '%c'\n", b[i]);
-//    }
+    a[0];
+    b[0] = a[0];
 }
 
 char f3() {

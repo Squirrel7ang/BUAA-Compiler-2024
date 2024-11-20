@@ -31,6 +31,16 @@ define dso_local void @f2(ptr noundef %0, ptr noundef %1, i32 noundef %2, i32 no
   store i32 %2, ptr %7, align 4
   store i32 %3, ptr %8, align 4
   store i32 0, ptr %9, align 4
+  %10 = load ptr, ptr %5, align 8
+  %11 = getelementptr inbounds i32, ptr %10, i64 0
+  %12 = load i32, ptr %11, align 4
+  %13 = load ptr, ptr %5, align 8
+  %14 = getelementptr inbounds i32, ptr %13, i64 0
+  %15 = load i32, ptr %14, align 4
+  %16 = trunc i32 %15 to i8
+  %17 = load ptr, ptr %6, align 8
+  %18 = getelementptr inbounds i8, ptr %17, i64 0
+  store i8 %16, ptr %18, align 1
   ret void
 }
 

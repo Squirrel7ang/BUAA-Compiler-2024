@@ -26,4 +26,8 @@ namespace llvm {
         return _usees.at(i)->usee();
     }
 
+    ValuePtr User::getUsee(unsigned int i) {
+        return _usees.at(i)->usee();
+    }
+
 }

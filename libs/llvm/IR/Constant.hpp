@@ -12,7 +12,7 @@
 namespace llvm {
     class Constant: public User {
     public:
-        explicit Constant(LLVMContextPtr& context, TypePtr ty, ValueType vty)
+        explicit Constant(LLVMContextPtr& context, TypePtr& ty, ValueType vty)
                 : User(context, ty, vty) {}
         // virtual std::string output();
         void print(std::ostream&) { }

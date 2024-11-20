@@ -6,13 +6,13 @@
 
 namespace tang {
     void Visitor::defineGlobalVariable(Symbol& s) {
-        auto context = _modulePtr->context();
+        auto&& context = _modulePtr->context();
         llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
         _modulePtr->addGlobalVariable(gv);
     }
 
     void Visitor::defineLocalVariable(const u_ptr<ConstDef>& node, Symbol& s) {
-        auto context = _modulePtr->context();
+        auto&& context = _modulePtr->context();
         llvm::AllocaInstPtr aip = s.toAllocaInst(context);
         _curBlock->addInst(aip);
 
@@ -23,7 +23,7 @@ namespace tang {
                 // if this is {} initializer
                 if (node->constInitVal->stringConst == nullptr) {
                     for (auto& exp: node->constInitVal->constExps) {
-                        auto vp = genConstExpIR(exp);
+                        auto vp = genConstExpIR(exp, s.getType()->toBasicLLVMType(context));
                         assignVariable(s, vp);
                         i++;
                     }
@@ -48,7 +48,7 @@ namespace tang {
             }
             // else this is not an array
             else {
-                auto vp = genConstExpIR(node->constInitVal->constExps.at(0));
+                auto vp = genConstExpIR(node->constInitVal->constExps.at(0), s.getType()->toLLVMType(context));
                 assignVariable(s, vp);
             }
         }
@@ -66,7 +66,7 @@ namespace tang {
                 // if this is {} initializer
                 if (node->initVal->stringConst == nullptr) {
                     for (auto& exp: node->initVal->exps) {
-                        auto vp = genExpIR(exp);
+                        auto vp = genExpIR(exp, s.getType()->toBasicLLVMType(context));
                         assignVariable(s, vp);
                         i++;
                     }
@@ -91,27 +91,29 @@ namespace tang {
             }
             // else this is not an array
             else {
-                auto vp = genExpIR(node->initVal->exps.at(0));
+                auto vp = genExpIR(node->initVal->exps.at(0), s.getType()->toLLVMType(context));
                 assignVariable(s, vp);
             }
         }
     }
 
-    llvm::ValuePtr Visitor::genConstExpIR(const u_ptr<ConstExp>& node) {
-        return genAddExpIR(node->addExp);
+    llvm::ValuePtr Visitor::genConstExpIR(const u_ptr<ConstExp>& node, llvm::TypePtr expectType) {
+        // TODO: match expectType
+        return genAddExpIR(node->addExp, expectType);
     }
 
-    llvm::ValuePtr Visitor::genExpIR(const u_ptr<Exp>& node) {
-        return genAddExpIR(node->addExp);
+    llvm::ValuePtr Visitor::genExpIR(const u_ptr<Exp>& node, llvm::TypePtr expectType) {
+        // TODO: match expectType
+        return genAddExpIR(node->addExp, expectType);
     }
 
-    llvm::ValuePtr Visitor::genAddExpIR(const u_ptr<AddExp>& node) {
+    llvm::ValuePtr Visitor::genAddExpIR(const u_ptr<AddExp>& node, llvm::TypePtr expectType) {
         auto context = _modulePtr->context();
-        llvm::ValuePtr inst0 = genMulExpIR(node->mulExps.at(0));
+        llvm::ValuePtr inst0 = genMulExpIR(node->mulExps.at(0), expectType);
         llvm::ValuePtr inst1;
 
         for (int i = 0; i < node->ops.size(); i++) {
-            inst1 = genMulExpIR(node->mulExps.at(i+1));
+            inst1 = genMulExpIR(node->mulExps.at(i+1), expectType);
             llvm::BinaryOperatorPtr bip;
             if (node->ops.at(i).getType() == TK_PLUS) {
                 bip = std::make_shared<llvm::BinaryOperator>(
@@ -127,15 +129,16 @@ namespace tang {
             _curBlock->addInst(bip);
             inst0 = bip;
         }
+        // TODO: match expectType
         return inst0;
     }
 
-    llvm::ValuePtr Visitor::genMulExpIR(const u_ptr<MulExp>& node) {
+    llvm::ValuePtr Visitor::genMulExpIR(const u_ptr<MulExp>& node, llvm::TypePtr expectType) {
         auto context = _modulePtr->context();
-        llvm::ValuePtr inst0 = genUnaryExpIR(node->unaryExps.at(0));
+        llvm::ValuePtr inst0 = genUnaryExpIR(node->unaryExps.at(0), expectType);
         llvm::ValuePtr inst1;
         for (int i = 0; i < node->ops.size(); i++) {
-            inst1 = genUnaryExpIR(node->unaryExps.at(i+1));
+            inst1 = genUnaryExpIR(node->unaryExps.at(i+1), expectType);
             llvm::BinaryOperatorPtr bip;
             if (node->ops.at(i).getType() == TK_MULT) {
                 bip = std::make_shared<llvm::BinaryOperator>(
@@ -155,10 +158,11 @@ namespace tang {
             _curBlock->addInst(bip);
             inst0 = bip;
         }
+        // TODO: match expectType
         return inst0;
     }
 
-    llvm::ValuePtr Visitor::genUnaryExpIR(const u_ptr<UnaryExp>& node) {
+    llvm::ValuePtr Visitor::genUnaryExpIR(const u_ptr<UnaryExp>& node, llvm::TypePtr expectType) {
         auto context = _modulePtr->context();
         llvm::ValuePtr inst;
 
@@ -168,33 +172,38 @@ namespace tang {
                 inst = genFuncCallIR(arg);
             }
             else if constexpr (std::is_same_v<T, u_ptr<PrimaryExp>>) {
-                inst = genPrimaryExp(arg);
+                inst = genPrimaryExp(arg, expectType);
             }
             else assert(0);
         }, *(node->unaryExp));
 
         llvm::UnaryOperatorPtr uop; //  TODO: there are no unary instructions
+        llvm::BinaryOperatorPtr bop;
         for (auto& op: node->unaryOps) {
             if (op->isMinus) {
-                uop = std::make_shared<llvm::UnaryOperator>(
-                    context, context->I32_TY, inst, llvm::UOID_NEG);
+                llvm::ConstantDataPtr cd = std::make_shared<llvm::ConstantData>(context, context->I32_TY, 0);
+                bop = std::make_shared<llvm::BinaryOperator>(
+                    context, context->I32_TY, cd, inst, llvm::BOID_SUB);
+                _curBlock->addInst(bop);
             }
             else if (op->isExc) {
-                uop = std::make_shared<llvm::UnaryOperator>(
-                    context, context->I32_TY, inst, llvm::UOID_NOT);
+                // TODO
             }
-            _curBlock->addInst(uop);
         }
 
+        // TODO: match expectType
         if (uop != nullptr) {
             return uop;
+        }
+        else if (bop != nullptr) {
+            return bop;
         }
         else {
             return inst;
         }
     }
 
-    llvm::ValuePtr Visitor::genPrimaryExp(const u_ptr<PrimaryExp>& node) {
+    llvm::ValuePtr Visitor::genPrimaryExp(const u_ptr<PrimaryExp>& node, llvm::TypePtr expectType) {
         llvm::ValuePtr inst;
         std::visit([&](auto && arg) {
             using T = std::decay_t<decltype(arg)>;
@@ -212,10 +221,11 @@ namespace tang {
             }
             else assert(0);
         }, *(node->primaryExp));
+        // TODO: match expectType
         return inst;
     }
 
-    llvm::CallInstPtr Visitor::genFuncCallIR(const u_ptr<FuncCall>& node) {
+    llvm::CallInstPtr Visitor::genFuncCallIR(const u_ptr<FuncCall>& node, llvm::TypePtr expectType) {
         auto context = _modulePtr->context();
         llvm::CallInstPtr cip;
         Symbol s;
@@ -224,39 +234,42 @@ namespace tang {
         auto _func_type= std::dynamic_pointer_cast<FuncSymbolType>(s.getType());
         auto _llvm_type = _func_type->_returnType->toLLVMType(context);
 
-        if (node->funcRParams->exps.empty()) {
-            cip = std::make_shared<llvm::CallInst>(context, _llvm_type);
+        if (node->funcRParams == nullptr) {
+            cip = std::make_shared<llvm::CallInst>(context, _llvm_type, s.getLLVMValue());
         }
         else {
             vector<llvm::ValuePtr> rargs;
             for (auto& exp: node->funcRParams->exps) {
-                auto inst = genExpIR(exp);
+                auto inst = genExpIR(exp, expectType);
                 rargs.push_back(inst);
             }
-            cip = std::make_shared<llvm::CallInst>(context, _llvm_type, rargs);
+            cip = std::make_shared<llvm::CallInst>(context, _llvm_type, s.getLLVMValue(), rargs);
         }
 
         _curBlock->addInst(cip);
 
+        // TODO: match expectType
         return cip;
 
     }
 
-    llvm::ConstantDataPtr Visitor::genNumberIR(const u_ptr<Number>& node) {
+    llvm::ConstantDataPtr Visitor::genNumberIR(const u_ptr<Number>& node, llvm::TypePtr expectType) {
         auto context = _modulePtr->context();
         llvm::ConstantDataPtr cdp = std::make_shared<llvm::ConstantData>(
             context, context->I32_TY, node->intConst->val);
+        // TODO: match expectType
         return cdp;
     }
 
-    llvm::ConstantDataPtr Visitor::genCharacterIR(const u_ptr<Character>& node) {
+    llvm::ConstantDataPtr Visitor::genCharacterIR(const u_ptr<Character>& node, llvm::TypePtr expectType) {
         auto context = _modulePtr->context();
         llvm::ConstantDataPtr cdp = std::make_shared<llvm::ConstantData>(
             context, context->I8_TY, node->charConst->ch);
+        // TODO: match expectType
         return cdp;
     }
 
-    llvm::LoadInstPtr Visitor::genLValIR(const u_ptr<LVal>& node) {
+    llvm::LoadInstPtr Visitor::genLValIR(const u_ptr<LVal>& node, llvm::TypePtr expectType) {
         auto context = _modulePtr->context();
         Symbol s;
         _symbolTable.findSymbolGlobal(s, node->ident->str);
@@ -264,7 +277,7 @@ namespace tang {
         llvm::LoadInstPtr lip;
         if (s.getType()->isArray()) {
             llvm::GetElePtrInstPtr gepi;
-            auto offset = genExpIR(node->exp);
+            auto offset = genExpIR(node->exp, expectType);
             if (s.getType()->toRawType() == INT_ARRAY_ST) {
                 auto sty = std::dynamic_pointer_cast<IntArrayType>(s.getType());
                 gepi = std::make_shared<llvm::GetElePtrInst>(
@@ -296,7 +309,7 @@ namespace tang {
         auto ty = s.getLLVMValue();
         auto ptr = s.getLLVMValue();
         auto sip = std::make_shared<llvm::StoreInst>(
-            context, s.getType()->toBasicLLVMType(context), value, ptr);
+            context, value, ptr);
         _curBlock->addInst(sip);
     }
 
@@ -304,11 +317,12 @@ namespace tang {
         auto context = _modulePtr->context();
         llvm::ReturnInstPtr rip = std::make_shared<llvm::ReturnInst>(
             context, ty, value);
+        _curBlock->addInst(rip);
     }
 
     void Visitor::returnVoid() {
         auto context = _modulePtr->context();
         llvm::ReturnInstPtr rip = std::make_shared<llvm::ReturnInst>( context);
-
+        _curBlock->addInst(rip);
     }
 }

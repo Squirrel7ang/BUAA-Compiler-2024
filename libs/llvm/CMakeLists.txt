@@ -1,6 +1,7 @@
 set(LIBRARY_NAME llvm)
 
 add_library(${LIBRARY_NAME}
+        IR/Common.hpp
         IR/Module.cpp
         IR/BasicBlock.cpp
         IR/Function.cpp
@@ -29,7 +30,6 @@ add_library(${LIBRARY_NAME}
         IR/GlobalVariable.hpp
         IR/Type.cpp
         IR/Type.hpp
-        IR/Common.hpp
         IR/ConstantData.cpp
         IR/ConstantData.hpp
         IR/IRPrinter.hpp

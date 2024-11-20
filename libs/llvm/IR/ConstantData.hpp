@@ -22,12 +22,13 @@ namespace llvm {
             }
         }
         explicit ConstantData(LLVMContextPtr& context, TypePtr ty, int data)
-                : Constant(context, ty, CONSTANT_DATA_T), _data(data), _length(-1) { }
+                : Constant(context, ty, CONSTANT_DATA_T), _length(-1) {
+            _data.push_back(data);
+        }
     public:
         void print(std::ostream& out) {
             if (_length < 0) {
-                _type->print(out);
-                out << " " << _data.at(0);
+                out << _data.at(0);
             }
             else {
                 out << "[";
@@ -38,6 +39,9 @@ namespace llvm {
                 _type->print(out);
                 out << " " << _data.at(_length - 1) << "]";
             }
+        }
+        void printRef(std::ostream &out) override {
+            print(out);
         }
     };
 }

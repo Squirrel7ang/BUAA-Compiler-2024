@@ -12,8 +12,8 @@
 namespace llvm {
     class GlobalValue : public Constant {
     public:
-        explicit GlobalValue(LLVMContextPtr& context, TypePtr type, ValueType vty)
-                : Constant(context, type, vty) {}
+        explicit GlobalValue(LLVMContextPtr& context, TypePtr ty, ValueType vty)
+                : Constant(context, ty, vty) {}
         // virtual std::string output();
     };
 }

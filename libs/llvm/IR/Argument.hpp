@@ -8,6 +8,7 @@
 #include <ostream>
 
 #include "Common.hpp"
+#include "Type.hpp"
 #include "Value.hpp"
 
 namespace llvm{
@@ -17,8 +18,8 @@ namespace llvm{
                 : Value(context, ty, ARGUMENT_T) { }
         void print(std::ostream& out) {
             _type->print(out);
-            out << " noundef ";
-
+            out << " ";
+            printRef(out);
         }
     };
 }

@@ -21,11 +21,22 @@ namespace llvm {
         }
         void print(std::ostream& out) {
             // TODO: print tmpVar's Index
+            out << _index << ':';
             out << std::endl;
             for (auto& inst: insts) {
+                out << "  ";
                 inst->print(out);
+                out << std::endl;
             }
         }
+        void setIndex(int &index) override {
+            _index = index;
+            index++;
+            for (auto& inst: insts) {
+                inst->setIndex(index);
+            }
+        }
+
     };
 }
 

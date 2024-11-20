@@ -22,17 +22,20 @@ int main(int argc, char *argv[]) {
     std::string parserOut = "parser.txt";
     std::string visitorOut = "symbol.txt";
     std::string errOut = "error.txt";
+    std::string llvmOut = "llvm_ir.txt";
 
     std::ifstream infile(input, std::ios::in);
     std::ofstream lexerStream;
     std::ofstream parserStream;
     std::ofstream visitorStream;
     std::ofstream erroutStream;
+    std::ofstream llvmStream;
 
     lexerStream.open(lexerOut, std::ios::out);
     parserStream.open(parserOut, std::ios::out);
     visitorStream.open(visitorOut, std::ios::out);
     erroutStream.open(errOut, std::ios::out);
+    llvmStream.open(llvmOut, std::ios::out);
 
     auto reporter = ErrorReporter(erroutStream);
     auto lexer = Lexer(infile, input, lexerStream, reporter);
@@ -46,7 +49,7 @@ int main(int argc, char *argv[]) {
     }
     else {
         auto llvmModule = visitor.getLLVMModule();
-        // llvm::IRPrinter printer = llvm::IRPrinter(llvmModule);
+        llvmModule->print(llvmStream);
     }
 
 

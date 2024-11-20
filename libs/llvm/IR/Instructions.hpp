@@ -8,8 +8,8 @@
 #include <cassert>
 
 #include "Common.hpp"
-#include "Instruction.hpp"
 #include "Type.hpp"
+#include "Instruction.hpp"
 
 namespace llvm {
 
@@ -17,9 +17,6 @@ namespace llvm {
     public:
         explicit Instruction(LLVMContextPtr& context, TypePtr ty, ValueType vty)
                 :User(context, ty, vty) { }
-        void printRef(std::ostream& out) override {
-            out << '%' << index;
-        }
     };
 
     class UnaryInst : public Instruction {
@@ -32,8 +29,6 @@ namespace llvm {
     };
 
     enum UnaryOpID {
-        UOID_NEG,
-        UOID_NOT,
         UOID_TRUNC,
         UOID_ZEXT, // always perform zero extend
     };
@@ -48,7 +43,14 @@ namespace llvm {
         void print(std::ostream& out) override {
             printRef(out);
             out << " = ";
-            // TODO
+            switch (_uoid) {
+                case(UOID_ZEXT): out << "zext "; break;
+                case(UOID_TRUNC): out << "trunc "; break;
+                default: assert(0);
+            }
+            getUsee(0)->printRefWithType(out);
+            out << " to ";
+            _type->print(out);
         }
     };
 
@@ -82,25 +84,18 @@ namespace llvm {
             printRef(out);
             out << " = ";
             switch (_boid) {
-                BOID_ADD: out << "add nsw "; break;
-                BOID_SUB: out << "sub nsw "; break;
-                BOID_MUL: out << "mul nsw "; break;
-                BOID_DIV: out << "sdiv"; break;
-                BOID_REM: out << "srem"; break;
-                BOID_AND: out << "and "; break;
-                BOID_OR: out << "or "; break;
+                case BOID_ADD: out << "add nsw "; break;
+                case BOID_SUB: out << "sub nsw "; break;
+                case BOID_MUL: out << "mul nsw "; break;
+                case BOID_DIV: out << "sdiv "; break;
+                case BOID_REM: out << "srem "; break;
                 default: assert(0);
             }
-            out << "i32 ";
-            auto&& usee0 = getUsee(0);
-            auto&& usee1 = getUsee(1);
-            usee0->printRef(out);
+            _type->print(out);
+            out << " ";
+            getUsee(0)->printRef(out);
             out << ", ";
-            usee1->printRef(out);
-            out << std::endl;
-        }
-        void printRef(std::ostream& out) override {
-
+            getUsee(1)->printRef(out);
         }
     };
 
@@ -137,7 +132,6 @@ namespace llvm {
             usee0->printRef(out);
             out << ", ";
             usee1->printRef(out);
-            out << std::endl;
         }
     };
 
@@ -151,7 +145,6 @@ namespace llvm {
             out << " = ";
             out << "alloca ";
             _allocaType->print(out);
-            out << std::endl;
         }
     };
 
@@ -171,60 +164,75 @@ namespace llvm {
             out << "getelementptr ";
             out << ", ";
             out << "ptr ";
+            out << "inbounds ";
             getUsee(0)->printRef(out);
             out << ", ";
+            out << "i64 0 , ";
             out << "i64 ";
             getUsee(1)->printRef(out);
-
-            out << std::endl;
         }
     };
 
     class LoadInst : public UnaryInst {
-        TypePtr _loadType;
     public:
-        explicit LoadInst(LLVMContextPtr& context, TypePtr ty,
-                          ValuePtr vp, TypePtr loadType)
-                : UnaryInst(context, ty, LOAD_INST_T, vp), _loadType(loadType) { }
+        explicit LoadInst(LLVMContextPtr& context, TypePtr ty, ValuePtr vp)
+                : UnaryInst(context, ty, LOAD_INST_T, vp) { }
         void print(std::ostream& out) {
             printRef(out);
             out << " = ";
             out << "load ";
-            _loadType->print(out);
+            _type->print(out);
             out << ", ";
             out << "ptr ";
             getUsee(0)->printRef(out);
-
-            out << std::endl;
         }
     };
 
     class StoreInst : public BinaryInst {
     public:
-        explicit StoreInst(LLVMContextPtr& context, TypePtr ty,
+        explicit StoreInst(LLVMContextPtr& context,
                         ValuePtr value, ValuePtr ptr)
-                :BinaryInst(context, ty, STORE_INST_T, value, ptr) { }
+                :BinaryInst(context, context->VOID_TY, STORE_INST_T, value, ptr) { }
         void print(std::ostream& out) {
             out << "store ";
-            out << getUsee(0)->
+            getUsee(0)->printRefWithType(out);
             out << ", ";
-            out << "ptr ";
-            getUsee(0)->printRef(out);
-
-            out << std::endl;
+            getUsee(1)->printRefWithType(out);
         }
     };
 
     class CallInst : public Instruction {
     public:
-        explicit CallInst(LLVMContextPtr& context, TypePtr ty, vector<ValuePtr> & args)
+        explicit CallInst(LLVMContextPtr& context, TypePtr ty, ValuePtr func, vector<ValuePtr> & args)
                 : Instruction(context, ty, CALL_INST_T) {
+            createUse(func);
             for (auto value: args) {
                 createUse(value);
             }
         }
-        explicit CallInst(LLVMContextPtr& context, TypePtr ty)
-                : Instruction(context, ty, CALL_INST_T) { }
+        explicit CallInst(LLVMContextPtr& context, TypePtr ty, ValuePtr func)
+                : Instruction(context, ty, CALL_INST_T) {
+            createUse(func);
+        }
+        void print(std::ostream& out) {
+            printRef(out);
+            out << " = ";
+            out << "call ";
+            _type->print(out);
+            out << " ";
+            getUsee(0)->printRef(out);
+            out << "(";
+
+            // parameters
+            for (int i = 1; i < _usees.size(); i++) {
+                getUsee(i)->printRefWithType(out);
+                if (i < _usees.size() - 1) {
+                    out << ", ";
+                }
+            }
+
+            out << ")";
+        }
     };
 
     class BranchInst : public Instruction {
@@ -235,6 +243,9 @@ namespace llvm {
             createUse(cond);
             createUse(ifPtr);
             createUse(elsePtr);
+        }
+        void print(std::ostream &) override {
+
         }
     };
 
@@ -249,6 +260,9 @@ namespace llvm {
                 : Instruction(context, ty, JUMP_INST_T){
             createUse(targetPtr);
         }
+        void print(std::ostream &) override {
+
+        }
     };
 
     class ReturnInst : public Instruction {
@@ -262,6 +276,15 @@ namespace llvm {
         // return void;
         explicit ReturnInst(LLVMContextPtr& context)
                 : Instruction(context, context->VOID_TY, RETURN_INST_T){
+        }
+        void print(std::ostream & out) override {
+            out << "ret ";
+            if (_usees.size() > 0) {
+                getUsee(0)->printRefWithType(out);
+            }
+            else {
+                _context->VOID_TY->print(out);
+            }
         }
     };
 

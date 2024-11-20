@@ -1,0 +1,24 @@
+// functions
+int addint(int a, int b) {
+    int ret = a+b;
+    if (ret == a+b) {
+        printf("add char success");
+    }
+    return ret;
+}
+
+char addchar(char a, char b) {
+    char ret = a+b;
+    if (ret == a+b) {
+        printf("add char success");
+    }
+    return ret;
+}
+
+void addarray(int c[], int a[], int b[], int len) {
+    int i = 0;
+    for (; i < len; i=i+1) {
+        c[i] = a[i] + b[i];
+    }
+    return;
+}

@@ -8,7 +8,6 @@
 #include <memory>
 
 #include "Common.hpp"
-#include "Value.hpp"
 #include "LLVMContext.hpp"
 #include "Use.hpp"
 
@@ -17,14 +16,12 @@ namespace llvm {
     protected:
         vector<UsePtr> _usees;
     public:
-        explicit User(LLVMContextPtr& context, TypePtr ty, ValueType vty)
+        explicit User(LLVMContextPtr& context, TypePtr& ty, ValueType vty)
                 : Value(context, ty, vty) {}
     protected:
         void createUse(ValuePtr val);
         ValuePtr OpAt(unsigned int i);
-        ValuePtr getUsee(unsigned int i) {
-            return _usees.at(i)->usee();
-        }
+        ValuePtr getUsee(unsigned int i);
     };
 }
 

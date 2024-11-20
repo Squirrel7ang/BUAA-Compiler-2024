@@ -1,0 +1,74 @@
+int display_1() {
+    printf("1");
+    return 1;
+}
+
+void display_void() {
+    printf("void");
+}
+
+char display_char() {
+    printf("char");
+    return 'a';
+}
+
+int add(int a, int b) {
+    int tmp = a + b;
+    return tmp;
+}
+
+int main() {
+    printf("22371027\n");
+    
+    int a = +100;
+    int b = 32425;
+
+    int t = 0, i = 0, k = 0;
+    const int times = 100;
+    
+    t = a+b;
+    printf("%d", t);
+    t = a-b;
+    printf("%d", t);
+    t = a*b;
+    printf("%d", t);
+    t = b/a;
+    printf("%d", t);
+    t = b%a;
+    printf("%d", t);
+
+    if (a <= b) {
+        printf("%d", t);
+    }
+    if (a < b) {
+        printf("%d", t);
+    }
+    if (b > a) {
+        printf("%d", t);
+    }
+    if (b >= a) {
+        printf("%d", t);
+    }
+
+    for(i = 0; i < times; i=i+2) {
+        i = i - 1;
+        if (i == times - 2) {
+            char temp = 0;
+            break;
+        }
+        else {
+            continue;
+        }
+    }
+
+    add(a, b);
+
+
+    if (display_1()) {
+        ;
+    }
+    display_void();
+    display_char();
+    
+    return 0;
+}

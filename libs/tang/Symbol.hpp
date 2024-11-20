@@ -14,6 +14,7 @@
 #include "ErrorReporter.hpp"
 #include "IR/Common.hpp"
 #include "IR/ConstantData.hpp"
+#include "IR/Function.hpp"
 #include "IR/GlobalVariable.hpp"
 #include "IR/Instructions.hpp"
 #include "IR/Type.hpp"
@@ -176,8 +177,14 @@ namespace tang {
         bool isArray() override { return true; }
         bool isFunc() override { return false; }
         llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) override {
-            auto ty = std::make_shared<llvm::ArrayType>(context, context->I32_TY, _len);
-            return ty;
+            if (_len == 0) {
+                auto ty = std::make_shared<llvm::PointerType>(context->I8_TY);
+                return ty;
+            }
+            else {
+                auto ty = std::make_shared<llvm::ArrayType>(context->I32_TY, _len);
+                return ty;
+            }
         }
         llvm::TypePtr toBasicLLVMType(llvm::LLVMContextPtr context) override {
             return context->I32_TY;
@@ -208,8 +215,14 @@ namespace tang {
         bool isArray() override { return true; }
         bool isFunc() override { return false; }
         llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) override {
-            auto ty = std::make_shared<llvm::ArrayType>(context, context->I8_TY, _len);
-            return ty;
+            if (_len == 0) {
+                auto ty = std::make_shared<llvm::PointerType>(context->I8_TY);
+                return ty;
+            }
+            else {
+                auto ty = std::make_shared<llvm::ArrayType>(context->I8_TY, _len);
+                return ty;
+            }
         }
         llvm::TypePtr toBasicLLVMType(llvm::LLVMContextPtr context) override {
             return context->I8_TY;
@@ -261,7 +274,7 @@ namespace tang {
             for (auto& ptr: _argType) {
                 argLlvmType.push_back(ptr->toLLVMType(context));
             }
-            auto ret = std::make_shared<llvm::FunctionType>(context, retLlvmType, argLlvmType);
+            auto ret = std::make_shared<llvm::FunctionType>(retLlvmType, argLlvmType);
             return ret;
         }
         llvm::TypePtr toBasicLLVMType(llvm::LLVMContextPtr context) override {
@@ -290,10 +303,20 @@ namespace tang {
             return initVals.at(index);
         }
         llvm::ValuePtr getLLVMValue() { return _vp; }
-        llvm::GlobalVariablePtr toGlobalVariable(llvm::LLVMContextPtr context) {
+        void setValuePtr(llvm::ValuePtr ptr) {
+            _vp = ptr; // used in setting the valuePtr to Function
+        }
+        llvm::ArgumentPtr toArgument(llvm::LLVMContextPtr& context) {
+            llvm::ArgumentPtr ap;
+            ap = std::make_shared<llvm::Argument>(context, _type->toLLVMType(context));
+            _vp = ap;
+            return ap;
+        }
+        llvm::GlobalVariablePtr toGlobalVariable(llvm::LLVMContextPtr& context) {
             llvm::GlobalVariablePtr gvp;
             llvm::ConstantDataPtr cdp;
-            llvm::TypePtr ty = _type->toLLVMType(context);
+            llvm::TypePtr _ty = _type->toLLVMType(context);
+            llvm::PointerTypePtr ty = std::make_shared<llvm::PointerType>(_ty);
             if (_hasInitVal) {
                 cdp = std::make_shared<llvm::ConstantData>(
                     context, ty, initVals, _type->getLength());
@@ -302,8 +325,8 @@ namespace tang {
             _vp = gvp;
             return gvp;
         }
-        llvm::AllocaInstPtr toAllocaInst(llvm::LLVMContextPtr context) {
-            auto ptrTy = std::make_shared<llvm::PointerType>(context, _type->toBasicLLVMType(context));
+        llvm::AllocaInstPtr toAllocaInst(llvm::LLVMContextPtr& context) {
+            auto ptrTy = std::make_shared<llvm::PointerType>(_type->toBasicLLVMType(context));
             auto _aip = std::make_shared<llvm::AllocaInst>(context, ptrTy, _type->toLLVMType(context));
             _vp = _aip;
             return _aip;

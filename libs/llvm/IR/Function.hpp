@@ -5,6 +5,7 @@
 #ifndef FUNCTION_HPP
 #define FUNCTION_HPP
 
+#include "Common.hpp"
 #include "Argument.hpp"
 #include "BasicBlock.hpp"
 #include "GlobalValue.hpp"
@@ -41,10 +42,23 @@ namespace llvm {
         void addBasicBlock(BasicBlockPtr block) {
             _blocks.push_back(block);
         }
+        int argNum() { return _args.size(); }
+        ArgumentPtr getArg(int i) { return _args.at(i); }
+        void setIndex() {
+            int index = 0;
+            for (auto& arg: _args) {
+                arg->setIndex(index);
+            }
+            for (auto& block: _blocks) {
+                block->setIndex(index);
+            }
+        }
         void print(std::ostream& out) {
+            // TODO: index temporary variables
+            setIndex();
+
             out << "define dso_local ";
-            auto funcTypePtr = std::dynamic_pointer_cast<FunctionType>(_type);
-            funcTypePtr->_retType->print(out);
+            _type->print(out);
             out << " @" << _name << '(';
             for (int i = 0; i < _args.size(); i++) {
                 _args.at(i)->print(out);
@@ -61,6 +75,9 @@ namespace llvm {
             }
 
             out << "}" << std::endl << std::endl;
+        }
+        void printRef(std::ostream& out) override {
+            out << "@" << _name;
         }
     };
 }
