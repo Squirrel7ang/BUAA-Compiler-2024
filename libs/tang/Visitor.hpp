@@ -91,21 +91,23 @@ namespace tang {
 
         void defineLocalVariable(const u_ptr<VarDef>&, Symbol &s);
 
-        llvm::ValuePtr genConstExpIR(const u_ptr<ConstExp> &node, llvm::TypePtr expectType);
-        llvm::ValuePtr genExpIR(const u_ptr<Exp> &node, llvm::TypePtr expectType);
-        llvm::ValuePtr genAddExpIR(const u_ptr<AddExp> &node, llvm::TypePtr expectType);
-        llvm::ValuePtr genMulExpIR(const u_ptr<MulExp> &node, llvm::TypePtr expectType);
-        llvm::ValuePtr genUnaryExpIR(const u_ptr<UnaryExp> &node, llvm::TypePtr expectType);
-        llvm::ValuePtr genPrimaryExp(const u_ptr<PrimaryExp> &node, llvm::TypePtr expectType);
-        llvm::CallInstPtr genFuncCallIR(const u_ptr<FuncCall> &node, llvm::TypePtr expectType);
-        llvm::ConstantDataPtr genNumberIR(const u_ptr<Number> &node, llvm::TypePtr expectType);
-        llvm::ConstantDataPtr genCharacterIR(const u_ptr<Character> &node, llvm::TypePtr expectType);
-        llvm::LoadInstPtr genLValIR(const u_ptr<LVal> &node, llvm::TypePtr expectType);
+        llvm::ValuePtr genConstExpIR(const u_ptr<ConstExp> &node, const llvm::TypePtr& expectType);
+        llvm::ValuePtr genExpIR(const u_ptr<Exp> &node, const llvm::TypePtr& expectType);
+        llvm::ValuePtr genAddExpIR(const u_ptr<AddExp> &node, const llvm::TypePtr& expectType);
+        llvm::ValuePtr genMulExpIR(const u_ptr<MulExp> &node, const llvm::TypePtr& expectType);
+        llvm::ValuePtr genUnaryExpIR(const u_ptr<UnaryExp> &node, const llvm::TypePtr& expectType);
+        llvm::ValuePtr genPrimaryExp(const u_ptr<PrimaryExp> &node, const llvm::TypePtr& expectType);
+        llvm::ValuePtr genFuncCallIR(const u_ptr<FuncCall> &node, const llvm::TypePtr& expectType);
+        llvm::ValuePtr genNumberIR(const u_ptr<Number> &node, const llvm::TypePtr& expectType);
+        llvm::ValuePtr genCharacterIR(const u_ptr<Character> &node, const llvm::TypePtr& expectType);
+        llvm::ValuePtr genLValIR(const u_ptr<LVal> &node, const llvm::TypePtr& expectType);
 
         void assignVariable(Symbol &s, llvm::ValuePtr value);
 
         void returnValue(llvm::TypePtr ty, llvm::ValuePtr value);
         void returnVoid();
+
+        llvm::ValuePtr convert(llvm::ValuePtr, llvm::TypePtr);
 
     private:
         bool isGlobal() { return _symbolTable.isGlobal(); }

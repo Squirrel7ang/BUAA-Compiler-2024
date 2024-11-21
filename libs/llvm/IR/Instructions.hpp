@@ -162,12 +162,24 @@ namespace llvm {
             printRef(out);
             out << " = ";
             out << "getelementptr ";
-            out << ", ";
-            out << "ptr ";
+
             out << "inbounds ";
-            getUsee(0)->printRef(out);
+            auto&& usee0 = getUsee(0);
+            assert(usee0->getType()->isPointer());
+            auto&& pty = std::static_pointer_cast<PointerType>(usee0->getType());
+            pty->getBasicType()->print(out);
             out << ", ";
-            out << "i64 0 , ";
+
+            usee0->printRefWithType(out);
+            out << ", ";
+            if (pty->getBasicType()->isArray()) {
+                out << "i64 0 , ";
+            }
+            else {
+                // else this must be a pointer used in array arguments
+                // TODO: problem with int[] type
+                assert(pty->getBasicType()->isPointer());
+            }
             out << "i64 ";
             getUsee(1)->printRef(out);
         }

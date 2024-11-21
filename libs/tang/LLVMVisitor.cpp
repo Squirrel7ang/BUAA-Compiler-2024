@@ -2,9 +2,38 @@
 // Created by tang on 11/14/24.
 //
 
+#include <valarray>
+
 #include "Visitor.hpp"
 
 namespace tang {
+    llvm::ValuePtr Visitor::convert(llvm::ValuePtr value, llvm::TypePtr target) {
+        auto context = _modulePtr->context();
+        if (!target->isInteger()) { assert(0); }
+        if (!value->getType()->isInteger()) { assert(0); }
+
+        auto _origin = std::static_pointer_cast<llvm::IntegerType>(value->getType());
+        auto _target = std::static_pointer_cast<llvm::IntegerType>(target);
+
+        int origin_bits = _origin->getBits();
+        int target_bits = _target->getBits();
+
+        if (origin_bits < target_bits) {
+            // zext
+            auto zext  = std::make_shared<llvm::UnaryOperator>(context, _target, value, llvm::UOID_ZEXT);
+            _curBlock->addInst(zext);
+            return zext;
+        }
+        else if (origin_bits > target_bits) {
+            // trunc
+            auto trunc = std::make_shared<llvm::UnaryOperator>(context, _target, value, llvm::UOID_TRUNC);
+            _curBlock->addInst(trunc);
+            return trunc;
+        }
+        // else return the original value
+        return value;
+    }
+
     void Visitor::defineGlobalVariable(Symbol& s) {
         auto&& context = _modulePtr->context();
         llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
@@ -97,17 +126,15 @@ namespace tang {
         }
     }
 
-    llvm::ValuePtr Visitor::genConstExpIR(const u_ptr<ConstExp>& node, llvm::TypePtr expectType) {
-        // TODO: match expectType
+    llvm::ValuePtr Visitor::genConstExpIR(const u_ptr<ConstExp>& node, const llvm::TypePtr& expectType) {
         return genAddExpIR(node->addExp, expectType);
     }
 
-    llvm::ValuePtr Visitor::genExpIR(const u_ptr<Exp>& node, llvm::TypePtr expectType) {
-        // TODO: match expectType
+    llvm::ValuePtr Visitor::genExpIR(const u_ptr<Exp>& node, const llvm::TypePtr& expectType) {
         return genAddExpIR(node->addExp, expectType);
     }
 
-    llvm::ValuePtr Visitor::genAddExpIR(const u_ptr<AddExp>& node, llvm::TypePtr expectType) {
+    llvm::ValuePtr Visitor::genAddExpIR(const u_ptr<AddExp>& node, const llvm::TypePtr& expectType) {
         auto context = _modulePtr->context();
         llvm::ValuePtr inst0 = genMulExpIR(node->mulExps.at(0), expectType);
         llvm::ValuePtr inst1;
@@ -130,10 +157,10 @@ namespace tang {
             inst0 = bip;
         }
         // TODO: match expectType
-        return inst0;
+        return convert(inst0, expectType);
     }
 
-    llvm::ValuePtr Visitor::genMulExpIR(const u_ptr<MulExp>& node, llvm::TypePtr expectType) {
+    llvm::ValuePtr Visitor::genMulExpIR(const u_ptr<MulExp>& node, const llvm::TypePtr& expectType) {
         auto context = _modulePtr->context();
         llvm::ValuePtr inst0 = genUnaryExpIR(node->unaryExps.at(0), expectType);
         llvm::ValuePtr inst1;
@@ -158,18 +185,17 @@ namespace tang {
             _curBlock->addInst(bip);
             inst0 = bip;
         }
-        // TODO: match expectType
-        return inst0;
+        return convert(inst0, expectType);
     }
 
-    llvm::ValuePtr Visitor::genUnaryExpIR(const u_ptr<UnaryExp>& node, llvm::TypePtr expectType) {
+    llvm::ValuePtr Visitor::genUnaryExpIR(const u_ptr<UnaryExp>& node, const llvm::TypePtr& expectType) {
         auto context = _modulePtr->context();
         llvm::ValuePtr inst;
 
         std::visit([&](auto && arg) {
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, u_ptr<FuncCall>>) {
-                inst = genFuncCallIR(arg);
+                inst = genFuncCallIR(arg, expectType);
             }
             else if constexpr (std::is_same_v<T, u_ptr<PrimaryExp>>) {
                 inst = genPrimaryExp(arg, expectType);
@@ -191,41 +217,39 @@ namespace tang {
             }
         }
 
-        // TODO: match expectType
         if (uop != nullptr) {
-            return uop;
+            return convert(uop, expectType);
         }
         else if (bop != nullptr) {
-            return bop;
+            return convert(bop, expectType);
         }
         else {
-            return inst;
+            return convert(inst, expectType);
         }
     }
 
-    llvm::ValuePtr Visitor::genPrimaryExp(const u_ptr<PrimaryExp>& node, llvm::TypePtr expectType) {
+    llvm::ValuePtr Visitor::genPrimaryExp(const u_ptr<PrimaryExp>& node, const llvm::TypePtr& expectType) {
         llvm::ValuePtr inst;
         std::visit([&](auto && arg) {
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, u_ptr<Exp>>) {
-                inst = genExpIR(arg);
+                inst = genExpIR(arg, expectType);
             }
             else if constexpr (std::is_same_v<T, u_ptr<Number>>) {
-                inst = genNumberIR(arg);
+                inst = genNumberIR(arg, expectType);
             }
             else if constexpr (std::is_same_v<T, u_ptr<Character>>) {
-                inst = genCharacterIR(arg);
+                inst = genCharacterIR(arg, expectType);
             }
             else if constexpr (std::is_same_v<T, u_ptr<LVal>>) {
-                inst = genLValIR(arg);
+                inst = genLValIR(arg, expectType);
             }
             else assert(0);
         }, *(node->primaryExp));
-        // TODO: match expectType
-        return inst;
+        return convert(inst, expectType);
     }
 
-    llvm::CallInstPtr Visitor::genFuncCallIR(const u_ptr<FuncCall>& node, llvm::TypePtr expectType) {
+    llvm::ValuePtr Visitor::genFuncCallIR(const u_ptr<FuncCall>& node, const llvm::TypePtr& expectType) {
         auto context = _modulePtr->context();
         llvm::CallInstPtr cip;
         Symbol s;
@@ -249,27 +273,25 @@ namespace tang {
         _curBlock->addInst(cip);
 
         // TODO: match expectType
-        return cip;
+        return convert(cip, expectType);
 
     }
 
-    llvm::ConstantDataPtr Visitor::genNumberIR(const u_ptr<Number>& node, llvm::TypePtr expectType) {
+    llvm::ValuePtr Visitor::genNumberIR(const u_ptr<Number>& node, const llvm::TypePtr& expectType) {
         auto context = _modulePtr->context();
         llvm::ConstantDataPtr cdp = std::make_shared<llvm::ConstantData>(
             context, context->I32_TY, node->intConst->val);
-        // TODO: match expectType
-        return cdp;
+        return convert(cdp, expectType);
     }
 
-    llvm::ConstantDataPtr Visitor::genCharacterIR(const u_ptr<Character>& node, llvm::TypePtr expectType) {
+    llvm::ValuePtr Visitor::genCharacterIR(const u_ptr<Character>& node, const llvm::TypePtr& expectType) {
         auto context = _modulePtr->context();
         llvm::ConstantDataPtr cdp = std::make_shared<llvm::ConstantData>(
             context, context->I8_TY, node->charConst->ch);
-        // TODO: match expectType
-        return cdp;
+        return convert(cdp, expectType);
     }
 
-    llvm::LoadInstPtr Visitor::genLValIR(const u_ptr<LVal>& node, llvm::TypePtr expectType) {
+    llvm::ValuePtr Visitor::genLValIR(const u_ptr<LVal>& node, const llvm::TypePtr& expectType) {
         auto context = _modulePtr->context();
         Symbol s;
         _symbolTable.findSymbolGlobal(s, node->ident->str);
@@ -301,7 +323,7 @@ namespace tang {
         }
         _curBlock->addInst(lip);
 
-        return lip;
+        return convert(lip, expectType);
     }
 
     void Visitor::assignVariable(Symbol& s, llvm::ValuePtr value) {

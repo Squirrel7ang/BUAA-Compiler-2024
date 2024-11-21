@@ -326,7 +326,7 @@ namespace tang {
             return gvp;
         }
         llvm::AllocaInstPtr toAllocaInst(llvm::LLVMContextPtr& context) {
-            auto ptrTy = std::make_shared<llvm::PointerType>(_type->toBasicLLVMType(context));
+            auto ptrTy = std::make_shared<llvm::PointerType>(_type->toLLVMType(context));
             auto _aip = std::make_shared<llvm::AllocaInst>(context, ptrTy, _type->toLLVMType(context));
             _vp = _aip;
             return _aip;

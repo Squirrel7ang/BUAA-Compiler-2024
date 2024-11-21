@@ -247,13 +247,14 @@ namespace tang {
     } 
 
     void Visitor::_visitReturnStmt(const u_ptr<ReturnStmt>& node) {
+        auto context = _modulePtr->context();
         if (_curFuncType->toRawType() == VOID_FUNC_ST && node->exp != nullptr) {
             _reporter.report(node->returnToken.getLin(), 'f');
         }
         s_ptr<SymbolType> sty;
         if (node->exp != nullptr) {
             _visitExp(node->exp, sty);
-            auto val = genExpIR(node->exp);
+            auto val = genExpIR(node->exp, _curFuncType->_returnType->toLLVMType(context));
             returnValue(sty->toLLVMType(_modulePtr->context()), val);
         }
         else {
@@ -512,20 +513,22 @@ namespace tang {
     }
 
     void Visitor::_visitAssignStmt(const u_ptr<AssignStmt>& node) {
-        // TODO
+        auto context = _modulePtr->context();
         s_ptr<SymbolType> _;
         _visitLVal(node->lVal, true);
         _visitExp(node->exp, _);
 
         // llvm
-        auto val = genExpIR(node->exp);
         Symbol s;
         _symbolTable.findSymbolGlobal(s, node->lVal->ident->str);
+
+        auto val = genExpIR(node->exp, s.getType()->toBasicLLVMType(context));
         assignVariable(s, val);
 
     }
 
     void Visitor::_visitStmt(const u_ptr<Stmt>& node) {
+        auto context = _modulePtr->context();
         s_ptr<SymbolType> p;
         std::visit([&](auto && arg) {
             using T = std::decay_t<decltype(arg)>;
@@ -533,7 +536,7 @@ namespace tang {
                 _visitAssignStmt(arg);
             else if constexpr (std::is_same_v<T, u_ptr<Exp>>) {
                 _visitExp(arg, p);
-                genExpIR(arg);
+                genExpIR(arg, context->I32_TY);
             }
             else if constexpr (std::is_same_v<T, u_ptr<Block>>)
                 _visitBlock(arg, true, 0);
