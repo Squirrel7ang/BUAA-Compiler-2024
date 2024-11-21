@@ -167,18 +167,17 @@ namespace tang {
             else 
                 return "IntArray";
         }
-        bool isConst() override {
-            return _isConst;
-        }
         RawSymbolType toRawType() {
             if (_isConst) return CONST_INT_ARRAY_ST;
             else return INT_ARRAY_ST;
         }
+        bool isConst() override { return _isConst; }
         bool isArray() override { return true; }
+        bool isArgument() const { return _len == 0; }
         bool isFunc() override { return false; }
         llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) override {
             if (_len == 0) {
-                auto ty = std::make_shared<llvm::PointerType>(context->I8_TY);
+                auto ty = std::make_shared<llvm::PointerType>(context->I32_TY);
                 return ty;
             }
             else {
@@ -205,14 +204,13 @@ namespace tang {
             else 
                 return "CharArray";
         }
-        bool isConst() override {
-            return _isConst;
-        }
         RawSymbolType toRawType() {
             if (_isConst) return CONST_CHAR_ARRAY_ST;
             else return CHAR_ARRAY_ST;
         }
+        bool isConst() override { return _isConst; }
         bool isArray() override { return true; }
+        bool isArgument() const { return _len == 0; }
         bool isFunc() override { return false; }
         llvm::TypePtr toLLVMType(llvm::LLVMContextPtr context) override {
             if (_len == 0) {

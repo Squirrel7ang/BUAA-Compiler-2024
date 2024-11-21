@@ -8,8 +8,9 @@
 #include <vector>
 #include <memory>
 
-#include "Common.hpp"
 #include "Value.hpp"
+#include "Common.hpp"
+#include "Type.hpp"
 
 namespace llvm {
     class Use {
@@ -18,8 +19,7 @@ namespace llvm {
         UserPtr _user;
         ValuePtr _value;
     public:
-        explicit Use(LLVMContextPtr& context, UserPtr& user, ValuePtr& value)
-                :_context(context), _user(user), _value(value) { }
+        explicit Use(LLVMContextPtr& context, UserPtr& user, ValuePtr& value);
         UserPtr user();
         ValuePtr usee();
         ValuePtr value();

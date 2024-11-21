@@ -149,12 +149,10 @@ namespace llvm {
     };
 
     class GetElePtrInst : public Instruction {
-        TypePtr _basicTy;
     public:
         explicit GetElePtrInst(LLVMContextPtr& context, TypePtr ty,
-                               TypePtr basicTy, ValuePtr ptr, ValuePtr offset)
-            : Instruction(context, ty, GETELEPTR_INST_T),
-            _basicTy(basicTy) {
+                               ValuePtr ptr, ValuePtr offset)
+            : Instruction(context, ty, GETELEPTR_INST_T) {
             createUse(ptr);
             createUse(offset);
         }
@@ -175,11 +173,6 @@ namespace llvm {
             if (pty->getBasicType()->isArray()) {
                 out << "i64 0 , ";
             }
-            else {
-                // else this must be a pointer used in array arguments
-                // TODO: problem with int[] type
-                assert(pty->getBasicType()->isPointer());
-            }
             out << "i64 ";
             getUsee(1)->printRef(out);
         }
@@ -188,7 +181,9 @@ namespace llvm {
     class LoadInst : public UnaryInst {
     public:
         explicit LoadInst(LLVMContextPtr& context, TypePtr ty, ValuePtr vp)
-                : UnaryInst(context, ty, LOAD_INST_T, vp) { }
+                : UnaryInst(context, ty, LOAD_INST_T, vp) {
+            assert(vp->getType()->isPointer());
+        }
         void print(std::ostream& out) {
             printRef(out);
             out << " = ";
@@ -280,9 +275,8 @@ namespace llvm {
     class ReturnInst : public Instruction {
     public:
         // return value;
-        explicit ReturnInst(LLVMContextPtr& context, TypePtr ty,
-                            ValuePtr ret)
-                : Instruction(context, ty, RETURN_INST_T){
+        explicit ReturnInst(LLVMContextPtr& context, ValuePtr ret)
+                : Instruction(context, context->VOID_TY, RETURN_INST_T){
             createUse(ret);
         }
         // return void;
@@ -300,16 +294,56 @@ namespace llvm {
         }
     };
 
-    class PrintfInst : public Instruction {
-
+    enum PutInstID {
+        PIID_CH,
+        PIID_INT,
+        PIID_STR,
+    };
+    class PutInst : public Instruction {
+        PutInstID _piid;
+    public:
+        explicit PutInst(LLVMContextPtr& context, ValuePtr value, PutInstID piid)
+                : Instruction(context, context->VOID_TY, PUT_INST_T), _piid(piid) {
+            createUse(value);
+        }
+        void print(std::ostream &out) override {
+            out << "call void @";
+            switch (_piid) {
+                case PIID_CH: out << "putch"; break;
+                case PIID_INT: out << "putint"; break;
+                case PIID_STR: out << "putstr"; break;
+                default: assert(0);
+            }
+            out << "(";
+            getUsee(0)->printRefWithType(out);
+            out << ")";
+        }
     };
 
     class GetintInst : public Instruction {
-
+    public:
+        explicit  GetintInst(LLVMContextPtr context)
+                : Instruction(context, context->I32_TY, GETINT_INST_T) { }
+        void print(std::ostream& out) override {
+            printRef(out);
+            out << " = ";
+            out << "call ";
+            _type->print(out);
+            out << "@getint()";
+        }
     };
 
-    class GetCharInst : public Instruction {
-
+    class GetcharInst : public Instruction {
+    public:
+        explicit  GetcharInst(LLVMContextPtr context)
+                : Instruction(context, context->I32_TY, GETCHAR_INST_T) { }
+        void print(std::ostream& out) override {
+            printRef(out);
+            out << " = ";
+            out << "call ";
+            _type->print(out);
+            out << "@getchar()";
+        }
     };
 
 }

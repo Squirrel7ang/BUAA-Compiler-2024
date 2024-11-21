@@ -234,17 +234,20 @@ namespace tang {
             s_ptr<SymbolType> _;
             _visitExp(exp, _);
         }
+        genPrintfStmtIR(node);
     }
 
     void Visitor::_visitGetcharStmt(const u_ptr<GetcharStmt>& node) {
         _visitLVal(node->lVal, true);
-        // TODO
+
+        genGetcharStmtIR(node);
     }
 
     void Visitor::_visitGetintStmt(const u_ptr<GetintStmt>& node) {
         _visitLVal(node->lVal, true);
-        // TODO
-    } 
+
+        genGetintStmtIR(node);
+    }
 
     void Visitor::_visitReturnStmt(const u_ptr<ReturnStmt>& node) {
         auto context = _modulePtr->context();
@@ -523,8 +526,7 @@ namespace tang {
         _symbolTable.findSymbolGlobal(s, node->lVal->ident->str);
 
         auto val = genExpIR(node->exp, s.getType()->toBasicLLVMType(context));
-        assignVariable(s, val);
-
+        assignLVal(node->lVal, val);
     }
 
     void Visitor::_visitStmt(const u_ptr<Stmt>& node) {
@@ -532,13 +534,13 @@ namespace tang {
         s_ptr<SymbolType> p;
         std::visit([&](auto && arg) {
             using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, u_ptr<AssignStmt>>)
+            if constexpr (std::is_same_v<T, u_ptr<AssignStmt>>) // done
                 _visitAssignStmt(arg);
-            else if constexpr (std::is_same_v<T, u_ptr<Exp>>) {
+            else if constexpr (std::is_same_v<T, u_ptr<Exp>>) { // done
                 _visitExp(arg, p);
                 genExpIR(arg, context->I32_TY);
             }
-            else if constexpr (std::is_same_v<T, u_ptr<Block>>)
+            else if constexpr (std::is_same_v<T, u_ptr<Block>>) // nothing to be done
                 _visitBlock(arg, true, 0);
             else if constexpr (std::is_same_v<T, u_ptr<IfStmt>>)
                 _visitIfStmt(arg);
@@ -548,11 +550,11 @@ namespace tang {
                 _visitBreakStmt(arg);
             else if constexpr (std::is_same_v<T, u_ptr<ContinueStmt>>)
                 _visitContinueStmt(arg);
-            else if constexpr (std::is_same_v<T, u_ptr<ReturnStmt>>)
+            else if constexpr (std::is_same_v<T, u_ptr<ReturnStmt>>) // done
                 _visitReturnStmt(arg);
-            else if constexpr (std::is_same_v<T, u_ptr<GetintStmt>>)
+            else if constexpr (std::is_same_v<T, u_ptr<GetintStmt>>) // done
                 _visitGetintStmt(arg);
-            else if constexpr (std::is_same_v<T, u_ptr<GetcharStmt>>)
+            else if constexpr (std::is_same_v<T, u_ptr<GetcharStmt>>) // done
                 _visitGetcharStmt(arg);
             else if constexpr (std::is_same_v<T, u_ptr<PrintfStmt>>)
                 _visitPrintfStmt(arg);
@@ -662,7 +664,7 @@ namespace tang {
         // create alloca and store insts for every parameters
         for (int i = 0; i < func->argNum(); i++) {
             auto&& argPtr = func->getArg(i);
-            llvm::PointerTypePtr ptp=  std::make_shared<llvm::PointerType>(argPtr->getType());
+            llvm::PointerTypePtr ptp = std::make_shared<llvm::PointerType>(argPtr->getType());
             auto alloca = std::make_shared<llvm::AllocaInst>(context, ptp, argPtr->getType());
             _curBlock->addInst(alloca);
             auto store = std::make_shared<llvm::StoreInst>(context, argPtr, alloca);
@@ -684,7 +686,7 @@ namespace tang {
         llvm::ReturnInstPtr rip;
         if (_type->isInteger()) {
             auto cdp = std::make_shared<llvm::ConstantData>(context, _type, 0);
-            rip = std::make_shared<llvm::ReturnInst>(context, _type, cdp);
+            rip = std::make_shared<llvm::ReturnInst>(context, cdp);
         }
         else {
             // otherwise this must be a void function
@@ -729,7 +731,7 @@ namespace tang {
 
         // add ret instruction at end of every function
         llvm::ConstantDataPtr cdp = std::make_shared<llvm::ConstantData>(context, context->I32_TY, 0);
-        llvm::ReturnInstPtr rip = std::make_shared<llvm::ReturnInst>(context, context->I32_TY, cdp);
+        llvm::ReturnInstPtr rip = std::make_shared<llvm::ReturnInst>(context, cdp);
         _curBlock->addInst(rip);
 
         // check if there is return in the inside;

@@ -33,6 +33,7 @@ namespace llvm {
 
         FUNCTION_T,
         GLOBAL_VARIABLE_T,
+        GLOBAL_STRING_T,
 
         BINARY_INST_T,
         BINARY_OPERATOR_T,
@@ -46,6 +47,9 @@ namespace llvm {
         STORE_INST_T,
         ALLOCA_INST_T,
         GETELEPTR_INST_T,
+        GETINT_INST_T,
+        GETCHAR_INST_T,
+        PUT_INST_T,
         COMPARE_INST_T,
         INPUT_INST_T,
         OUTPUT_INST_T,
@@ -113,6 +117,9 @@ namespace llvm {
     class ConstantData;
     using ConstantDataPtr = s_ptr<ConstantData>;
 
+    class GlobalString;
+    using GlobalStringPtr = s_ptr<GlobalString>;
+
     /******* INSTRUCTIONS *******/
 
     class Instruction;
@@ -157,14 +164,14 @@ namespace llvm {
     class ReturnInst;
     using ReturnInstPtr = s_ptr<ReturnInst>;
 
-    class PrintfInst;
-    using PrintfInstPtr = s_ptr<PrintfInst>;
+    class PutInst;
+    using PutInstPtr = s_ptr<PutInst>;
 
     class GetintInst;
     using GetIntInstPtr = s_ptr<GetintInst>;
 
-    class GetCharInst;
-    using GetCharInstPtr = s_ptr<GetCharInst>;
+    class GetcharInst;
+    using GetCharInstPtr = s_ptr<GetcharInst>;
 }
 
 #endif //COMMON_HPP

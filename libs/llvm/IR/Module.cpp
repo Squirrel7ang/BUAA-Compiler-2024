@@ -26,4 +26,8 @@ namespace llvm {
         _globalVariables.push_back(gvp);
     }
 
+    void Module::addString(GlobalStringPtr str) {
+        _strings.push_back(str);
+    }
+
 }

@@ -33,7 +33,9 @@ namespace llvm {
             _index = index;
             index++;
             for (auto& inst: insts) {
-                inst->setIndex(index);
+                if (!inst->getType()->isVoidTy()) {
+                    inst->setIndex(index);
+                }
             }
         }
 

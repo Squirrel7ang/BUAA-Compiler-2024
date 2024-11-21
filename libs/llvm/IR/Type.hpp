@@ -58,7 +58,7 @@ namespace llvm {
 
     class VoidType : public Type {
     public:
-        explicit VoidType(): Type(INTEGER_TYPE_ID) {}
+        explicit VoidType(): Type(VOID_TYPE_ID) {}
         void print(std::ostream& out) override {
             out << "void";
         }

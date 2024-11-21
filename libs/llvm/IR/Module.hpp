@@ -24,8 +24,9 @@ namespace llvm {
      */
     class Module {
         LLVMContextPtr _context;
-        std::vector<GlobalVariablePtr> _globalVariables;
-        std::vector<FunctionPtr> _functions;
+        vector<GlobalVariablePtr> _globalVariables;
+        vector<FunctionPtr> _functions;
+        vector<GlobalStringPtr> _strings;
     public:
         explicit Module();
         LLVMContextPtr context();
@@ -34,6 +35,7 @@ namespace llvm {
         // 'functions' related functions
         void addFunction(FunctionPtr);
         void addGlobalVariable(GlobalVariablePtr);
+        void addString(GlobalStringPtr str);
 
         // Printer
         std::string getSourceName() { return _context->getSourceName(); }

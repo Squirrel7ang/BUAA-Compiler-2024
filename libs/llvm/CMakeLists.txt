@@ -35,6 +35,8 @@ add_library(${LIBRARY_NAME}
         IR/IRPrinter.hpp
         IR/Argument.hpp
         IR/Argument.cpp
+        IR/GlobalString.hpp
+        IR/GlobalString.cpp
 
 )
 

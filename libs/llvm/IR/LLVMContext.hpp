@@ -39,6 +39,11 @@ namespace llvm {
 
         // Printer
         std::string getSourceName() { return sourceName; }
+        std::string getStringName() {
+            static int i = -1;
+            i++;
+            return "str." + std::to_string(i);
+        }
     };
 }
 

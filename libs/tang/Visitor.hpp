@@ -101,8 +101,19 @@ namespace tang {
         llvm::ValuePtr genNumberIR(const u_ptr<Number> &node, const llvm::TypePtr& expectType);
         llvm::ValuePtr genCharacterIR(const u_ptr<Character> &node, const llvm::TypePtr& expectType);
         llvm::ValuePtr genLValIR(const u_ptr<LVal> &node, const llvm::TypePtr& expectType);
+        void genGetcharStmtIR(const u_ptr<GetcharStmt> &node);
+        void genGetintStmtIR(const u_ptr<GetintStmt> &node);
+        void genPrintfStmtIR(const u_ptr<PrintfStmt> &node);
 
-        void assignVariable(Symbol &s, llvm::ValuePtr value);
+        llvm::ValuePtr genPutstrIR(llvm::GlobalStringPtr value);
+        llvm::ValuePtr genPutintIR(llvm::ValuePtr value);
+        llvm::ValuePtr genPutchIR(llvm::ValuePtr value);
+
+        void assignLVal(Symbol& s, llvm::ValuePtr value);
+
+        void assignLVal(Symbol& s, llvm::ValuePtr offset, llvm::ValuePtr value);
+
+        void assignLVal(u_ptr<LVal>& lVal, llvm::ValuePtr value);
 
         void returnValue(llvm::TypePtr ty, llvm::ValuePtr value);
         void returnVoid();
