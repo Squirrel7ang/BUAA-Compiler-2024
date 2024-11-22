@@ -220,7 +220,7 @@ namespace tang {
             }
             else if (op->isExc) {
                 cip = std::make_shared<llvm::CompareInst>(
-                    context, context->I1_TY, zero, inst, llvm::CIID_EQ);
+                    context, zero, inst, llvm::CIID_EQ);
                 _curBlock->addInst(cip);
             }
         }
@@ -446,6 +446,107 @@ namespace tang {
         auto putstr = std::make_shared<llvm::PutInst>(context, geip, llvm::PIID_STR);
         _curBlock->addInst(putstr);
         return putstr;
+    }
+
+    void Visitor::genCondIR(const u_ptr<Cond>& node, const llvm::BasicBlockPtr &ifBlock,
+                            const llvm::BasicBlockPtr &elseBlock) {
+        genLOrExpIR(node->lOrExp, ifBlock, elseBlock);
+    }
+
+    void Visitor::genLOrExpIR(const u_ptr<LOrExp>& node,
+                              const llvm::BasicBlockPtr &ifBlock, const llvm::BasicBlockPtr &elseBlock) {
+        auto&& context = _modulePtr->context();
+
+        int i;
+        for (i = 0; i < node->lAndExps.size() - 1; i++) {
+            llvm::BasicBlockPtr newBlock = std::make_shared<llvm::BasicBlock>(context);
+            _curFunction->addBasicBlock(newBlock);
+            genLAndExpIR(node->lAndExps.at(i), ifBlock, newBlock);
+        }
+        genLAndExpIR(node->lAndExps.at(i), ifBlock, elseBlock);
+    }
+
+    void Visitor::genLAndExpIR(const u_ptr<LAndExp>& node,
+                                         const llvm::BasicBlockPtr& ifBlock, const llvm::BasicBlockPtr& elseBlock) {
+        auto&& context = _modulePtr->context();
+        llvm::ValuePtr inst;
+
+        int i;
+        for (i = 0; i < node->eqExps.size() - 1; i++) {
+            llvm::BasicBlockPtr newBlock = std::make_shared<llvm::BasicBlock>(context);
+            _curFunction->addBasicBlock(newBlock);
+            inst = genEqExpIR(node->eqExps.at(i), context->I1_TY);
+            auto brInst = std::make_shared<llvm::BranchInst>(
+                context, inst, elseBlock, newBlock);
+            _curBlock->addInst(brInst);
+            _curBlock = newBlock;
+        }
+        inst = genEqExpIR(node->eqExps.at(i), context->I1_TY);
+        auto brInst = std::make_shared<llvm::BranchInst>(
+            context, inst, elseBlock, ifBlock);
+        _curBlock->addInst(brInst);
+        _curBlock = ifBlock;
+
+    }
+
+    llvm::ValuePtr Visitor::genEqExpIR(const u_ptr<EqExp>& node, const llvm::TypePtr& expectType) {
+        auto context = _modulePtr->context();
+        llvm::ValuePtr inst0 = genRelExpIR(node->relExps.at(0), context->I1_TY);
+        llvm::ValuePtr inst1;
+
+        for (int i = 0; i < node->ops.size(); i++) {
+            inst1 = genRelExpIR(node->relExps.at(i+1), context->I1_TY);
+            llvm::CompareInstPtr cip;
+            auto&& opType = node->ops.at(i).getType();
+            if (opType == TK_EQL) {
+                cip = std::make_shared<llvm::CompareInst>(
+                    context, inst0, inst1, llvm::CIID_EQ);
+            }
+            else if (opType == TK_NEQ) {
+                cip = std::make_shared<llvm::CompareInst>(
+                    context, inst0, inst1, llvm::CIID_NE);
+            }
+            else
+                assert(0);
+
+            _curBlock->addInst(cip);
+            inst0 = cip;
+        }
+        return convert(inst0, expectType);
+    }
+
+    llvm::ValuePtr Visitor::genRelExpIR(const u_ptr<RelExp>& node, const llvm::TypePtr& expectType) {
+        auto context = _modulePtr->context();
+        llvm::ValuePtr inst0 = genAddExpIR(node->addExps.at(0), context->I32_TY);
+        llvm::ValuePtr inst1;
+
+        for (int i = 0; i < node->ops.size(); i++) {
+            inst1 = genAddExpIR(node->addExps.at(i+1), context->I32_TY);
+            llvm::CompareInstPtr cip;
+            auto&& opType = node->ops.at(i).getType();
+            if (opType == TK_LEQ) {
+                cip = std::make_shared<llvm::CompareInst>(
+                    context, inst0, inst1, llvm::CIID_SLE);
+            }
+            else if (opType == TK_LSS) {
+                cip = std::make_shared<llvm::CompareInst>(
+                    context, inst0, inst1, llvm::CIID_SLT);
+            }
+            else if (opType == TK_GEQ) {
+                cip = std::make_shared<llvm::CompareInst>(
+                    context, inst0, inst1, llvm::CIID_SGE);
+            }
+            else if (opType == TK_GRE) {
+                cip = std::make_shared<llvm::CompareInst>(
+                    context, inst0, inst1, llvm::CIID_SGT);
+            }
+            else
+                assert(0);
+
+            _curBlock->addInst(cip);
+            inst0 = convert(cip, context->I32_TY);
+        }
+        return convert(inst0, expectType);
     }
 
     void Visitor::assignLVal(Symbol& s, llvm::ValuePtr value) {

@@ -110,7 +110,7 @@ namespace llvm {
     class CompareInst : public BinaryInst {
         CompareInstID _ciid;
     public:
-        explicit CompareInst(LLVMContextPtr& context, TypePtr ty,
+        explicit CompareInst(LLVMContextPtr& context,
                             ValuePtr vp1, ValuePtr vp2, CompareInstID ciid)
                 : BinaryInst(context, context->I1_TY, COMPARE_INST_T, vp1, vp2), _ciid(ciid) {
         }
@@ -244,12 +244,12 @@ namespace llvm {
 
     class BranchInst : public Instruction {
     public:
-        explicit BranchInst(LLVMContextPtr& context, TypePtr ty,
-                            ValuePtr cond, ValuePtr ifPtr, ValuePtr elsePtr)
-                : Instruction(context, ty, BRANCH_INST_T){
+        explicit BranchInst(LLVMContextPtr& context,
+                            ValuePtr cond, ValuePtr falseBlock, ValuePtr trueBlock)
+                : Instruction(context, context->VOID_TY, BRANCH_INST_T){
             createUse(cond);
-            createUse(ifPtr);
-            createUse(elsePtr);
+            createUse(falseBlock);
+            createUse(trueBlock);
         }
         void print(std::ostream &) override {
 
@@ -262,9 +262,8 @@ namespace llvm {
      */
     class JumpInst : public Instruction {
     public:
-        explicit JumpInst(LLVMContextPtr& context, TypePtr ty,
-                            ValuePtr targetPtr)
-                : Instruction(context, ty, JUMP_INST_T){
+        explicit JumpInst(LLVMContextPtr& context, ValuePtr targetPtr)
+                : Instruction(context, context->VOID_TY, JUMP_INST_T){
             createUse(targetPtr);
         }
         void print(std::ostream &) override {

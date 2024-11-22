@@ -266,11 +266,29 @@ namespace tang {
     }
 
     void Visitor::_visitContinueStmt(const u_ptr<ContinueStmt>& node) {
+        auto context = _modulePtr->context();
+
         _loopStack.checkBreakContinue(node->getLin());
-    } 
+
+        auto outerBlock = _loopStack.getCurrentLoopOuter();
+        auto jip = std::make_shared<llvm::JumpInst>(context, outerBlock);
+        _curBlock->addInst(jip);
+        auto newBlock = std::make_shared<llvm::BasicBlock>(context);
+        _curFunction->addBasicBlock(newBlock);
+        _curBlock = newBlock;
+    }
 
     void Visitor::_visitBreakStmt(const u_ptr<BreakStmt>& node) {
+        auto context = _modulePtr->context();
+
         _loopStack.checkBreakContinue(node->getLin());
+
+        auto outerBlock = _loopStack.getCurrentLoopOuter();
+        auto jip = std::make_shared<llvm::JumpInst>(context, outerBlock);
+        _curBlock->addInst(jip);
+        auto newBlock = std::make_shared<llvm::BasicBlock>(context);
+        _curFunction->addBasicBlock(newBlock);
+        _curBlock = newBlock;
     }
 
     void Visitor::_visitLVal(const u_ptr<LVal>& node,
@@ -323,45 +341,103 @@ namespace tang {
         }
     }
 
-    void Visitor::_visitAssignment(const u_ptr<Assignment>& node) {
-        Symbol s;
+    void Visitor::_visitAssignment(const u_ptr<Assignment>& node, bool visit, bool genLLVM) {
+        auto context = _modulePtr->context();
 
-        _visitLVal(node->lVal, true);
+        if (visit) {
+            s_ptr<SymbolType> _;
+            _visitLVal(node->lVal, true);
+            _visitExp(node->exp, _);
+        }
 
-        s_ptr<SymbolType> _;
-        _visitExp(node->exp, _);
+        if (genLLVM) {
+            // llvm
+            Symbol s;
+            _symbolTable.findSymbolGlobal(s, node->lVal->ident->str);
+
+            auto val = genExpIR(node->exp, s.getType()->toBasicLLVMType(context));
+            assignLVal(node->lVal, val);
+        }
+
     }
 
     void Visitor::_visitForStmt(const u_ptr<ForStmt>& node) {
-        _loopStack.pushLoop();
+        auto context = _modulePtr->context();
+        auto body = std::make_shared<llvm::BasicBlock>(context);
+        auto outer = std::make_shared<llvm::BasicBlock>(context);
+        _curFunction->addBasicBlock(body);
+        _curFunction->addBasicBlock(outer);
+
+        _loopStack.pushLoop(body, outer);
         s_ptr<SymbolType> _;
 
         if (node->init != nullptr) {
-            _visitAssignment(node->init);
+            _visitAssignment(node->init, true, true);
         }
+
         if (node->cond != nullptr) {
             _visitCond(node->cond, _);
+            genCondIR(node->cond, body, outer);
+            // curBlock has already become body
+        }
+        else {
+            auto jumpInst = std::make_shared<llvm::JumpInst>(context, body);
+            _curBlock->addInst(jumpInst);
+            _curBlock = body;
         }
 
         if (node->update != nullptr) {
-            _visitAssignment(node->update);
+            _visitAssignment(node->update, true, false);
         }
 
         _visitStmt(node->stmt);
+
+        if (node->update != nullptr) {
+            _visitAssignment(node->update, false, true);
+        }
+        auto jumpInst = std::make_shared<llvm::JumpInst>(context, body);
+        _curBlock->addInst(jumpInst);
+        _curBlock = outer;
 
         _loopStack.popLoop();
     }
 
     void Visitor::_visitIfStmt(const u_ptr<IfStmt>& node) {
-        s_ptr<SymbolType> _;
-        if (node->cond != nullptr) {
-            _visitCond(node->cond, _);
-        }
+        auto context = _modulePtr->context();
 
-        _visitStmt(node->ifStmt);
+        s_ptr<SymbolType> _;
+        assert(node->cond != nullptr);
+        _visitCond(node->cond, _);
+
+        // llvm
+        llvm::BasicBlockPtr ifBlock = std::make_shared<llvm::BasicBlock>(context);
+        llvm::BasicBlockPtr elseBlock;
+        if (node->elseStmt != nullptr) {
+            elseBlock = std::make_shared<llvm::BasicBlock>(context);
+        }
+        llvm::BasicBlockPtr outerBlock = std::make_shared<llvm::BasicBlock>(context);
+
 
         if (node->elseStmt != nullptr) {
+            // llvm
+            genCondIR(node->cond, ifBlock, elseBlock);
+            // afterward genCondIR, curBlock is already set to ifBlock
+
+            // visit if
+            _visitStmt(node->ifStmt);
+            auto brInst = std::make_shared<llvm::JumpInst>(context, outerBlock);
+            _curBlock = elseBlock;
+
+            // visit else
             _visitStmt(node->elseStmt);
+            _curBlock = outerBlock;
+        }
+        else {
+            genCondIR(node->cond, ifBlock, outerBlock);
+            // afterward genCondIR, curBlock is already set to ifBlock
+            _visitStmt(node->ifStmt);
+            auto brInst = std::make_shared<llvm::JumpInst>(context, outerBlock);
+            _curBlock = outerBlock;
         }
     }
 
@@ -542,13 +618,13 @@ namespace tang {
             }
             else if constexpr (std::is_same_v<T, u_ptr<Block>>) // nothing to be done
                 _visitBlock(arg, true, 0);
-            else if constexpr (std::is_same_v<T, u_ptr<IfStmt>>)
+            else if constexpr (std::is_same_v<T, u_ptr<IfStmt>>) // done
                 _visitIfStmt(arg);
-            else if constexpr (std::is_same_v<T, u_ptr<ForStmt>>)
+            else if constexpr (std::is_same_v<T, u_ptr<ForStmt>>) // done
                 _visitForStmt(arg);
-            else if constexpr (std::is_same_v<T, u_ptr<BreakStmt>>)
+            else if constexpr (std::is_same_v<T, u_ptr<BreakStmt>>) // done
                 _visitBreakStmt(arg);
-            else if constexpr (std::is_same_v<T, u_ptr<ContinueStmt>>)
+            else if constexpr (std::is_same_v<T, u_ptr<ContinueStmt>>) // done
                 _visitContinueStmt(arg);
             else if constexpr (std::is_same_v<T, u_ptr<ReturnStmt>>) // done
                 _visitReturnStmt(arg);
@@ -556,7 +632,7 @@ namespace tang {
                 _visitGetintStmt(arg);
             else if constexpr (std::is_same_v<T, u_ptr<GetcharStmt>>) // done
                 _visitGetcharStmt(arg);
-            else if constexpr (std::is_same_v<T, u_ptr<PrintfStmt>>)
+            else if constexpr (std::is_same_v<T, u_ptr<PrintfStmt>>) // done
                 _visitPrintfStmt(arg);
             else if constexpr (std::is_same_v<T, u_ptr<EmptyStmt>>) { /* do nothing */ }
             else

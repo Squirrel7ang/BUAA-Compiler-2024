@@ -38,6 +38,7 @@ namespace tang {
         llvm::ModulePtr getLLVMModule() { return _modulePtr; }
 
     private:
+        // evaluate
         int evaluate(u_ptr<PrimaryExp> &node);
         int evaluate(u_ptr<UnaryExp> &node);
         int evaluate(u_ptr<MulExp> &node);
@@ -48,6 +49,7 @@ namespace tang {
         int evaluate(u_ptr<Character> &node);
         int evaluate(u_ptr<ConstExp> &node);
 
+        // visit
         void _visitConstExp(const u_ptr<ConstExp>& node);
         void _visitInitVal(const u_ptr<InitVal>& node);
         void _visitConstInitVal(const u_ptr<ConstInitVal>& node);
@@ -64,7 +66,7 @@ namespace tang {
         void _visitBreakStmt(const u_ptr<BreakStmt>& node);
         void _visitLVal(const u_ptr<LVal>& node, bool unAssignable);
         void _visitLVal(const u_ptr<LVal>& node, s_ptr<SymbolType>& type, bool constIsUnassignable);
-        void _visitAssignment(const u_ptr<Assignment>& node);
+        void _visitAssignment(const u_ptr<Assignment>& node, bool visit, bool genLLVM);
         void _visitForStmt(const u_ptr<ForStmt>& node);
         void _visitIfStmt(const u_ptr<IfStmt>& node);
         void _visitFuncCall(const u_ptr<FuncCall> &node, s_ptr<SymbolType>& type);
@@ -85,12 +87,12 @@ namespace tang {
         void _visitMainFuncDef(const u_ptr<MainFuncDef>& node);
         void _visitCompUnit(const u_ptr<CompUnit>& node);
 
+        // definition
         void defineGlobalVariable(Symbol &s);
-
         void defineLocalVariable(const u_ptr<ConstDef> &node, Symbol &s);
-
         void defineLocalVariable(const u_ptr<VarDef>&, Symbol &s);
 
+        // exp
         llvm::ValuePtr genConstExpIR(const u_ptr<ConstExp> &node, const llvm::TypePtr& expectType);
         llvm::ValuePtr genExpIR(const u_ptr<Exp> &node, const llvm::TypePtr& expectType);
         llvm::ValuePtr genAddExpIR(const u_ptr<AddExp> &node, const llvm::TypePtr& expectType);
@@ -101,23 +103,35 @@ namespace tang {
         llvm::ValuePtr genNumberIR(const u_ptr<Number> &node, const llvm::TypePtr& expectType);
         llvm::ValuePtr genCharacterIR(const u_ptr<Character> &node, const llvm::TypePtr& expectType);
         llvm::ValuePtr genLValIR(const u_ptr<LVal> &node, const llvm::TypePtr& expectType);
+
+        // IO
         void genGetcharStmtIR(const u_ptr<GetcharStmt> &node);
         void genGetintStmtIR(const u_ptr<GetintStmt> &node);
         void genPrintfStmtIR(const u_ptr<PrintfStmt> &node);
-
         llvm::ValuePtr genPutstrIR(llvm::GlobalStringPtr value);
         llvm::ValuePtr genPutintIR(llvm::ValuePtr value);
         llvm::ValuePtr genPutchIR(llvm::ValuePtr value);
 
+        // Condition
+        void genCondIR(const u_ptr<Cond> &node, const llvm::BasicBlockPtr &ifBlock,
+                       const llvm::BasicBlockPtr &elseBlock);
+        void genLOrExpIR(const u_ptr<LOrExp> &node, const llvm::BasicBlockPtr &ifBlock,
+                         const llvm::BasicBlockPtr &elseBlock);
+        void genLAndExpIR(const u_ptr<LAndExp> &node, const llvm::BasicBlockPtr& ifBlock,
+                                    const llvm::BasicBlockPtr& elseBlock);
+        llvm::ValuePtr genEqExpIR(const u_ptr<EqExp> &node, const llvm::TypePtr &expectType);
+        llvm::ValuePtr genRelExpIR(const u_ptr<RelExp> &node, const llvm::TypePtr &expectType);
+
+        // LVal
         void assignLVal(Symbol& s, llvm::ValuePtr value);
-
         void assignLVal(Symbol& s, llvm::ValuePtr offset, llvm::ValuePtr value);
-
         void assignLVal(u_ptr<LVal>& lVal, llvm::ValuePtr value);
 
+        // Return
         void returnValue(llvm::TypePtr ty, llvm::ValuePtr value);
         void returnVoid();
 
+        // trunc and zext
         llvm::ValuePtr convert(llvm::ValuePtr, llvm::TypePtr);
 
     private:

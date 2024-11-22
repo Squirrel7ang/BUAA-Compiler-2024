@@ -297,6 +297,10 @@ namespace tang {
         }
     };
 
+    /**
+     * Assignment and AssignStmt is identical
+     * besides output function `print(std::ostream&)`
+     */
     class Assignment: public Node { // this is the ForStmt in the document
     public:
         explicit Assignment(const Token& t) : Node(t) {}
