@@ -7,6 +7,9 @@ int main() {
     if (a1 && a2 && a3 || b1 && b2 && b3 || c1 && c2 && c3) {
         ;
     }
+    else {
+        ;
+    }
 
     if (a + 1 == b || a) {
         a = 1;
@@ -18,20 +21,6 @@ int main() {
     else {
         // else stmt
         a = 2;
-    }
-
-    // break stmt
-    for (;;) {
-        break;
-    }
-
-    // continue stmt with condition and update stmt
-    int i = 0;
-    for (i = 0; i < 4; i=i+1) {
-        a = a + 1;
-        if (a > a-1) {
-            continue;
-        }
     }
 
     return a-6;

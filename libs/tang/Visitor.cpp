@@ -270,8 +270,8 @@ namespace tang {
 
         _loopStack.checkBreakContinue(node->getLin());
 
-        auto outerBlock = _loopStack.getCurrentLoopOuter();
-        auto jip = std::make_shared<llvm::JumpInst>(context, outerBlock);
+        auto condBlock = _loopStack.getCurrentLoopCond();
+        auto jip = std::make_shared<llvm::JumpInst>(context, condBlock);
         _curBlock->addInst(jip);
         auto newBlock = std::make_shared<llvm::BasicBlock>(context);
         _curFunction->addBasicBlock(newBlock);
@@ -363,27 +363,33 @@ namespace tang {
 
     void Visitor::_visitForStmt(const u_ptr<ForStmt>& node) {
         auto context = _modulePtr->context();
-        auto body = std::make_shared<llvm::BasicBlock>(context);
-        auto outer = std::make_shared<llvm::BasicBlock>(context);
-        _curFunction->addBasicBlock(body);
-        _curFunction->addBasicBlock(outer);
+        auto condBlock = std::make_shared<llvm::BasicBlock>(context);
+        auto bodyBlock = std::make_shared<llvm::BasicBlock>(context);
+        auto outerBlock = std::make_shared<llvm::BasicBlock>(context);
 
-        _loopStack.pushLoop(body, outer);
+        _loopStack.pushLoop(condBlock, bodyBlock, outerBlock);
         s_ptr<SymbolType> _;
 
         if (node->init != nullptr) {
             _visitAssignment(node->init, true, true);
         }
 
+        // condition basic block;
+        auto jip = std::make_shared<llvm::JumpInst>(context, condBlock);
+        _curBlock->addInst(jip);
+
+        _curFunction->addBasicBlock(condBlock);
+        _curBlock = condBlock;
         if (node->cond != nullptr) {
             _visitCond(node->cond, _);
-            genCondIR(node->cond, body, outer);
-            // curBlock has already become body
+            genCondIR(node->cond, bodyBlock, outerBlock);
+            // curBlock has already become bodyBlock
         }
         else {
-            auto jumpInst = std::make_shared<llvm::JumpInst>(context, body);
-            _curBlock->addInst(jumpInst);
-            _curBlock = body;
+            jip = std::make_shared<llvm::JumpInst>(context, bodyBlock);
+            _curBlock->addInst(jip);
+            _curBlock = bodyBlock;
+            _curFunction->addBasicBlock(bodyBlock);
         }
 
         if (node->update != nullptr) {
@@ -395,9 +401,10 @@ namespace tang {
         if (node->update != nullptr) {
             _visitAssignment(node->update, false, true);
         }
-        auto jumpInst = std::make_shared<llvm::JumpInst>(context, body);
-        _curBlock->addInst(jumpInst);
-        _curBlock = outer;
+        jip = std::make_shared<llvm::JumpInst>(context, condBlock);
+        _curBlock->addInst(jip);
+        _curBlock = outerBlock;
+        _curFunction->addBasicBlock(outerBlock);
 
         _loopStack.popLoop();
     }
@@ -417,7 +424,6 @@ namespace tang {
         }
         llvm::BasicBlockPtr outerBlock = std::make_shared<llvm::BasicBlock>(context);
 
-
         if (node->elseStmt != nullptr) {
             // llvm
             genCondIR(node->cond, ifBlock, elseBlock);
@@ -426,18 +432,25 @@ namespace tang {
             // visit if
             _visitStmt(node->ifStmt);
             auto brInst = std::make_shared<llvm::JumpInst>(context, outerBlock);
+            _curBlock->addInst(brInst);
             _curBlock = elseBlock;
+            _curFunction->addBasicBlock(elseBlock);
 
             // visit else
             _visitStmt(node->elseStmt);
+            brInst = std::make_shared<llvm::JumpInst>(context, outerBlock);
+            _curBlock->addInst(brInst);
             _curBlock = outerBlock;
+            _curFunction->addBasicBlock(outerBlock);
         }
         else {
             genCondIR(node->cond, ifBlock, outerBlock);
             // afterward genCondIR, curBlock is already set to ifBlock
             _visitStmt(node->ifStmt);
             auto brInst = std::make_shared<llvm::JumpInst>(context, outerBlock);
+            _curBlock->addInst(brInst);
             _curBlock = outerBlock;
+            _curFunction->addBasicBlock(outerBlock);
         }
     }
 

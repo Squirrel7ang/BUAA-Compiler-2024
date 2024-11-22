@@ -13,11 +13,16 @@
 namespace tang {
 
     class Loop {
+        llvm::BasicBlockPtr condBlock;
         llvm::BasicBlockPtr bodyBlock;
         llvm::BasicBlockPtr outerBlock;
     public:
-        explicit Loop(llvm::BasicBlockPtr body, llvm::BasicBlockPtr outer)
-                : bodyBlock(body), outerBlock(outer) { }
+        explicit Loop(llvm::BasicBlockPtr cond,
+                      llvm::BasicBlockPtr body,
+                      llvm::BasicBlockPtr outer)
+                : condBlock(cond), bodyBlock(body), outerBlock(outer) { }
+
+        llvm::BasicBlockPtr getCond() { return condBlock; }
         llvm::BasicBlockPtr getBody() { return bodyBlock; }
         llvm::BasicBlockPtr getOuter() { return outerBlock; }
     };
@@ -28,8 +33,10 @@ namespace tang {
     public:
         explicit LoopStack(ErrorReporter& reporter)
             : _reporter(reporter) { }
-        void pushLoop(llvm::BasicBlockPtr body, llvm::BasicBlockPtr outer) {
-            auto l = Loop(body, outer);
+        void pushLoop(llvm::BasicBlockPtr cond,
+                      llvm::BasicBlockPtr body,
+                      llvm::BasicBlockPtr outer) {
+            auto&& l = Loop(cond, body, outer);
             loops.push_back(l);
         }
         void popLoop() { loops.pop_back(); }
@@ -39,12 +46,9 @@ namespace tang {
             }
             return !loops.empty();
         }
-        llvm::BasicBlockPtr getCurrentLoopBody() {
-            return loops.back().getBody();
-        }
-        llvm::BasicBlockPtr getCurrentLoopOuter() {
-            return loops.back().getOuter();
-        }
+        llvm::BasicBlockPtr getCurrentLoopCond() { return loops.back().getCond(); }
+        llvm::BasicBlockPtr getCurrentLoopBody() { return loops.back().getBody(); }
+        llvm::BasicBlockPtr getCurrentLoopOuter() { return loops.back().getOuter(); }
     };
 } // namespace tang
 

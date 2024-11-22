@@ -460,33 +460,34 @@ namespace tang {
         int i;
         for (i = 0; i < node->lAndExps.size() - 1; i++) {
             llvm::BasicBlockPtr newBlock = std::make_shared<llvm::BasicBlock>(context);
-            _curFunction->addBasicBlock(newBlock);
             genLAndExpIR(node->lAndExps.at(i), ifBlock, newBlock);
+            _curBlock = newBlock;
+            _curFunction->addBasicBlock(newBlock);
         }
         genLAndExpIR(node->lAndExps.at(i), ifBlock, elseBlock);
+        _curBlock = ifBlock;
+        _curFunction->addBasicBlock(ifBlock);
     }
 
     void Visitor::genLAndExpIR(const u_ptr<LAndExp>& node,
-                                         const llvm::BasicBlockPtr& ifBlock, const llvm::BasicBlockPtr& elseBlock) {
+                               const llvm::BasicBlockPtr& ifBlock, const llvm::BasicBlockPtr& elseBlock) {
         auto&& context = _modulePtr->context();
         llvm::ValuePtr inst;
 
         int i;
         for (i = 0; i < node->eqExps.size() - 1; i++) {
             llvm::BasicBlockPtr newBlock = std::make_shared<llvm::BasicBlock>(context);
-            _curFunction->addBasicBlock(newBlock);
             inst = genEqExpIR(node->eqExps.at(i), context->I1_TY);
             auto brInst = std::make_shared<llvm::BranchInst>(
                 context, inst, elseBlock, newBlock);
             _curBlock->addInst(brInst);
             _curBlock = newBlock;
+            _curFunction->addBasicBlock(newBlock);
         }
         inst = genEqExpIR(node->eqExps.at(i), context->I1_TY);
         auto brInst = std::make_shared<llvm::BranchInst>(
             context, inst, elseBlock, ifBlock);
         _curBlock->addInst(brInst);
-        _curBlock = ifBlock;
-
     }
 
     llvm::ValuePtr Visitor::genEqExpIR(const u_ptr<EqExp>& node, const llvm::TypePtr& expectType) {

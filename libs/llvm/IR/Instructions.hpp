@@ -129,7 +129,7 @@ namespace llvm {
             }
             auto&& usee0 = getUsee(0);
             auto&& usee1 = getUsee(1);
-            usee0->printRef(out);
+            usee0->printRefWithType(out);
             out << ", ";
             usee1->printRef(out);
         }
@@ -251,8 +251,13 @@ namespace llvm {
             createUse(falseBlock);
             createUse(trueBlock);
         }
-        void print(std::ostream &) override {
-
+        void print(std::ostream& out) override {
+            out << "br ";
+            getUsee(0)->printRefWithType(out);
+            out << ", ";
+            getUsee(1)->printRefWithType(out);
+            out << ", ";
+            getUsee(2)->printRefWithType(out);
         }
     };
 
@@ -266,8 +271,9 @@ namespace llvm {
                 : Instruction(context, context->VOID_TY, JUMP_INST_T){
             createUse(targetPtr);
         }
-        void print(std::ostream &) override {
-
+        void print(std::ostream& out) override {
+            out << "br ";
+            getUsee(0)->printRefWithType(out);
         }
     };
 
