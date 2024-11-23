@@ -314,12 +314,26 @@ namespace tang {
             llvm::GlobalVariablePtr gvp;
             llvm::ConstantDataPtr cdp;
             llvm::TypePtr _ty = _type->toLLVMType(context);
-            llvm::PointerTypePtr ty = std::make_shared<llvm::PointerType>(_ty);
-            if (_hasInitVal) {
+            llvm::PointerTypePtr pty = std::make_shared<llvm::PointerType>(_ty);
+            // TODO: check
+            // TODO: no matter _hasInitVal, there are always initial value. therefore just use them
+            // if (_hasInitVal) {
+            //     cdp = std::make_shared<llvm::ConstantData>(
+            //         context, ty, initVals, _type->getLength());
+            // }
+            if (_type->isArray()) {
                 cdp = std::make_shared<llvm::ConstantData>(
-                    context, ty, initVals, _type->getLength());
+                    context, _ty, initVals, _type->getLength(), true);
             }
-            gvp = std::make_shared<llvm::GlobalVariable>(context, ty, cdp, (cdp==nullptr), _name);
+            else {
+                if (initVals.empty())
+                    cdp = std::make_shared<llvm::ConstantData>(
+                        context, _ty, 0);
+                else
+                    cdp = std::make_shared<llvm::ConstantData>(
+                        context, _ty, initVals.at(0));
+            }
+            gvp = std::make_shared<llvm::GlobalVariable>(context, pty, cdp, (cdp==nullptr), _name);
             _vp = gvp;
             return gvp;
         }

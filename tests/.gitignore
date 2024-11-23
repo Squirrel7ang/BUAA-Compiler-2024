@@ -1,2 +1,15 @@
 *.s
 *.S
+error.txt
+input.txt
+lexer.txt
+llvm_ir.txt
+parser.txt
+symbol.txt
+testfile.txt
+lib.ll
+main.ll
+out.ll
+
+linkTest/main.ll
+linkTest/out.ll

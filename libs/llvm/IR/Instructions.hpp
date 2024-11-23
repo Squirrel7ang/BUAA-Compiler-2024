@@ -7,6 +7,7 @@
 
 #include <cassert>
 
+#include "Function.hpp"
 #include "Common.hpp"
 #include "Type.hpp"
 #include "Instruction.hpp"
@@ -171,9 +172,9 @@ namespace llvm {
             usee0->printRefWithType(out);
             out << ", ";
             if (pty->getBasicType()->isArray()) {
-                out << "i64 0 , ";
+                out << "i32 0 , ";
             }
-            out << "i64 ";
+            out << "i32 ";
             getUsee(1)->printRef(out);
         }
     };
@@ -209,37 +210,20 @@ namespace llvm {
     };
 
     class CallInst : public Instruction {
+        FunctionPtr _func;
     public:
         explicit CallInst(LLVMContextPtr& context, TypePtr ty, ValuePtr func, vector<ValuePtr> & args)
-                : Instruction(context, ty, CALL_INST_T) {
-            createUse(func);
+                : Instruction(context, ty, CALL_INST_T), _func(std::dynamic_pointer_cast<Function>(func)) {
+            // createUse(func);
             for (auto value: args) {
                 createUse(value);
             }
         }
         explicit CallInst(LLVMContextPtr& context, TypePtr ty, ValuePtr func)
-                : Instruction(context, ty, CALL_INST_T) {
-            createUse(func);
+                : Instruction(context, ty, CALL_INST_T), _func(std::dynamic_pointer_cast<Function>(func)) {
+            // createUse(func);
         }
-        void print(std::ostream& out) {
-            printRef(out);
-            out << " = ";
-            out << "call ";
-            _type->print(out);
-            out << " ";
-            getUsee(0)->printRef(out);
-            out << "(";
-
-            // parameters
-            for (int i = 1; i < _usees.size(); i++) {
-                getUsee(i)->printRefWithType(out);
-                if (i < _usees.size() - 1) {
-                    out << ", ";
-                }
-            }
-
-            out << ")";
-        }
+        void print(std::ostream& out) override;
     };
 
     class BranchInst : public Instruction {

@@ -95,15 +95,15 @@ namespace tang {
     class StringConst: public Node {
     public:
         explicit StringConst(const Token& t) : Node(t) {}
-        u_ptr<std::string> str; // escape is already char
+        std::string str; // escape is already char
         static void print(std::ostream& out) {
             // nothing
         }
         unsigned int getFormatNum() {
             unsigned int ret = 0;
-            for (int i = 0; i < str->length()-1; i++) {
-                char ch1 = (*str)[i];
-                char ch2 = (*str)[i+1];
+            for (int i = 0; i < str.length()-1; i++) {
+                char ch1 = str.at(i);
+                char ch2 = str.at(i+1);
                 if ((ch1 == '%' && ch2 == 'd') ||
                     (ch1 == '%' && ch2 == 'c')) {
                     ret++;

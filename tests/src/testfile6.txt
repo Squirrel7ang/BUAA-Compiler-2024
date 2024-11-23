@@ -22,3 +22,7 @@ void addarray(int c[], int a[], int b[], int len) {
     }
     return;
 }
+
+int main() {
+    return 0;
+}

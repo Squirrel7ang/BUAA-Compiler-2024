@@ -6,6 +6,8 @@
 
 #include <cassert>
 
+#include "GlobalString.hpp"
+
 namespace llvm {
     Module::Module() {
         _context = std::make_shared<LLVMContext>();
@@ -28,6 +30,36 @@ namespace llvm {
 
     void Module::addString(GlobalStringPtr str) {
         _strings.push_back(str);
+    }
+
+    void Module::print(std::ostream& out) {
+        auto sourceName = _context->getSourceName();
+        out << "; ModuleID = '" + sourceName + "'" << std::endl;
+        out << "source_filename = \"" + sourceName + "\"" << std::endl;
+        out << std::endl;
+
+        out << "declare i32 @getint()" << std::endl;
+        out << "declare i32 @getchar()" << std::endl;
+        out << "declare void @putint(i32)" << std::endl;
+        out << "declare void @putch(i32)" << std::endl;
+        out << "declare void @putstr(i8*)" << std::endl;
+        out << std::endl;
+
+        // GlobalStrings
+        for (auto& str: _strings) {
+            str->print(out);
+        }
+
+        // GlobalVaraibles
+        for (auto& gvp: _globalVariables) {
+            gvp->print(out);
+        }
+        out << std::endl;
+
+        // Function
+        for (auto fp: _functions) {
+            fp->print(out);
+        }
     }
 
 }

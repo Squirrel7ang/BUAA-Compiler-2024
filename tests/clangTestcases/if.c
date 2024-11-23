@@ -23,5 +23,5 @@ int main() {
         a = 2;
     }
 
-    return a-6;
+    return 0;
 }

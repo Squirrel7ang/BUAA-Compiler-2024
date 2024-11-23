@@ -51,7 +51,10 @@ namespace tang {
                 Symbol s(st, vardef->ident->str);
                 if (vardef->has_initVal()) {
                     for (auto& exp: vardef->initVal->exps) {
-                        s.addInitVal(evaluate(exp));
+                        // TODO
+                        // s.addInitVal(evaluate(exp));
+                        s_ptr<SymbolType> _;
+                        _visitExp(exp, _);
                     }
                 }
 
@@ -67,8 +70,11 @@ namespace tang {
                 auto st = std::make_shared<IntSymbolType>(isConst);
                 Symbol s(st, vardef->ident->str);
                 if (vardef->has_initVal()) {
-                    assert(vardef->initVal->exps.size() == 1); // only one initVal;
-                    s.addInitVal(evaluate(vardef->initVal->exps.at(0)));
+                    // TODO
+                    // assert(vardef->initVal->exps.size() == 1); // only one initVal;
+                    // s.addInitVal(evaluate(vardef->initVal->exps.at(0)));
+                    s_ptr<SymbolType> _;
+                    _visitExp(vardef->initVal->exps.at(0), _);
                 }
 
                 if (isGlobal()) {
@@ -89,7 +95,10 @@ namespace tang {
                 Symbol s(st, vardef->ident->str);
                 if (vardef->has_initVal()) {
                     for (auto& exp: vardef->initVal->exps) {
-                        s.addInitVal(evaluate(exp));
+                        // TODO
+                        // s.addInitVal(evaluate(exp));
+                        s_ptr<SymbolType> _;
+                        _visitExp(exp, _);
                     }
                 }
 
@@ -105,8 +114,11 @@ namespace tang {
                 auto st = std::make_shared<CharSymbolType>(isConst);
                 Symbol s(st, vardef->ident->str);
                 if (vardef->has_initVal()) {
-                    assert(vardef->initVal->exps.size() == 1); // only one initVal;
-                    s.addInitVal(evaluate(vardef->initVal->exps.at(0)));
+                    // TODO
+                    // assert(vardef->initVal->exps.size() == 1); // only one initVal;
+                    // s.addInitVal(evaluate(vardef->initVal->exps.at(0)));
+                    s_ptr<SymbolType> _;
+                    _visitExp(vardef->initVal->exps.at(0), _);
                 }
 
                 if (isGlobal()) {
@@ -146,8 +158,10 @@ namespace tang {
                 }
 
                 if (isGlobal()) {
-                    llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
-                    _modulePtr->addGlobalVariable(gv);
+                    defineGlobalVariable(s);
+                }
+                else {
+                    defineLocalVariable(constdef, s);
                 }
                 _symbolTable.addSymbol(constdef->ident->getLin(), s);
             }
@@ -160,8 +174,10 @@ namespace tang {
                 }
 
                 if (isGlobal()) {
-                    llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
-                    _modulePtr->addGlobalVariable(gv);
+                    defineGlobalVariable(s);
+                }
+                else {
+                    defineLocalVariable(constdef, s);
                 }
                 _symbolTable.addSymbol(constdef->ident->getLin(), s);
             }
@@ -182,8 +198,10 @@ namespace tang {
                 }
 
                 if (isGlobal()) {
-                    llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
-                    _modulePtr->addGlobalVariable(gv);
+                    defineGlobalVariable(s);
+                }
+                else {
+                    defineLocalVariable(constdef, s);
                 }
                 _symbolTable.addSymbol(constdef->ident->getLin(), s);
             }
@@ -196,8 +214,10 @@ namespace tang {
                 }
 
                 if (isGlobal()) {
-                    llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
-                    _modulePtr->addGlobalVariable(gv);
+                    defineGlobalVariable(s);
+                }
+                else {
+                    defineLocalVariable(constdef, s);
                 }
                 _symbolTable.addSymbol(constdef->ident->getLin(), s);
             }
@@ -856,6 +876,9 @@ namespace tang {
 
         _visitMainFuncDef(node->mainFuncDef);
         _symbolTable.exitScope(scopeIndex);
+
+        // llvm
+        _modulePtr->clearEmptyBasicBlock();
     }
 
     void Visitor::visit() {

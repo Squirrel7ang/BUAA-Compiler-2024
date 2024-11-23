@@ -8,36 +8,18 @@
 #include <ostream>
 
 #include "Common.hpp"
+#include "LLVMContext.hpp"
 #include "Instructions.hpp"
 
 namespace llvm {
     class BasicBlock : public Value {
         vector<InstructionPtr> insts;
     public:
-        explicit BasicBlock(LLVMContextPtr& context)
-                : Value(context, context->LABEL_TY, BASIC_BLOCK_T) { }
-        void addInst(InstructionPtr inst) {
-            insts.push_back(inst);
-        }
-        void print(std::ostream& out) {
-            // TODO: print tmpVar's Index
-            out << _index << ':';
-            out << std::endl;
-            for (auto& inst: insts) {
-                out << "  ";
-                inst->print(out);
-                out << std::endl;
-            }
-        }
-        void setIndex(int &index) override {
-            _index = index;
-            index++;
-            for (auto& inst: insts) {
-                if (!inst->getType()->isVoidTy()) {
-                    inst->setIndex(index);
-                }
-            }
-        }
+        explicit BasicBlock(LLVMContextPtr& context);
+        void addInst(InstructionPtr inst);
+        void print(std::ostream& out);
+        bool isEmptyBlock();
+        void setIndex(int &index) override;
 
     };
 }

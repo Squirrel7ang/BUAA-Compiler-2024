@@ -15,10 +15,15 @@ namespace llvm {
         int _length;
     public:
         explicit ConstantData(LLVMContextPtr& context, TypePtr ty,
-                              vector<int>& data, int length)
+                              vector<int>& data, int length, bool pad)
                 : Constant(context, ty, CONSTANT_DATA_T), _data(data), _length(length) {
-            for (int i = _data.size(); i < _length; i++) {
-                _data.push_back(0);
+            for (auto val: data) {
+                _data.push_back(val);
+            }
+            if (pad) {
+                for (int i = data.size(); i < _length; i++) {
+                    _data.push_back(0);
+                }
             }
         }
         explicit ConstantData(LLVMContextPtr& context, TypePtr ty, int data)
@@ -26,17 +31,18 @@ namespace llvm {
             _data.push_back(data);
         }
     public:
-        void print(std::ostream& out) {
+        void print(std::ostream& out) override {
             if (_length < 0) {
                 out << _data.at(0);
             }
             else {
                 out << "[";
+                auto ty = std::static_pointer_cast<ArrayType>(_type)->getBasicType();
                 for (int i = 0; i < _length - 1; i++) {
-                    _type->print(out);
+                    ty->print(out);
                      out << " " << _data.at(i) << ", ";
                 }
-                _type->print(out);
+                ty->print(out);
                 out << " " << _data.at(_length - 1) << "]";
             }
         }

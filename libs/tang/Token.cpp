@@ -138,7 +138,7 @@ namespace tang {
     std::string Token::STRCONToString() const {
         if (_type == TK_STRCON) {
             const std::string str = escapeToChar(content);
-            return str.substr(1, str.length() - 1);
+            return str.substr(1, str.length() - 2);
         }
         assert(0);
         return "";

@@ -9,12 +9,12 @@ char gb5 = gb1 + gb1;
 
 int main() {
   char ch = 'a';
-  ch = ch + '\x01';
+  ch = ch + '0';
   int a = 1;
   int b;
   b = 1;
   b = a + a;
   a = b + 1;
   b = gb + 2;
-  return a;
+  return 0;
 }

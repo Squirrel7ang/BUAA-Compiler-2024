@@ -11,7 +11,11 @@ namespace tang {
     llvm::ValuePtr Visitor::convert(llvm::ValuePtr value, llvm::TypePtr target) {
         auto context = _modulePtr->context();
         if (!target->isInteger()) { assert(0); }
-        if (!value->getType()->isInteger()) { assert(0); }
+        if (!value->getType()->isInteger()) {
+            // assert(0);
+            // this could be a pointer type, since array could be involved in exp.
+            return value;
+        }
 
         auto _origin = std::static_pointer_cast<llvm::IntegerType>(value->getType());
         auto _target = std::static_pointer_cast<llvm::IntegerType>(target);
@@ -63,8 +67,8 @@ namespace tang {
                 // if this is a stringConst;
                 else {
                     auto& str = node->constInitVal->stringConst->str;
-                    for (; i < str->length(); i++) {
-                        char ch = str->at(i);
+                    for (; i < str.length(); i++) {
+                        char ch = str.at(i);
                         auto vp = std::make_shared<llvm::ConstantData>(
                             context, context->I8_TY, ch);
                         offset = std::make_shared<llvm::ConstantData>(context, context->I32_TY, i);
@@ -109,8 +113,8 @@ namespace tang {
                 // if this is a stringConst;
                 else {
                     auto& str = node->initVal->stringConst->str;
-                    for (; i < str->length(); i++) {
-                        char ch = str->at(i);
+                    for (; i < str.length(); i++) {
+                        char ch = str.at(i);
                         auto vp = std::make_shared<llvm::ConstantData>(
                             context, context->I8_TY, ch);
                         offset = std::make_shared<llvm::ConstantData>(context, context->I32_TY, i);
@@ -138,7 +142,8 @@ namespace tang {
     }
 
     llvm::ValuePtr Visitor::genExpIR(const u_ptr<Exp>& node, const llvm::TypePtr& expectType) {
-        return genAddExpIR(node->addExp, expectType);
+        auto&& ret = genAddExpIR(node->addExp, _modulePtr->context()->I32_TY);
+        return convert(ret, expectType);
     }
 
     llvm::ValuePtr Visitor::genAddExpIR(const u_ptr<AddExp>& node, const llvm::TypePtr& expectType) {
@@ -307,6 +312,44 @@ namespace tang {
         if (!s.getType()->isArray()) {
             lip = std::make_shared<llvm::LoadInst>(context, s.getType()->toLLVMType(context), s.getLLVMValue());
         }
+        else if (node->exp == nullptr) {
+            // we are trying to pass an array into function parameter.
+            llvm::GetElePtrInstPtr gepi;
+            auto offset = std::make_shared<llvm::ConstantData>(context, context->I32_TY, 0);
+            if (s.getType()->toRawType() == INT_ARRAY_ST ||
+                s.getType()->toRawType() == CONST_INT_ARRAY_ST) {
+                auto sty = std::dynamic_pointer_cast<IntArrayType>(s.getType());
+                if (sty->isArgument()) {
+                    auto preload = std::make_shared<llvm::LoadInst>(
+                        context, context->I32_PTR_TY, s.getLLVMValue()); // preload is a pointer to i32
+                    _curBlock->addInst(preload);
+                    gepi = std::make_shared<llvm::GetElePtrInst>(
+                        context, context->I32_PTR_TY, preload, offset);
+                }
+                else {
+                    gepi = std::make_shared<llvm::GetElePtrInst>(
+                        context, context->I32_PTR_TY, s.getLLVMValue(), offset);
+                }
+            }
+            else if (s.getType()->toRawType() == CHAR_ARRAY_ST ||
+                     s.getType()->toRawType() == CONST_CHAR_ARRAY_ST) {
+                auto sty = std::dynamic_pointer_cast<CharArrayType>(s.getType());
+                if (sty->isArgument()) {
+                    // this is an argument, thus a pointer type
+                    auto preload = std::make_shared<llvm::LoadInst>(
+                        context, context->I8_PTR_TY, s.getLLVMValue()); // preload is a pointer to i32
+                    _curBlock->addInst(preload);
+                    gepi = std::make_shared<llvm::GetElePtrInst>(
+                        context, context->I8_PTR_TY, preload, offset);
+                }
+                else {
+                    gepi = std::make_shared<llvm::GetElePtrInst>(
+                        context, context->I8_PTR_TY, s.getLLVMValue(), offset);
+                }
+            }
+            _curBlock->addInst(gepi);
+            return gepi; // the only place where it is not convert to expectType.
+        }
         else {
             llvm::GetElePtrInstPtr gepi;
             auto offset = genExpIR(node->exp, expectType);
@@ -360,8 +403,9 @@ namespace tang {
 
         auto inst = std::make_shared<llvm::GetcharInst>(context);
         _curBlock->addInst(inst);
+        auto&& val = convert(inst, s.getType()->toBasicLLVMType(context));
 
-        assignLVal(s, inst);
+        assignLVal(s, val);
     }
 
     void Visitor::genGetintStmtIR(const u_ptr<GetintStmt>& node) {
@@ -373,8 +417,9 @@ namespace tang {
 
         auto inst = std::make_shared<llvm::GetintInst>(context);
         _curBlock->addInst(inst);
+        auto&& val = convert(inst, s.getType()->toBasicLLVMType(context));
 
-        assignLVal(s, inst);
+        assignLVal(s, val);
     }
 
     void Visitor::genPrintfStmtIR(const u_ptr<PrintfStmt>& node) {
@@ -385,29 +430,32 @@ namespace tang {
         int expNum = 0;
         std::string tmpStr;
 
-        ch0 = rawStr->at(0);
+        ch0 = rawStr.at(0);
         tmpStr += ch0;
-        for (int i = 1; i < rawStr->size(); i++) {
-            ch1 = rawStr->at(i);
+        for (int i = 1; i < rawStr.size(); i++) {
+            ch1 = rawStr.at(i);
             tmpStr += ch1;
             if (ch0 == '%' && (ch1 == 'd' || ch1 == 'c')) {
                 auto size = tmpStr.size();
                 tmpStr = tmpStr.substr(0, size - 2);
                 // handle tmpStr
-                auto&& llvmType = std::make_shared<llvm::ArrayType>(context->I8_TY, tmpStr.size() + 1);
-                auto&& globalStr = std::make_shared<llvm::GlobalString>(
-                    context, llvmType, context->getStringName(), tmpStr);
-                _modulePtr->addString(globalStr);
-                genPutstrIR(globalStr);
+                if (!tmpStr.empty()) {
+                    auto llvmType = std::make_shared<llvm::ArrayType>(context->I8_TY, tmpStr.size() + 1);
+                    auto ty = std::make_shared<llvm::PointerType>(llvmType);
+                    auto globalStr = std::make_shared<llvm::GlobalString>(
+                        context, ty, context->getStringName(), tmpStr);
+                    _modulePtr->addString(globalStr);
+                    genPutstrIR(globalStr);
+                }
                 // handle %c or %d
                 if (ch1 == 'c') {
                     auto& exp = node->exps.at(expNum);
-                    auto&& value = genExpIR(exp, context->I8_TY);
+                    auto value = genExpIR(exp, context->I32_TY);
                     genPutchIR(value);
                 }
                 else {
                     auto& exp = node->exps.at(expNum);
-                    auto&& value = genExpIR(exp, context->I32_TY);
+                    auto value = genExpIR(exp, context->I32_TY);
                     genPutintIR(value);
                 }
                 // reset tmpStr
@@ -416,11 +464,14 @@ namespace tang {
             ch0 = ch1;
         }
 
-        auto&& llvmType = std::make_shared<llvm::ArrayType>(context->I8_TY, tmpStr.size() + 1);
-        auto&& globalStr = std::make_shared<llvm::GlobalString>(
-            context, llvmType, context->getStringName(), tmpStr);
-        _modulePtr->addString(globalStr);
-        genPutstrIR(globalStr);
+        if (!tmpStr.empty()) {
+            auto&& llvmType = std::make_shared<llvm::ArrayType>(context->I8_TY, tmpStr.size() + 1);
+            auto ty = std::make_shared<llvm::PointerType>(llvmType);
+            auto&& globalStr = std::make_shared<llvm::GlobalString>(
+                context, ty, context->getStringName(), tmpStr);
+            _modulePtr->addString(globalStr);
+            genPutstrIR(globalStr);
+        }
     }
 
     llvm::ValuePtr Visitor::genPutchIR(llvm::ValuePtr value) {
@@ -619,8 +670,7 @@ namespace tang {
             assignLVal(s, value);
         }
         else {
-            auto&& expectType = s.getType()->toBasicLLVMType(context);
-            auto offset = genExpIR(lVal->exp, expectType);
+            auto offset = genExpIR(lVal->exp, context->I32_TY);
             assignLVal(s, offset, value);
         }
     }
@@ -630,11 +680,21 @@ namespace tang {
         llvm::ReturnInstPtr rip = std::make_shared<llvm::ReturnInst>(
             context, value);
         _curBlock->addInst(rip);
+
+        // add new block after return statement
+        auto newBlock = std::make_shared<llvm::BasicBlock>(context);
+        _curFunction->addBasicBlock(newBlock);
+        _curBlock = newBlock;
     }
 
     void Visitor::returnVoid() {
         auto context = _modulePtr->context();
         llvm::ReturnInstPtr rip = std::make_shared<llvm::ReturnInst>( context);
         _curBlock->addInst(rip);
+
+        // add new block after return statement
+        auto newBlock = std::make_shared<llvm::BasicBlock>(context);
+        _curFunction->addBasicBlock(newBlock);
+        _curBlock = newBlock;
     }
 }

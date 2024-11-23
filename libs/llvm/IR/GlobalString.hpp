@@ -26,20 +26,7 @@ namespace llvm {
             toAscii();
             size = escapeString.size() + 1;
         }
-    private:
-        void toAscii() {
-            for (int i = 0; i < escapeString.size(); i++) {
-                char ch = escapeString.at(i);
-                if (ch == '\n') {
-                    asciiString += "\\0A";
-                }
-                else {
-                    asciiString += ch;
-                }
-            }
-            asciiString += "\\00";
-        }
-        void print(std::ostream &out) override {
+        void print(std::ostream& out) override {
             out << '@' << name;
             out << " = " << "private ";
             out << "unnamed_addr ";
@@ -52,6 +39,19 @@ namespace llvm {
         }
         void printRef(std::ostream &out) override {
             out << '@' << name;
+        }
+    private:
+        void toAscii() {
+            for (int i = 0; i < escapeString.size(); i++) {
+                char ch = escapeString.at(i);
+                if (ch == '\n') {
+                    asciiString += "\\0A";
+                }
+                else {
+                    asciiString += ch;
+                }
+            }
+            asciiString += "\\00";
         }
     };
 

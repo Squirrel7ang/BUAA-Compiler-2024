@@ -66,7 +66,7 @@ namespace tang {
         Token&& t1 = getToken();
 
         std::string&& content = t1.STRCONToString();
-        stringConst->str = std::make_unique<std::string>(content);
+        stringConst->str = content;
 
         StringConst::print(_correctOutput);
         return stringConst;

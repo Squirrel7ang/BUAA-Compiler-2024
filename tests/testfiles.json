@@ -1,0 +1,67 @@
+{
+  "test1": {
+    "testfile": "clangTestcases/algorithmatic.c",
+    "input": "",
+    "output": ""
+  },
+  "test2": {
+    "testfile": "clangTestcases/array.c",
+    "input": "",
+    "output": ""
+  },
+  "test3": {
+    "testfile": "clangTestcases/for.c",
+    "input": "",
+    "output": ""
+  },
+  "test4": {
+    "testfile": "clangTestcases/function.c",
+    "input": "",
+    "output": ""
+  },
+  "test5": {
+    "testfile": "clangTestcases/if.c",
+    "input": "",
+    "output": ""
+  },
+  "test7": {
+    "testfile": "clangTestcases/simple.c",
+    "input": "",
+    "output": ""
+  },
+  "test9": {
+    "testfile": "src/testfile1.txt",
+    "input": "",
+    "output": "src/output1.txt"
+  },
+  "test10": {
+    "testfile": "src/testfile2.txt",
+    "input": "",
+    "output": "src/output2.txt"
+  },
+  "test11": {
+    "testfile": "src/testfile3.txt",
+    "input": "",
+    "output": "src/output3.txt"
+  },
+  "test12": {
+    "testfile": "src/testfile4.txt",
+    "input": "",
+    "output": "src/output4.txt"
+  },
+  "test13": {
+    "testfile": "src/testfile5.txt",
+    "input": "src/input5.txt",
+    "output": "src/output5.txt"
+  },
+  "test14": {
+    "testfile": "src/testfile6.txt",
+    "input": "",
+    "output": ""
+  },
+  "test15": {
+    "testfile": "src/testfile7.txt",
+    "input": "",
+    "output": ""
+  }
+}

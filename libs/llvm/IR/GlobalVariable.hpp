@@ -17,21 +17,22 @@ namespace llvm {
     private:
         ConstantDataPtr _initVal;
         bool _isConst;
-        TypePtr _type;
         std::string _name;
     public:
         explicit GlobalVariable(LLVMContextPtr& context, TypePtr ty,
                                 ConstantDataPtr initVal, bool constant, std::string& name)
                 : GlobalValue(context, ty, GLOBAL_VARIABLE_T), _initVal(initVal),
                   _isConst(constant), _name(name) { }
-        void print(std::ostream& out) {
+        void print(std::ostream& out) override {
             out << "@" << _name << " = dso_local";
             out << (_isConst ? " constant " : " global ");
-            _type->print(out);
+            auto&& ty = std::static_pointer_cast<PointerType>(_type)->getBasicType();
+            ty->print(out);
             out << " ";
             _initVal->print(out);
+            out << std::endl;
         }
-        void printRef(std::ostream& out) {
+        void printRef(std::ostream& out) override {
             out << "@" << _name;
         }
     };

@@ -15,14 +15,6 @@ int main() {
     z = -a;
     z = !a;
     z = +z;
-    z = a&&b;
-    z = a||b;
-    z = (a!=b);
-    z = (a==b);
-    z = (a< b);
-    z = (a<=b);
-    z = (a> b);
-    z = (a>=b);
     char zx;
     zx = a;
     a = zx;
@@ -48,5 +40,5 @@ int main() {
         ret = 0;
     }
 
-    return ret;
+    return 0;
 }

@@ -39,20 +39,11 @@ namespace llvm {
 
         // Printer
         std::string getSourceName() { return _context->getSourceName(); }
-        void print(std::ostream& out) {
-            auto sourceName = _context->getSourceName();
-            out << "; ModuleID = '" + sourceName + "'" << std::endl;
-            out << "source_filename = \"" + sourceName + "\"" << std::endl;
-            out << std::endl;
+        void print(std::ostream& out);
 
-            // GlobalVaraibles
-            for (auto gvp: _globalVariables) {
-                gvp->print(out);
-            }
-
-            // Function
-            for (auto fp: _functions) {
-                fp->print(out);
+        void clearEmptyBasicBlock() {
+            for (const auto& f: _functions) {
+                f->clearEmptyBasicBlocks();
             }
         }
     };
