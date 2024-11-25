@@ -15,16 +15,20 @@ namespace tang {
     class Loop {
         llvm::BasicBlockPtr condBlock;
         llvm::BasicBlockPtr bodyBlock;
+        llvm::BasicBlockPtr updateBlock;
         llvm::BasicBlockPtr outerBlock;
     public:
         explicit Loop(llvm::BasicBlockPtr cond,
                       llvm::BasicBlockPtr body,
+                      llvm::BasicBlockPtr update,
                       llvm::BasicBlockPtr outer)
-                : condBlock(cond), bodyBlock(body), outerBlock(outer) { }
+                : condBlock(cond), bodyBlock(body),
+                  outerBlock(outer), updateBlock(update) { }
 
         llvm::BasicBlockPtr getCond() { return condBlock; }
         llvm::BasicBlockPtr getBody() { return bodyBlock; }
         llvm::BasicBlockPtr getOuter() { return outerBlock; }
+        llvm::BasicBlockPtr getUpdate() { return updateBlock; }
     };
 
     class LoopStack {
@@ -35,8 +39,9 @@ namespace tang {
             : _reporter(reporter) { }
         void pushLoop(llvm::BasicBlockPtr cond,
                       llvm::BasicBlockPtr body,
+                      llvm::BasicBlockPtr update,
                       llvm::BasicBlockPtr outer) {
-            auto&& l = Loop(cond, body, outer);
+            auto&& l = Loop(cond, body, update, outer);
             loops.push_back(l);
         }
         void popLoop() { loops.pop_back(); }
@@ -49,6 +54,7 @@ namespace tang {
         llvm::BasicBlockPtr getCurrentLoopCond() { return loops.back().getCond(); }
         llvm::BasicBlockPtr getCurrentLoopBody() { return loops.back().getBody(); }
         llvm::BasicBlockPtr getCurrentLoopOuter() { return loops.back().getOuter(); }
+        llvm::BasicBlockPtr getCurrentLoopUpdate() { return loops.back().getUpdate(); }
     };
 } // namespace tang
 

@@ -237,6 +237,8 @@ namespace tang {
         unsigned int getSize() override {
             return 8;
         }
+        unsigned int argSize() { return _argType.size(); }
+        s_ptr<SymbolType> argTypeAt(unsigned int i) { return _argType.at(i); }
         unsigned int getLength() override { return 1; }
         std::string toOutput() override {
             std::string s;
@@ -300,7 +302,10 @@ namespace tang {
         int initValAt(int index) {
             return initVals.at(index);
         }
-        llvm::ValuePtr getLLVMValue() { return _vp; }
+        llvm::ValuePtr getLLVMValue() {
+            assert(_vp != nullptr);
+            return _vp;
+        }
         void setValuePtr(llvm::ValuePtr ptr) {
             _vp = ptr; // used in setting the valuePtr to Function
         }

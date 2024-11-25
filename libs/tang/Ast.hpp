@@ -194,7 +194,7 @@ namespace tang {
             out << "<ConstDef>" << std::endl;
         }
         bool is_array() { return isArray; }
-        bool has_initVal() { return constInitVal == nullptr; }
+        bool has_initVal() { return constInitVal != nullptr; }
     };
 
     class VarDef: public Node {

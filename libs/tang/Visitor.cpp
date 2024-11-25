@@ -39,6 +39,7 @@ namespace tang {
         }
     }
 
+    // TODO: add String Const initializer
     void Visitor::_visitVarDef(const u_ptr<VarDef>& vardef, bool isInt, bool isChar) {
         auto context = _modulePtr->context();
         constexpr bool isConst = false;
@@ -51,10 +52,11 @@ namespace tang {
                 Symbol s(st, vardef->ident->str);
                 if (vardef->has_initVal()) {
                     for (auto& exp: vardef->initVal->exps) {
-                        // TODO
-                        // s.addInitVal(evaluate(exp));
                         s_ptr<SymbolType> _;
                         _visitExp(exp, _);
+                        if (isGlobal()) {
+                            s.addInitVal(evaluate(exp));
+                        }
                     }
                 }
 
@@ -75,6 +77,9 @@ namespace tang {
                     // s.addInitVal(evaluate(vardef->initVal->exps.at(0)));
                     s_ptr<SymbolType> _;
                     _visitExp(vardef->initVal->exps.at(0), _);
+                    if (isGlobal()) {
+                        s.addInitVal(evaluate(vardef->initVal->exps.at(0)));
+                    }
                 }
 
                 if (isGlobal()) {
@@ -99,6 +104,9 @@ namespace tang {
                         // s.addInitVal(evaluate(exp));
                         s_ptr<SymbolType> _;
                         _visitExp(exp, _);
+                        if (isGlobal()) {
+                            s.addInitVal(evaluate(exp));
+                        }
                     }
                 }
 
@@ -119,6 +127,9 @@ namespace tang {
                     // s.addInitVal(evaluate(vardef->initVal->exps.at(0)));
                     s_ptr<SymbolType> _;
                     _visitExp(vardef->initVal->exps.at(0), _);
+                    if (isGlobal()) {
+                        s.addInitVal(evaluate(vardef->initVal->exps.at(0)));
+                    }
                 }
 
                 if (isGlobal()) {
@@ -141,6 +152,7 @@ namespace tang {
         }
     }
 
+    // TODO: add String Const initializer
     void Visitor::_visitConstDef(const u_ptr<ConstDef>& constdef, bool isInt, bool isChar) {
         auto context = _modulePtr->context();
         bool isConst = true;
@@ -290,8 +302,8 @@ namespace tang {
 
         _loopStack.checkBreakContinue(node->getLin());
 
-        auto condBlock = _loopStack.getCurrentLoopCond();
-        auto jip = std::make_shared<llvm::JumpInst>(context, condBlock);
+        auto updateBlock = _loopStack.getCurrentLoopUpdate();
+        auto jip = std::make_shared<llvm::JumpInst>(context, updateBlock);
         _curBlock->addInst(jip);
         auto newBlock = std::make_shared<llvm::BasicBlock>(context);
         _curFunction->addBasicBlock(newBlock);
@@ -385,9 +397,10 @@ namespace tang {
         auto context = _modulePtr->context();
         auto condBlock = std::make_shared<llvm::BasicBlock>(context);
         auto bodyBlock = std::make_shared<llvm::BasicBlock>(context);
+        auto updateBlock = std::make_shared<llvm::BasicBlock>(context);
         auto outerBlock = std::make_shared<llvm::BasicBlock>(context);
 
-        _loopStack.pushLoop(condBlock, bodyBlock, outerBlock);
+        _loopStack.pushLoop(condBlock, bodyBlock, updateBlock, outerBlock);
         s_ptr<SymbolType> _;
 
         if (node->init != nullptr) {
@@ -417,6 +430,12 @@ namespace tang {
         }
 
         _visitStmt(node->stmt);
+
+        // generate update llvm
+        jip = std::make_shared<llvm::JumpInst>(context, updateBlock);
+        _curBlock->addInst(jip);
+        _curBlock = updateBlock;
+        _curFunction->addBasicBlock(updateBlock);
 
         if (node->update != nullptr) {
             _visitAssignment(node->update, false, true);

@@ -46,7 +46,7 @@ namespace tang {
         }
         else assert(0); // FuncCall cannot be evaluated
 
-        for (int i = unaryOps.size() - 1; i >= 0; i++) {
+        for (int i = unaryOps.size() - 1; i >= 0; i--) {
             u_ptr<UnaryOp>& op = unaryOps.at(i);
             if (op->isMinus) {
                 ret = -ret;

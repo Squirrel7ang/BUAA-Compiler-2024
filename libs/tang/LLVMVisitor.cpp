@@ -2,15 +2,21 @@
 // Created by tang on 11/14/24.
 //
 
-#include <valarray>
-
 #include "Visitor.hpp"
 #include "IR/GlobalString.hpp"
 
 namespace tang {
     llvm::ValuePtr Visitor::convert(llvm::ValuePtr value, llvm::TypePtr target) {
         auto context = _modulePtr->context();
-        if (!target->isInteger()) { assert(0); }
+        if (!target->isInteger()) {
+            if (target->isPointer()) {
+                assert(value->getType()->isPointer());
+            }
+            else {
+                assert(0);
+            }
+            return value;
+        }
         if (!value->getType()->isInteger()) {
             // assert(0);
             // this could be a pointer type, since array could be involved in exp.
@@ -39,7 +45,6 @@ namespace tang {
         return value;
     }
 
-    // TODO: initialize the global value
     void Visitor::defineGlobalVariable(Symbol& s) {
         auto&& context = _modulePtr->context();
         llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
@@ -223,23 +228,17 @@ namespace tang {
                 bop = std::make_shared<llvm::BinaryOperator>(
                     context, context->I32_TY, zero, inst, llvm::BOID_SUB);
                 _curBlock->addInst(bop);
+                inst = bop;
             }
             else if (op->isExc) {
                 cip = std::make_shared<llvm::CompareInst>(
                     context, zero, inst, llvm::CIID_EQ);
                 _curBlock->addInst(cip);
+                inst = cip;
             }
         }
 
-        if (cip != nullptr) {
-            return convert(cip, expectType);
-        }
-        else if (bop != nullptr) {
-            return convert(bop, expectType);
-        }
-        else {
-            return convert(inst, expectType);
-        }
+        return convert(inst, expectType);
     }
 
     llvm::ValuePtr Visitor::genPrimaryExp(const u_ptr<PrimaryExp>& node, const llvm::TypePtr& expectType) {
@@ -277,8 +276,9 @@ namespace tang {
         }
         else {
             vector<llvm::ValuePtr> rargs;
+            int i = 0;
             for (auto& exp: node->funcRParams->exps) {
-                auto inst = genExpIR(exp, expectType);
+                auto inst = genExpIR(exp, _func_type->argTypeAt(i++)->toLLVMType(context));
                 rargs.push_back(inst);
             }
             cip = std::make_shared<llvm::CallInst>(context, _llvm_type, s.getLLVMValue(), rargs);
@@ -623,10 +623,14 @@ namespace tang {
         auto&& context = _modulePtr->context();
 
         llvm::StoreInstPtr sip;
-        auto ty = s.getLLVMValue();
         auto ptr = s.getLLVMValue();
+
+        // convert Type;
+        assert(ptr->getType()->isPointer());
+        auto ptrBType = std::static_pointer_cast<llvm::PointerType>(ptr->getType())->getBasicType();
+        auto convertedVal = convert(value, ptrBType);
         sip = std::make_shared<llvm::StoreInst>(
-            context, value, ptr);
+            context, convertedVal, ptr);
         _curBlock->addInst(sip);
     }
 
@@ -663,19 +667,24 @@ namespace tang {
             if (sty->isArgument()) {
                 // load first, then getelementptr
                 auto preload = std::make_shared<llvm::LoadInst>(
-                    context, context->I32_PTR_TY, s.getLLVMValue());
+                    context, context->I8_PTR_TY, s.getLLVMValue());
                 _curBlock->addInst(preload);
                 gepi = std::make_shared<llvm::GetElePtrInst>(
-                    context, context->I32_PTR_TY, preload, offset);
+                    context, context->I8_PTR_TY, preload, offset);
             }
             else {
                 // getElementPtr
                 gepi = std::make_shared<llvm::GetElePtrInst>(
-                    context, context->I32_PTR_TY, s.getLLVMValue(), offset);
+                    context, context->I8_PTR_TY, s.getLLVMValue(), offset);
             }
         }
         _curBlock->addInst(gepi);
-        sip = std::make_shared<llvm::StoreInst>(context, value, gepi);
+
+        // convert Type;
+        assert(gepi->getType()->isPointer());
+        auto ptrBType = std::static_pointer_cast<llvm::PointerType>(gepi->getType())->getBasicType();
+        auto convertedVal = convert(value, ptrBType);
+        sip = std::make_shared<llvm::StoreInst>(context, convertedVal, gepi);
         _curBlock->addInst(sip);
     }
 
