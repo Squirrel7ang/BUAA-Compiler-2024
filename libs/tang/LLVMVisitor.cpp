@@ -406,7 +406,7 @@ namespace tang {
         _curBlock->addInst(inst);
         auto&& val = convert(inst, s.getType()->toBasicLLVMType(context));
 
-        assignLVal(s, val);
+        assignLVal(node->lVal, val);
     }
 
     void Visitor::genGetintStmtIR(const u_ptr<GetintStmt>& node) {
@@ -420,7 +420,7 @@ namespace tang {
         _curBlock->addInst(inst);
         auto&& val = convert(inst, s.getType()->toBasicLLVMType(context));
 
-        assignLVal(s, val);
+        assignLVal(node->lVal, val);
     }
 
     void Visitor::genPrintfStmtIR(const u_ptr<PrintfStmt>& node) {

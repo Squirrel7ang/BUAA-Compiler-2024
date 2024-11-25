@@ -17,9 +17,6 @@ namespace llvm {
         explicit ConstantData(LLVMContextPtr& context, TypePtr ty,
                               vector<int>& data, int length, bool pad)
                 : Constant(context, ty, CONSTANT_DATA_T), _data(data), _length(length) {
-            for (auto val: data) {
-                _data.push_back(val);
-            }
             if (pad) {
                 for (int i = data.size(); i < _length; i++) {
                     _data.push_back(0);

@@ -54,9 +54,21 @@ namespace tang {
                     for (auto& exp: vardef->initVal->exps) {
                         s_ptr<SymbolType> _;
                         _visitExp(exp, _);
-                        if (isGlobal()) {
-                            s.addInitVal(evaluate(exp));
+                    }
+
+                    if (isGlobal()) {
+                        vector<int> inits;
+                        if (vardef->initVal->stringConst != nullptr) {
+                            auto& str = vardef->initVal->stringConst->_str;
+                            for (char i : str) {
+                                inits.push_back(i);
+                            }
+                            inits.push_back(0); // push a '\0' inside;
                         }
+                        else for (auto& exp: vardef->initVal->exps) {
+                            inits.push_back(evaluate(exp));
+                        }
+                        s.addInitVal(inits);
                     }
                 }
 
@@ -100,13 +112,23 @@ namespace tang {
                 Symbol s(st, vardef->ident->str);
                 if (vardef->has_initVal()) {
                     for (auto& exp: vardef->initVal->exps) {
-                        // TODO
-                        // s.addInitVal(evaluate(exp));
                         s_ptr<SymbolType> _;
                         _visitExp(exp, _);
-                        if (isGlobal()) {
-                            s.addInitVal(evaluate(exp));
+                    }
+
+                    if (isGlobal()) {
+                        vector<int> inits;
+                        if (vardef->initVal->stringConst != nullptr) {
+                            auto& str = vardef->initVal->stringConst->_str;
+                            for (char i : str) {
+                                inits.push_back(i);
+                            }
+                            inits.push_back(0); // push a '\0' inside;
                         }
+                        else for (auto& exp: vardef->initVal->exps) {
+                            inits.push_back(evaluate(exp));
+                        }
+                        s.addInitVal(inits);
                     }
                 }
 
@@ -164,9 +186,18 @@ namespace tang {
 
                 Symbol s(st, constdef->ident->str);
                 if (constdef->has_initVal()) {
-                    for (auto& exp: constdef->constInitVal->constExps) {
-                        s.addInitVal(evaluate(exp));
+                    vector<int> inits;
+                    if (constdef->constInitVal->stringConst != nullptr) {
+                        auto& str = constdef->constInitVal->stringConst->_str;
+                        for (char i : str) {
+                            inits.push_back(i);
+                        }
+                        inits.push_back(0); // push a '\0' inside;
                     }
+                    else for (auto& exp: constdef->constInitVal->constExps) {
+                        inits.push_back(evaluate(exp));
+                    }
+                    s.addInitVal(inits);
                 }
 
                 if (isGlobal()) {
@@ -204,9 +235,18 @@ namespace tang {
 
                 Symbol s(st, constdef->ident->str);
                 if (constdef->has_initVal()) {
-                    for (auto& exp: constdef->constInitVal->constExps) {
-                        s.addInitVal(evaluate(exp));
+                    vector<int> inits;
+                    if (constdef->constInitVal->stringConst != nullptr) {
+                        auto& str = constdef->constInitVal->stringConst->_str;
+                        for (char i : str) {
+                            inits.push_back(i);
+                        }
+                        inits.push_back(0); // push a '\0' inside;
                     }
+                    else for (auto& exp: constdef->constInitVal->constExps) {
+                        inits.push_back(evaluate(exp));
+                    }
+                    s.addInitVal(inits);
                 }
 
                 if (isGlobal()) {

@@ -37,7 +37,6 @@ namespace tang {
         void visit();
         llvm::ModulePtr getLLVMModule() { return _modulePtr; }
 
-    private:
         // evaluate
         int evaluate(u_ptr<PrimaryExp> &node);
         int evaluate(u_ptr<UnaryExp> &node);
@@ -49,6 +48,7 @@ namespace tang {
         int evaluate(u_ptr<Character> &node);
         int evaluate(u_ptr<ConstExp> &node);
 
+    private:
         // visit
         void _visitConstExp(const u_ptr<ConstExp>& node);
         void _visitInitVal(const u_ptr<InitVal>& node);

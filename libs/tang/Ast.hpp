@@ -5,7 +5,6 @@
 #ifndef AST_HPP
 #define AST_HPP
 
-#include <cassert>
 #include <memory>
 #include <variant>
 #include <vector>
@@ -14,6 +13,10 @@
 #include "Token.hpp"
 
 namespace tang {
+    class SymbolType;
+    template <typename T>
+    using s_ptr = std::shared_ptr<T>;
+
     class Cond;
     class LVal;
     class Exp;
@@ -93,7 +96,7 @@ namespace tang {
     };
 
     class StringConst: public Node {
-        vector<s_ptr<SymbolType>> _types;
+        vector<s_ptr<SymbolType>> _types; // store the symbolType of parameters;
     public:
         explicit StringConst(const Token& t, std::string& str) : Node(t), _str(str) {
             calFormat();
@@ -105,25 +108,9 @@ namespace tang {
         unsigned int getFormatNum() {
             return _types.size();
         }
-        s_ptr<SymbolType> symbolTypeAt(unsigned int i) {
-            return _types.at(i);
-        }
+        s_ptr<SymbolType> symbolTypeAt(unsigned int i);
     private:
-        void calFormat() {
-            unsigned int ret = 0;
-            for (int i = 0; i < _str.length()-1; i++) {
-                char ch1 = _str.at(i);
-                char ch2 = _str.at(i+1);
-                if (ch1 == '%' && ch2 == 'd') {
-                    auto sty = std::make_shared<IntSymbolType>(false);
-                    _types.push_back(sty);
-                }
-                if (ch1 == '%' && ch2 == 'c') {
-                    auto sty = std::make_shared<CharSymbolType>(false);
-                    _types.push_back(sty);
-                }
-            }
-        }
+        void calFormat();
     };
 
     using DeclVariant = variant<u_ptr<ConstDecl>, u_ptr<VarDecl>>;
@@ -410,9 +397,7 @@ namespace tang {
         static void print(std::ostream& out) {
             // nothing
         }
-        s_ptr<SymbolType> symbolTypeAt(unsigned int i) {
-            return stringConst->symbolTypeAt(i);
-        }
+        s_ptr<SymbolType> symbolTypeAt(unsigned int i);
     };
 
     class EmptyStmt: public Node {

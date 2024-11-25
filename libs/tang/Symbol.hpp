@@ -5,12 +5,12 @@
 #ifndef SYMBOL_HPP
 #define SYMBOL_HPP
 #include <cassert>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "Ast.hpp"
 #include "ErrorReporter.hpp"
 #include "IR/Common.hpp"
 #include "IR/ConstantData.hpp"
@@ -298,6 +298,11 @@ namespace tang {
         void addInitVal(int val) {
             _hasInitVal = true;
             initVals.push_back(val);
+        }
+        void addInitVal(std::vector<int>& initVals) {
+            for (const int v: initVals) {
+                addInitVal(v);
+            }
         }
         int initValAt(int index) {
             return initVals.at(index);

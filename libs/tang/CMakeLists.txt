@@ -17,6 +17,7 @@ add_library(${LIBRARY_NAME}
         Symbol.cpp
         Evaluate.cpp
         LLVMVisitor.cpp
+        Ast.cpp
         #        Symbol1.hpp
 #        Symbol1.cpp
 )

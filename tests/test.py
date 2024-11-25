@@ -11,6 +11,30 @@ test_files = []
 input_files = []
 output_files = []
 
+llvm_link = '/home/tang/Downloads/llvm12/bin/llvm-link'
+llc = '/home/tang/Downloads/llvm12/bin/llc'
+lli = '/home/tang/Downloads/llvm12/bin/lli'
+
+def check_syntax():
+    command = [llc, "out.ll"]
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    stdout, stderr = process.communicate()
+    if process.returncode != 0:
+        print("-"*30)
+        print("syntax check fail")
+        print("-"*30)
+        print("标准输出:")
+        print(stdout)
+        print("-"*30)
+        print("标准错误输出:")
+        print(stderr)
+        print("-"*30)
+        print("返回值:", process.returncode)
+        print("-"*30)
+        exit(-1)
+
+    pass
+
 
 def link():
     print("begin link_llvm... ")
@@ -19,7 +43,7 @@ def link():
     os.system("cp llvm_ir.txt main.ll")
     print("cp linkTest/lib.ll ./lib.ll")
     os.system("cp linkTest/lib.ll ./lib.ll")
-    command1 = ['llvm-link', "main.ll", "lib.ll", "-S", "-o", "out.ll"]
+    command1 = [llvm_link, "main.ll", "lib.ll", "-S", "-o", "out.ll"]
 
     # link
     result1 = subprocess.Popen(command1, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -46,7 +70,7 @@ def link():
 
 def run(input_file_name):
     print("begin lli... ")
-    command2 = ['lli', 'out.ll']
+    command2 = [lli, 'out.ll']
 
     if input_file_name != "":
         with open(input_file_name, 'r') as input_file:
@@ -73,7 +97,6 @@ def run(input_file_name):
         print("cp main.ll ../build/llvm_ir.txt")
         os.system("cp main.ll ../build/llvm_ir.txt")
         exit(-1)
-    print("")
 
 def _compile():
     print("begin compiling... ")
@@ -103,6 +126,7 @@ def test(t):
 
     _compile()
     link()
+    check_syntax()
     run(input_file)
 
     print("")
@@ -113,7 +137,7 @@ def test(t):
     pass
 
 def clean():
-    os.system("rm error.txt input.txt lexer.txt llvm_ir.txt parser.txt symbol.txt testfile.txt lib.ll main.ll out.ll")
+    os.system("rm error.txt input.txt lexer.txt llvm_ir.txt parser.txt symbol.txt testfile.txt lib.ll main.ll out.ll out.s")
     pass
 
 def read_tests():

@@ -109,7 +109,6 @@ namespace llvm {
         void print(std::ostream& out ) override {
             _basicType->print(out);
             out << '*';
-            // out << "ptr";
         }
         TypePtr getBasicType() { return _basicType; }
         bool equals(TypePtr type) override {

@@ -9,4 +9,5 @@
 
 ## LLVM-1
 
-- [ ] change all `Type` into `TypePtr`
+- ~~[ ] change all `Type` into `TypePtr`~~
+- [x] fix string const when initializing char array;
