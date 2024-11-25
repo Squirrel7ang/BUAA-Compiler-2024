@@ -93,23 +93,36 @@ namespace tang {
     };
 
     class StringConst: public Node {
+        vector<s_ptr<SymbolType>> _types;
     public:
-        explicit StringConst(const Token& t) : Node(t) {}
-        std::string str; // escape is already char
+        explicit StringConst(const Token& t, std::string& str) : Node(t), _str(str) {
+            calFormat();
+        }
+        const std::string _str; // escape is already char
         static void print(std::ostream& out) {
             // nothing
         }
         unsigned int getFormatNum() {
+            return _types.size();
+        }
+        s_ptr<SymbolType> symbolTypeAt(unsigned int i) {
+            return _types.at(i);
+        }
+    private:
+        void calFormat() {
             unsigned int ret = 0;
-            for (int i = 0; i < str.length()-1; i++) {
-                char ch1 = str.at(i);
-                char ch2 = str.at(i+1);
-                if ((ch1 == '%' && ch2 == 'd') ||
-                    (ch1 == '%' && ch2 == 'c')) {
-                    ret++;
+            for (int i = 0; i < _str.length()-1; i++) {
+                char ch1 = _str.at(i);
+                char ch2 = _str.at(i+1);
+                if (ch1 == '%' && ch2 == 'd') {
+                    auto sty = std::make_shared<IntSymbolType>(false);
+                    _types.push_back(sty);
+                }
+                if (ch1 == '%' && ch2 == 'c') {
+                    auto sty = std::make_shared<CharSymbolType>(false);
+                    _types.push_back(sty);
                 }
             }
-            return ret;
         }
     };
 
@@ -396,6 +409,9 @@ namespace tang {
         Token printfToken;
         static void print(std::ostream& out) {
             // nothing
+        }
+        s_ptr<SymbolType> symbolTypeAt(unsigned int i) {
+            return stringConst->symbolTypeAt(i);
         }
     };
 

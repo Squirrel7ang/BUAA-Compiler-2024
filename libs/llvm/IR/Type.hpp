@@ -107,7 +107,9 @@ namespace llvm {
         explicit PointerType(TypePtr basicType)
                : Type(POINTER_TYPE_ID), _basicType(basicType) {}
         void print(std::ostream& out ) override {
-            out << "ptr";
+            _basicType->print(out);
+            out << '*';
+            // out << "ptr";
         }
         TypePtr getBasicType() { return _basicType; }
         bool equals(TypePtr type) override {

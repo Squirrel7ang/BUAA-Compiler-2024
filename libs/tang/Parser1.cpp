@@ -60,13 +60,12 @@ namespace tang {
     }
 
     u_ptr<StringConst> Parser1::_tryStringConst()  {
-        auto stringConst = std::make_unique<StringConst>(peekToken());
         assert(peekToken().getType() == TK_STRCON);
 
         Token&& t1 = getToken();
 
         std::string&& content = t1.STRCONToString();
-        stringConst->str = content;
+        auto stringConst = std::make_unique<StringConst>(peekToken(), content);
 
         StringConst::print(_correctOutput);
         return stringConst;

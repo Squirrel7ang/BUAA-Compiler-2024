@@ -39,6 +39,7 @@ namespace tang {
         return value;
     }
 
+    // TODO: initialize the global value
     void Visitor::defineGlobalVariable(Symbol& s) {
         auto&& context = _modulePtr->context();
         llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
@@ -66,7 +67,7 @@ namespace tang {
                 }
                 // if this is a stringConst;
                 else {
-                    auto& str = node->constInitVal->stringConst->str;
+                    auto& str = node->constInitVal->stringConst->_str;
                     for (; i < str.length(); i++) {
                         char ch = str.at(i);
                         auto vp = std::make_shared<llvm::ConstantData>(
@@ -112,7 +113,7 @@ namespace tang {
                 }
                 // if this is a stringConst;
                 else {
-                    auto& str = node->initVal->stringConst->str;
+                    auto& str = node->initVal->stringConst->_str;
                     for (; i < str.length(); i++) {
                         char ch = str.at(i);
                         auto vp = std::make_shared<llvm::ConstantData>(
@@ -425,10 +426,20 @@ namespace tang {
     void Visitor::genPrintfStmtIR(const u_ptr<PrintfStmt>& node) {
         // llvm
         auto&& context = _modulePtr->context();
-        auto& rawStr = node->stringConst->str;
+        auto& rawStr = node->stringConst->_str;
         char ch0, ch1;
         int expNum = 0;
         std::string tmpStr;
+
+        vector<llvm::ValuePtr> args;
+        for (auto& exp: node->exps) {
+            auto&& sty = node->symbolTypeAt(expNum);
+            expNum++;
+            // args.push_back(genExpIR(exp, sty->toLLVMType(context)));
+            // putch  is also of I32 type
+            args.push_back(genExpIR(exp, context->I32_TY));
+        }
+        expNum = 0;
 
         ch0 = rawStr.at(0);
         tmpStr += ch0;
@@ -449,13 +460,11 @@ namespace tang {
                 }
                 // handle %c or %d
                 if (ch1 == 'c') {
-                    auto& exp = node->exps.at(expNum);
-                    auto value = genExpIR(exp, context->I32_TY);
+                    auto&& value = args.at(expNum++);
                     genPutchIR(value);
                 }
                 else {
-                    auto& exp = node->exps.at(expNum);
-                    auto value = genExpIR(exp, context->I32_TY);
+                    auto&& value = args.at(expNum++);
                     genPutintIR(value);
                 }
                 // reset tmpStr
@@ -530,24 +539,24 @@ namespace tang {
             llvm::BasicBlockPtr newBlock = std::make_shared<llvm::BasicBlock>(context);
             inst = genEqExpIR(node->eqExps.at(i), context->I1_TY);
             auto brInst = std::make_shared<llvm::BranchInst>(
-                context, inst, elseBlock, newBlock);
+                context, inst, newBlock, elseBlock);
             _curBlock->addInst(brInst);
             _curBlock = newBlock;
             _curFunction->addBasicBlock(newBlock);
         }
         inst = genEqExpIR(node->eqExps.at(i), context->I1_TY);
         auto brInst = std::make_shared<llvm::BranchInst>(
-            context, inst, elseBlock, ifBlock);
+            context, inst, ifBlock, elseBlock);
         _curBlock->addInst(brInst);
     }
 
     llvm::ValuePtr Visitor::genEqExpIR(const u_ptr<EqExp>& node, const llvm::TypePtr& expectType) {
         auto context = _modulePtr->context();
-        llvm::ValuePtr inst0 = genRelExpIR(node->relExps.at(0), context->I1_TY);
+        llvm::ValuePtr inst0 = genRelExpIR(node->relExps.at(0), context->I32_TY);
         llvm::ValuePtr inst1;
 
         for (int i = 0; i < node->ops.size(); i++) {
-            inst1 = genRelExpIR(node->relExps.at(i+1), context->I1_TY);
+            inst1 = genRelExpIR(node->relExps.at(i+1), context->I32_TY);
             llvm::CompareInstPtr cip;
             auto&& opType = node->ops.at(i).getType();
             if (opType == TK_EQL) {
@@ -564,6 +573,15 @@ namespace tang {
             _curBlock->addInst(cip);
             inst0 = cip;
         }
+
+        if (node->ops.empty()) {
+            auto zero = std::make_shared<llvm::ConstantData>(context, context->I32_TY, 0);
+            auto cip = std::make_shared<llvm::CompareInst>(
+                context, inst0, zero, llvm::CIID_NE);
+            _curBlock->addInst(cip);
+            return cip;
+        }
+
         return convert(inst0, expectType);
     }
 

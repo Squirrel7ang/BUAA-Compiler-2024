@@ -87,49 +87,56 @@ namespace tang {
 
     std::string escapeToChar(const std::string& str) {
         std::string s;
-        if (s.length() < 2) {
-            s = str;
-            return s;
-        }
-
-        if (str[0] != '\\') {
-            s += '\\';
+        if (str.length() < 2) {
+            return str;
         }
 
         const int len = str.length();
-        for (int i = 0; i < len - 1; i++) {
-            char ch1 = str[i];
-            char ch2 = str[i+1];
+        char ch1, ch2;
+        for (int i = 0; i < len ; i++) {
+            ch1 = str[i];
+            ch2 = str[i+1];
             if (ch1 == '\\') {
                 switch (ch2) {
                     case 'a':
                         s += '\a';
+                        break;
                     case 'b':
                         s += '\b';
+                        break;
                     case 't':
                         s += '\t';
+                        break;
                     case 'n':
-                        s += 'n';
+                        s += '\n';
+                        break;
                     case 'v':
                         s += '\v';
+                        break;
                     case 'f':
                         s += '\f';
+                        break;
                     case '\"':
                         s += '\"';
+                        break;
                     case '\'':
                         s += '\'';
+                        break;
                     case '\\':
                         s += '\\';
+                        break;
                     case '0':
                         s += '\0';
+                        break;
                     default: {
                         assert(0);
+                        break;
                     }
                 }
                 i++;
             }
             else {
-                s += ch2;
+                s += ch1;
             }
         }
         return s;

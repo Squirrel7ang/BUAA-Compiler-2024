@@ -191,8 +191,7 @@ namespace llvm {
             out << "load ";
             _type->print(out);
             out << ", ";
-            out << "ptr ";
-            getUsee(0)->printRef(out);
+            getUsee(0)->printRefWithType(out);
         }
     };
 
@@ -229,11 +228,11 @@ namespace llvm {
     class BranchInst : public Instruction {
     public:
         explicit BranchInst(LLVMContextPtr& context,
-                            ValuePtr cond, ValuePtr falseBlock, ValuePtr trueBlock)
+                            ValuePtr cond, ValuePtr trueBlock, ValuePtr falseBlock)
                 : Instruction(context, context->VOID_TY, BRANCH_INST_T){
             createUse(cond);
-            createUse(falseBlock);
             createUse(trueBlock);
+            createUse(falseBlock);
         }
         void print(std::ostream& out) override {
             out << "br ";

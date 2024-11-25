@@ -10,6 +10,7 @@ testfile.txt
 lib.ll
 main.ll
 out.ll
+officialTests
 
 linkTest/main.ll
 linkTest/out.ll
