@@ -37,7 +37,6 @@ add_library(${LIBRARY_NAME}
         IR/Argument.cpp
         IR/GlobalString.hpp
         IR/GlobalString.cpp
-        ../mips/Registers.hpp
 
 )
 

@@ -18,8 +18,6 @@ add_library(${LIBRARY_NAME}
         Evaluate.cpp
         LLVMVisitor.cpp
         Ast.cpp
-        #        Symbol1.hpp
-#        Symbol1.cpp
 )
 target_link_libraries(${LIBRARY_NAME} PUBLIC llvm)
 

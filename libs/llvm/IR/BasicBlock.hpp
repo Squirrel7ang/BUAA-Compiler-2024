@@ -6,6 +6,7 @@
 #define BASICBLOCK_HPP
 
 #include <ostream>
+#include <set>
 
 #include "Common.hpp"
 #include "LLVMContext.hpp"
@@ -13,11 +14,17 @@
 
 namespace llvm {
     class BasicBlock : public Value {
-        vector<InstructionPtr> insts;
+        vector<InstructionPtr> _insts;
+        vector<BasicBlockPtr> _preds;
+        vector<BasicBlockPtr> _succs;
+        std::set<ValuePtr> _in; // data flow analyze
+        std::set<ValuePtr> _out; // data flow analyze
     public:
         explicit BasicBlock(LLVMContextPtr& context);
+        void addPred(const BasicBlockPtr & block);
+        void addSucc(const BasicBlockPtr & block);
         void addInst(InstructionPtr inst);
-        void print(std::ostream& out);
+        void print(std::ostream& out) override;
         bool isEmptyBlock();
         void setIndex(int &index) override;
 

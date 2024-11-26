@@ -5,6 +5,7 @@
 #include "Module.hpp"
 
 #include <cassert>
+#include <functional>
 
 #include "GlobalString.hpp"
 
@@ -62,4 +63,10 @@ namespace llvm {
         }
     }
 
+    // TODO:  analyze the active variables in every Function
+    void Module::analyzeActiveVariable() {
+        for (auto& f: _functions) {
+            f->analizeActiveVariable();
+        }
+    }
 }

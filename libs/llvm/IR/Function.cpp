@@ -14,6 +14,11 @@ namespace llvm {
         }
     }
 
+    // TODO: calculate every in and out for each block
+    void Function::analizeActiveVariable() {
+
+    }
+
     void Function::printRef(std::ostream &out) {
         out << '@' << _name;
     }

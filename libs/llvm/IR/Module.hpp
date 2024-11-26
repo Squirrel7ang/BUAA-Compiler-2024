@@ -46,6 +46,7 @@ namespace llvm {
                 f->clearEmptyBasicBlocks();
             }
         }
+        void analyzeActiveVariable();
     };
     using ModulePtr = std::shared_ptr<Module>;
 }

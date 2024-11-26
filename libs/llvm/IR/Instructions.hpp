@@ -242,6 +242,13 @@ namespace llvm {
             out << ", ";
             getUsee(2)->printRefWithType(out);
         }
+        BasicBlockPtr getTarget(bool cond) {
+            int i = cond ? 1 : 0;
+            auto t = getUsee(i + 1);
+            assert(t->is(BASIC_BLOCK_T));
+            auto targetBlock = std::static_pointer_cast<BasicBlock>(t);
+            return targetBlock;
+        }
     };
 
     /**
@@ -257,6 +264,12 @@ namespace llvm {
         void print(std::ostream& out) override {
             out << "br ";
             getUsee(0)->printRefWithType(out);
+        }
+        BasicBlockPtr getTarget() {
+            auto t = getUsee(0);
+            assert(t->is(BASIC_BLOCK_T));
+            auto targetBlock = std::static_pointer_cast<BasicBlock>(t);
+            return targetBlock;
         }
     };
 

@@ -40,6 +40,8 @@ namespace llvm {
         void printRef(std::ostream& out) override;
 
         void clearEmptyBasicBlocks();
+
+        void analizeActiveVariable();
     };
 }
 
