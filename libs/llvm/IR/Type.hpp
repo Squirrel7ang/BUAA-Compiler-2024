@@ -36,6 +36,7 @@ namespace llvm {
         bool isFunction() { return _typeID == FUNCTION_TYPE_ID; }
         bool isPointer() { return _typeID == POINTER_TYPE_ID; }
         TypeID getID() { return _typeID; }
+        virtual int getSize() { return 1; }
         explicit Type(TypeID typeId)
                 : _typeID(typeId) {}
         virtual void print(std::ostream& out) { }
@@ -77,6 +78,9 @@ namespace llvm {
             return type->isInteger() &&
                    (std::static_pointer_cast<IntegerType>(type)->getBits() == bitwidth);
         }
+        int getSize() override {
+            return bitwidth / 8;
+        }
     };
 
     class ArrayType: public Type {
@@ -99,6 +103,9 @@ namespace llvm {
             return _type->getLength() == _length &&
                    _basicType->equals(_type->getBasicType());
         }
+        int getSize() override {
+            return _basicType->getSize() * _length;
+        }
     };
 
     class PointerType: public Type {
@@ -114,6 +121,9 @@ namespace llvm {
         bool equals(TypePtr type) override {
             return type->isPointer() &&
                    _basicType->equals(std::static_pointer_cast<PointerType>(type)->getBasicType());
+        }
+        int getSize() override {
+            return 4;
         }
     };
 

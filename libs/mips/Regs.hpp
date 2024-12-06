@@ -13,7 +13,7 @@ namespace mips {
     enum MipsRegType {
         MRT_ZERO, // zero
         MRT_TMP, // t0-t7, t8-t9
-        MRT_STATIC, // s0-s7
+        MRT_SAVE, // s0-s7
         MRT_ARG, // a0-a3
         MRT_SP, // sp
         MRT_RETVAL, // v0, v1

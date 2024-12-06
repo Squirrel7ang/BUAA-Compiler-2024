@@ -24,12 +24,31 @@ namespace llvm {
         vector<BasicBlockPtr> _blocks;
         vector<ArgumentPtr> _args;
         std::string _name;
+        std::set<ValuePtr> beginOut;
+        std::set<ValuePtr> beginIn;
+        std::set<ValuePtr> exitIn;
+        std::set<ValuePtr> exitOut;
     public:
         explicit Function(LLVMContextPtr& context, TypePtr ty,
                           std::vector<ArgumentPtr>& parameters, std::string name);
         explicit Function(LLVMContextPtr& context, TypePtr ty,
                           std::vector<TypePtr>& parameters, std::string name);
         explicit Function(LLVMContextPtr& context, TypePtr ty, std::string name);
+
+        // iterator for basicBlocks and arguments inside;
+        vector<BasicBlockPtr>::iterator blockBegin() {
+            return _blocks.begin();
+        }
+        vector<BasicBlockPtr>::iterator blockEnd() {
+            return _blocks.end();
+        }
+        vector<ArgumentPtr>::iterator argumentBegin() {
+            return _args.begin();
+        }
+        vector<ArgumentPtr>::iterator argumentEnd() {
+            return _args.end();
+        }
+
         void addBasicBlock(BasicBlockPtr block) {
             _blocks.push_back(block);
         }
@@ -38,10 +57,9 @@ namespace llvm {
         void setIndex();
         void print(std::ostream& out) override;
         void printRef(std::ostream& out) override;
-
         void clearEmptyBasicBlocks();
-
         void analizeActiveVariable();
+        int calSpaceUse();
     };
 }
 

@@ -18,10 +18,11 @@ namespace llvm {
     public:
         explicit User(LLVMContextPtr& context, TypePtr& ty, ValueType vty)
                 : Value(context, ty, vty) {}
+        unsigned int getUseeSize();
+        ValuePtr getUsee(unsigned int i);
     protected:
         void createUse(ValuePtr val);
         ValuePtr OpAt(unsigned int i);
-        ValuePtr getUsee(unsigned int i);
     };
 }
 

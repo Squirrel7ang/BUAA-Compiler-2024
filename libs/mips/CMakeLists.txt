@@ -8,8 +8,16 @@ add_library(${LIBRARY_NAME}
         Regs.cpp
         Insts.hpp
         Insts.cpp
-        Asm.hpp
+        MipsAsmGen.hpp
         Controller.hpp
+        TmpRegTable.hpp
+        SaveRegTable.hpp
+        VarTable.hpp
+        VarTable.cpp
+        MipsAsmGen.cpp
+        TmpRegTable.cpp
+        Stack.hpp
+        Stack.cpp
 )
 target_link_libraries(${LIBRARY_NAME} PUBLIC llvm)
 

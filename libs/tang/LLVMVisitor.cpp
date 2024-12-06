@@ -32,13 +32,13 @@ namespace tang {
         if (origin_bits < target_bits) {
             // zext
             auto zext  = std::make_shared<llvm::UnaryOperator>(context, _target, value, llvm::UOID_ZEXT);
-            _curBlock->addInst(zext);
+            _curBlock->addInst(_curBlock, zext);
             return zext;
         }
         else if (origin_bits > target_bits) {
             // trunc
             auto trunc = std::make_shared<llvm::UnaryOperator>(context, _target, value, llvm::UOID_TRUNC);
-            _curBlock->addInst(trunc);
+            _curBlock->addInst(_curBlock, trunc);
             return trunc;
         }
         // else return the original value
@@ -54,7 +54,7 @@ namespace tang {
     void Visitor::defineLocalVariable(const u_ptr<ConstDef>& node, Symbol& s) {
         auto&& context = _modulePtr->context();
         llvm::AllocaInstPtr aip = s.toAllocaInst(context);
-        _curBlock->addInst(aip);
+        _curBlock->addInst(_curBlock, aip);
 
         // initialize;
         if (node->constInitVal != nullptr) {
@@ -100,7 +100,7 @@ namespace tang {
     void Visitor::defineLocalVariable(const u_ptr<VarDef>& node, Symbol& s) {
         auto context = _modulePtr->context();
         llvm::AllocaInstPtr aip = s.toAllocaInst(context);
-        _curBlock->addInst(aip);
+        _curBlock->addInst(_curBlock, aip);
 
         // initialize;
         if (node->initVal != nullptr) {
@@ -171,7 +171,7 @@ namespace tang {
             else
                 assert(0);
 
-            _curBlock->addInst(bip);
+            _curBlock->addInst(_curBlock, bip);
             inst0 = bip;
         }
         return convert(inst0, expectType);
@@ -199,7 +199,7 @@ namespace tang {
             else
                 assert(0);
 
-            _curBlock->addInst(bip);
+            _curBlock->addInst(_curBlock, bip);
             inst0 = bip;
         }
         return convert(inst0, expectType);
@@ -227,13 +227,13 @@ namespace tang {
             if (op->isMinus) {
                 bop = std::make_shared<llvm::BinaryOperator>(
                     context, context->I32_TY, zero, inst, llvm::BOID_SUB);
-                _curBlock->addInst(bop);
+                _curBlock->addInst(_curBlock, bop);
                 inst = bop;
             }
             else if (op->isExc) {
                 cip = std::make_shared<llvm::CompareInst>(
                     context, zero, inst, llvm::CIID_EQ);
-                _curBlock->addInst(cip);
+                _curBlock->addInst(_curBlock, cip);
                 inst = cip;
             }
         }
@@ -284,7 +284,7 @@ namespace tang {
             cip = std::make_shared<llvm::CallInst>(context, _llvm_type, s.getLLVMValue(), rargs);
         }
 
-        _curBlock->addInst(cip);
+        _curBlock->addInst(_curBlock, cip);
 
         return convert(cip, expectType);
 
@@ -323,7 +323,7 @@ namespace tang {
                 if (sty->isArgument()) {
                     auto preload = std::make_shared<llvm::LoadInst>(
                         context, context->I32_PTR_TY, s.getLLVMValue()); // preload is a pointer to i32
-                    _curBlock->addInst(preload);
+                    _curBlock->addInst(_curBlock, preload);
                     gepi = std::make_shared<llvm::GetElePtrInst>(
                         context, context->I32_PTR_TY, preload, offset);
                 }
@@ -339,7 +339,7 @@ namespace tang {
                     // this is an argument, thus a pointer type
                     auto preload = std::make_shared<llvm::LoadInst>(
                         context, context->I8_PTR_TY, s.getLLVMValue()); // preload is a pointer to i32
-                    _curBlock->addInst(preload);
+                    _curBlock->addInst(_curBlock, preload);
                     gepi = std::make_shared<llvm::GetElePtrInst>(
                         context, context->I8_PTR_TY, preload, offset);
                 }
@@ -348,7 +348,7 @@ namespace tang {
                         context, context->I8_PTR_TY, s.getLLVMValue(), offset);
                 }
             }
-            _curBlock->addInst(gepi);
+            _curBlock->addInst(_curBlock, gepi);
             return gepi; // the only place where it is not convert to expectType.
         }
         else {
@@ -361,7 +361,7 @@ namespace tang {
                     // this is an argument, thus a pointer type
                     auto preload = std::make_shared<llvm::LoadInst>(
                         context, context->I32_PTR_TY, s.getLLVMValue()); // preload is a pointer to i32
-                    _curBlock->addInst(preload);
+                    _curBlock->addInst(_curBlock, preload);
                     gepi = std::make_shared<llvm::GetElePtrInst>(
                         context, context->I32_PTR_TY, preload, offset);
                 }
@@ -378,7 +378,7 @@ namespace tang {
                     // this is an argument, thus a pointer type
                     auto preload = std::make_shared<llvm::LoadInst>(
                         context, context->I8_PTR_TY, s.getLLVMValue()); // preload is a pointer to i32
-                    _curBlock->addInst(preload);
+                    _curBlock->addInst(_curBlock, preload);
                     gepi = std::make_shared<llvm::GetElePtrInst>(
                         context, context->I8_PTR_TY, preload, offset);
                 }
@@ -388,9 +388,9 @@ namespace tang {
                 }
                 lip = std::make_shared<llvm::LoadInst>(context, context->I8_TY, gepi);
             }
-            _curBlock->addInst(gepi);
+            _curBlock->addInst(_curBlock, gepi);
         }
-        _curBlock->addInst(lip);
+        _curBlock->addInst(_curBlock, lip);
 
         return convert(lip, expectType);
     }
@@ -403,7 +403,7 @@ namespace tang {
         _symbolTable.findSymbolGlobal(s, node->lVal->ident->str);
 
         auto inst = std::make_shared<llvm::GetcharInst>(context);
-        _curBlock->addInst(inst);
+        _curBlock->addInst(_curBlock, inst);
         auto&& val = convert(inst, s.getType()->toBasicLLVMType(context));
 
         assignLVal(node->lVal, val);
@@ -417,7 +417,7 @@ namespace tang {
         _symbolTable.findSymbolGlobal(s, node->lVal->ident->str);
 
         auto inst = std::make_shared<llvm::GetintInst>(context);
-        _curBlock->addInst(inst);
+        _curBlock->addInst(_curBlock, inst);
         auto&& val = convert(inst, s.getType()->toBasicLLVMType(context));
 
         assignLVal(node->lVal, val);
@@ -486,14 +486,14 @@ namespace tang {
     llvm::ValuePtr Visitor::genPutchIR(llvm::ValuePtr value) {
         auto&& context = _modulePtr->context();
         auto putch = std::make_shared<llvm::PutInst>(context, value, llvm::PIID_CH);
-        _curBlock->addInst(putch);
+        _curBlock->addInst(_curBlock, putch);
         return putch;
     }
 
     llvm::ValuePtr Visitor::genPutintIR(llvm::ValuePtr value) {
         auto&& context = _modulePtr->context();
         auto putint = std::make_shared<llvm::PutInst>(context, value, llvm::PIID_INT);
-        _curBlock->addInst(putint);
+        _curBlock->addInst(_curBlock, putint);
         return putint;
     }
 
@@ -502,9 +502,9 @@ namespace tang {
         auto zero = std::make_shared<llvm::ConstantData>(context, context->I32_TY, 0);
         auto geip = std::make_shared<llvm::GetElePtrInst>(
             context, context->I8_PTR_TY, value, zero);
-        _curBlock->addInst(geip);
+        _curBlock->addInst(_curBlock, geip);
         auto putstr = std::make_shared<llvm::PutInst>(context, geip, llvm::PIID_STR);
-        _curBlock->addInst(putstr);
+        _curBlock->addInst(_curBlock, putstr);
         return putstr;
     }
 
@@ -540,14 +540,14 @@ namespace tang {
             inst = genEqExpIR(node->eqExps.at(i), context->I1_TY);
             auto brInst = std::make_shared<llvm::BranchInst>(
                 context, inst, newBlock, elseBlock);
-            _curBlock->addInst(brInst);
+            _curBlock->addInst(_curBlock, brInst);
             _curBlock = newBlock;
             _curFunction->addBasicBlock(newBlock);
         }
         inst = genEqExpIR(node->eqExps.at(i), context->I1_TY);
         auto brInst = std::make_shared<llvm::BranchInst>(
             context, inst, ifBlock, elseBlock);
-        _curBlock->addInst(brInst);
+        _curBlock->addInst(_curBlock, brInst);
     }
 
     llvm::ValuePtr Visitor::genEqExpIR(const u_ptr<EqExp>& node, const llvm::TypePtr& expectType) {
@@ -570,7 +570,7 @@ namespace tang {
             else
                 assert(0);
 
-            _curBlock->addInst(cip);
+            _curBlock->addInst(_curBlock, cip);
             inst0 = cip;
         }
 
@@ -578,7 +578,7 @@ namespace tang {
             auto zero = std::make_shared<llvm::ConstantData>(context, context->I32_TY, 0);
             auto cip = std::make_shared<llvm::CompareInst>(
                 context, inst0, zero, llvm::CIID_NE);
-            _curBlock->addInst(cip);
+            _curBlock->addInst(_curBlock, cip);
             return cip;
         }
 
@@ -613,7 +613,7 @@ namespace tang {
             else
                 assert(0);
 
-            _curBlock->addInst(cip);
+            _curBlock->addInst(_curBlock, cip);
             inst0 = convert(cip, context->I32_TY);
         }
         return convert(inst0, expectType);
@@ -631,7 +631,7 @@ namespace tang {
         auto convertedVal = convert(value, ptrBType);
         sip = std::make_shared<llvm::StoreInst>(
             context, convertedVal, ptr);
-        _curBlock->addInst(sip);
+        _curBlock->addInst(_curBlock, sip);
     }
 
     void Visitor::assignLVal(Symbol& s, llvm::ValuePtr offset, llvm::ValuePtr value) {
@@ -651,7 +651,7 @@ namespace tang {
                 // load first, then getelementptr
                 auto preload = std::make_shared<llvm::LoadInst>(
                     context, context->I32_PTR_TY, s.getLLVMValue());
-                _curBlock->addInst(preload);
+                _curBlock->addInst(_curBlock, preload);
                 gepi = std::make_shared<llvm::GetElePtrInst>(
                     context, context->I32_PTR_TY, preload, offset);
             }
@@ -668,7 +668,7 @@ namespace tang {
                 // load first, then getelementptr
                 auto preload = std::make_shared<llvm::LoadInst>(
                     context, context->I8_PTR_TY, s.getLLVMValue());
-                _curBlock->addInst(preload);
+                _curBlock->addInst(_curBlock, preload);
                 gepi = std::make_shared<llvm::GetElePtrInst>(
                     context, context->I8_PTR_TY, preload, offset);
             }
@@ -678,14 +678,14 @@ namespace tang {
                     context, context->I8_PTR_TY, s.getLLVMValue(), offset);
             }
         }
-        _curBlock->addInst(gepi);
+        _curBlock->addInst(_curBlock, gepi);
 
         // convert Type;
         assert(gepi->getType()->isPointer());
         auto ptrBType = std::static_pointer_cast<llvm::PointerType>(gepi->getType())->getBasicType();
         auto convertedVal = convert(value, ptrBType);
         sip = std::make_shared<llvm::StoreInst>(context, convertedVal, gepi);
-        _curBlock->addInst(sip);
+        _curBlock->addInst(_curBlock, sip);
     }
 
     void Visitor::assignLVal(u_ptr<LVal>& lVal, llvm::ValuePtr value) {
@@ -706,7 +706,7 @@ namespace tang {
         auto context = _modulePtr->context();
         llvm::ReturnInstPtr rip = std::make_shared<llvm::ReturnInst>(
             context, value);
-        _curBlock->addInst(rip);
+        _curBlock->addInst(_curBlock, rip);
 
         // add new block after return statement
         auto newBlock = std::make_shared<llvm::BasicBlock>(context);
@@ -717,7 +717,7 @@ namespace tang {
     void Visitor::returnVoid() {
         auto context = _modulePtr->context();
         llvm::ReturnInstPtr rip = std::make_shared<llvm::ReturnInst>( context);
-        _curBlock->addInst(rip);
+        _curBlock->addInst(_curBlock, rip);
 
         // add new block after return statement
         auto newBlock = std::make_shared<llvm::BasicBlock>(context);

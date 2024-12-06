@@ -37,6 +37,14 @@ namespace llvm {
         void addGlobalVariable(GlobalVariablePtr);
         void addString(GlobalStringPtr str);
 
+        // iterator for functions inside;
+        vector<FunctionPtr>::iterator functionBegin() {
+            return _functions.begin();
+        }
+        vector<FunctionPtr>::iterator functionEnd() {
+            return _functions.end();
+        }
+
         // Printer
         std::string getSourceName() { return _context->getSourceName(); }
         void print(std::ostream& out);

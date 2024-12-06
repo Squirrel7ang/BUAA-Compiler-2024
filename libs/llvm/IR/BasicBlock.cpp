@@ -2,11 +2,25 @@
 // Created by tang on 11/6/24.
 //
 
+#include <algorithm>
 #include "BasicBlock.hpp"
 
 namespace llvm {
+    void BasicBlock::addVarUse(ValuePtr vp) {
+        if (!_def.contains(vp) && !vp->is(BASIC_BLOCK_T)) {
+            _use.insert(vp);
+        }
+    }
+
+    void BasicBlock::addVarDef(ValuePtr vp) {
+        if (!_use.contains(vp)) {
+            _def.insert(vp);
+        }
+    }
+
     BasicBlock::BasicBlock(LLVMContextPtr& context)
-            : Value(context, context->LABEL_TY, BASIC_BLOCK_T) { }
+            : Value(context, context->LABEL_TY, BASIC_BLOCK_T),
+              _spaceUse(0) { }
 
     void BasicBlock::addPred(const BasicBlockPtr &block) {
         _preds.push_back(block);
@@ -16,14 +30,29 @@ namespace llvm {
         _succs.push_back(block);
     }
 
-    void BasicBlock::addInst(InstructionPtr inst) {
+    const std::set<ValuePtr>& BasicBlock::getVarIn() {
+        return _in;
+    }
+
+    const std::set<ValuePtr>& BasicBlock::getVarOut() {
+        return _out;
+    }
+
+    const std::set<ValuePtr>& BasicBlock::getVarDef() {
+        return _def;
+    }
+
+    const std::set<ValuePtr>& BasicBlock::getVarUse() {
+        return _use;
+    }
+
+    void BasicBlock::addInst(const s_ptr<BasicBlock> me, InstructionPtr inst) {
         _insts.push_back(inst);
 
-        // TODO: add preds as well
-        auto me = std::shared_ptr<BasicBlock>(this);
         if (inst->is(JUMP_INST_T)) {
             JumpInstPtr jip = std::static_pointer_cast<JumpInst>(inst);
             auto target = jip->getTarget();
+            target->addPred(me);
             this->addSucc(target);
         }
         else if (inst->is(BRANCH_INST_T)) {
@@ -31,8 +60,54 @@ namespace llvm {
             auto target0 = bip->getTarget(true);
             auto target1 = bip->getTarget(false);
             this->addSucc(target0);
+            target0->addPred(me);
             this->addSucc(target1);
+            target1->addPred(me);
         }
+        else if (inst->is(ALLOCA_INST_T)) {
+            AllocaInstPtr aip = std::static_pointer_cast<AllocaInst>(inst);
+            _spaceUse += aip->allocateSpace();
+        }
+    }
+
+    bool BasicBlock::addVarIn(ValuePtr vp) {
+        bool changed = false;
+        if (!_in.contains(vp)) {
+            _in.insert(vp);
+            changed = true;
+        }
+        return changed;
+    }
+
+    bool BasicBlock::addVarIn(const std::set<ValuePtr> &vps) {
+        bool changed = false;
+        for (auto& vp: vps) {
+            if (_in.contains(vp))
+                changed = true;
+            else
+                _in.insert(vp);
+        }
+        return changed;
+    }
+
+    bool BasicBlock::addVarOut(ValuePtr vp) {
+        bool changed = false;
+        if (!_out.contains(vp)) {
+            _out.insert(vp);
+            changed = true;
+        }
+        return changed;
+    }
+
+    bool BasicBlock::addVarOut(const std::set<ValuePtr> &vps) {
+        bool changed = false;
+        for (auto& vp: vps) {
+            if (_out.contains(vp))
+                changed = true;
+            else
+                _out.insert(vp);
+        }
+        return changed;
     }
 
     void BasicBlock::print(std::ostream& out) {
@@ -63,4 +138,46 @@ namespace llvm {
         }
     }
 
+    void BasicBlock::calUseDef() {
+        _def.clear();
+        _use.clear();
+        for (auto& inst: _insts) {
+            // add use first, then def
+            for (int i = 0; i < inst->getUseeSize(); i++) {
+                addVarUse(inst->getUsee(i));
+            }
+            if (!inst->getType()->equals(_context->VOID_TY)) {
+                addVarDef(inst);
+            }
+        }
+    }
+
+    bool BasicBlock::calVarOut() {
+        int changed = false;
+        for (auto& block: _succs) {
+            changed |= addVarOut(block->getVarIn());
+        }
+        return changed;
+    }
+
+    bool BasicBlock::endWithReturn() {
+        return _insts.back()->is(RETURN_INST_T);
+    }
+
+    int BasicBlock::calSpaceUse() {
+        return _spaceUse;
+    }
+
+    bool BasicBlock::calVarIn() {
+        bool changed = false;
+
+        std::set<ValuePtr> outCutDef;
+        std::set_difference(_out.begin(), _out.end(), _def.begin(), _def.end(),
+            std::inserter(outCutDef, outCutDef.begin()));
+
+        changed |= addVarIn(_use);
+        changed |= addVarIn(outCutDef);
+
+        return changed;
+    }
 }

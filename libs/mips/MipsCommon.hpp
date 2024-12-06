@@ -27,6 +27,24 @@ namespace mips {
     class MipsReg;
     using MipsRegPtr = s_ptr<MipsReg>;
 
+    class Stack;
+    using StackPtr = s_ptr<Stack>;
+
+    class StackSlot;
+    using StackSlotPtr = s_ptr<StackSlot>;
+
+    class Variable;
+    using VariablePtr = s_ptr<Variable>;
+
+    class VarTable;
+    using VarTablePtr = s_ptr<VarTable>;
+
+    class TmpRegTable;
+    using TmpRegTablePtr = s_ptr<TmpRegTable>;
+
+    class SaveRegTable;
+    using SaveRegTablePtr = s_ptr<SaveRegTable>;
+
     class MipsInst;
     using MipsInstPtr = s_ptr<MipsInst>;
 

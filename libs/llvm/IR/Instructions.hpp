@@ -18,6 +18,22 @@ namespace llvm {
     public:
         explicit Instruction(LLVMContextPtr& context, TypePtr ty, ValueType vty)
                 :User(context, ty, vty) { }
+        bool is(const ValueType vty) const override {
+            return vty == UNARY_OPERATOR_T ||
+                vty == BINARY_OPERATOR_T ||
+                vty == COMPARE_INST_T ||
+                vty == BRANCH_INST_T ||
+                vty == JUMP_INST_T ||
+                vty == LOAD_INST_T ||
+                vty == STORE_INST_T ||
+                vty == PUT_INST_T ||
+                vty == GETINT_INST_T ||
+                vty == GETCHAR_INST_T ||
+                vty == GETELEPTR_INST_T ||
+                vty == CALL_INST_T ||
+                vty == ALLOCA_INST_T ||
+                vty == RETURN_INST_T;
+        }
     };
 
     class UnaryInst : public Instruction {
@@ -26,6 +42,10 @@ namespace llvm {
                            ValueType vty, ValuePtr vp)
                 : Instruction(context, ty, vty) {
             createUse(vp);
+        }
+        bool is(const ValueType vty) const override {
+            return vty == UNARY_OPERATOR_T ||
+                vty == LOAD_INST_T;
         }
     };
 
@@ -53,6 +73,9 @@ namespace llvm {
             out << " to ";
             _type->print(out);
         }
+        bool is(const ValueType vty) const override {
+            return vty == UNARY_OPERATOR_T;
+        }
     };
 
     class BinaryInst : public Instruction {
@@ -62,6 +85,11 @@ namespace llvm {
                 : Instruction(context, ty, vty) {
             createUse(vp1);
             createUse(vp2);
+        }
+        bool is(const ValueType vty) const override {
+            return vty == BINARY_OPERATOR_T ||
+                vty == STORE_INST_T ||
+                vty == COMPARE_INST_T;
         }
     };
 
@@ -97,6 +125,9 @@ namespace llvm {
             getUsee(0)->printRef(out);
             out << ", ";
             getUsee(1)->printRef(out);
+        }
+        bool is(const ValueType vty) const override {
+            return vty == BINARY_OPERATOR_T;
         }
     };
 
@@ -134,6 +165,9 @@ namespace llvm {
             out << ", ";
             usee1->printRef(out);
         }
+        bool is(const ValueType vty) const override {
+            return vty == COMPARE_INST_T;
+        }
     };
 
     class AllocaInst : public Instruction {
@@ -147,6 +181,10 @@ namespace llvm {
             out << "alloca ";
             _allocaType->print(out);
         }
+        bool is(const ValueType vty) const override {
+            return vty == ALLOCA_INST_T;
+        }
+        int allocateSpace() const;
     };
 
     class GetElePtrInst : public Instruction {
@@ -177,6 +215,9 @@ namespace llvm {
             out << "i32 ";
             getUsee(1)->printRef(out);
         }
+        bool is(const ValueType vty) const override {
+            return vty == GETELEPTR_INST_T;
+        }
     };
 
     class LoadInst : public UnaryInst {
@@ -193,6 +234,9 @@ namespace llvm {
             out << ", ";
             getUsee(0)->printRefWithType(out);
         }
+        bool is(const ValueType vty) const override {
+            return vty == LOAD_INST_T;
+        }
     };
 
     class StoreInst : public BinaryInst {
@@ -205,6 +249,9 @@ namespace llvm {
             getUsee(0)->printRefWithType(out);
             out << ", ";
             getUsee(1)->printRefWithType(out);
+        }
+        bool is(const ValueType vty) const override {
+            return vty == STORE_INST_T;
         }
     };
 
@@ -223,6 +270,9 @@ namespace llvm {
             // createUse(func);
         }
         void print(std::ostream& out) override;
+        bool is(const ValueType vty) const override {
+            return vty == CALL_INST_T;
+        }
     };
 
     class BranchInst : public Instruction {
@@ -249,6 +299,9 @@ namespace llvm {
             auto targetBlock = std::static_pointer_cast<BasicBlock>(t);
             return targetBlock;
         }
+        bool is(const ValueType vty) const override {
+            return vty == BRANCH_INST_T;
+        }
     };
 
     /**
@@ -271,6 +324,9 @@ namespace llvm {
             auto targetBlock = std::static_pointer_cast<BasicBlock>(t);
             return targetBlock;
         }
+        bool is(const ValueType vty) const override {
+            return vty == JUMP_INST_T;
+        }
     };
 
     class ReturnInst : public Instruction {
@@ -292,6 +348,9 @@ namespace llvm {
             else {
                 _context->VOID_TY->print(out);
             }
+        }
+        bool is(const ValueType vty) const override {
+            return vty == RETURN_INST_T;
         }
     };
 
@@ -319,6 +378,9 @@ namespace llvm {
             getUsee(0)->printRefWithType(out);
             out << ")";
         }
+        bool is(const ValueType vty) const override {
+            return vty == PUT_INST_T;
+        }
     };
 
     class GetintInst : public Instruction {
@@ -332,6 +394,9 @@ namespace llvm {
             _type->print(out);
             out << "@getint()";
         }
+        bool is(const ValueType vty) const override {
+            return vty == GETINT_INST_T;
+        }
     };
 
     class GetcharInst : public Instruction {
@@ -344,6 +409,9 @@ namespace llvm {
             out << "call ";
             _type->print(out);
             out << "@getchar()";
+        }
+        bool is(const ValueType vty) const override {
+            return vty == GETCHAR_INST_T;
         }
     };
 

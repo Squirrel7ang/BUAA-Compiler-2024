@@ -30,7 +30,8 @@ namespace llvm {
         void printType(std::ostream& out);
         void printRefWithType(std::ostream& out);
         virtual TypePtr getType() { return this->_type; }
-        bool is(const ValueType vty) const { return _valueType == vty; }
+        ValueType getValueType() const { return this->_valueType; }
+        virtual bool is(const ValueType vty) const { return _valueType == vty; }
 
     protected:
         UserPtr getUser(unsigned int i);

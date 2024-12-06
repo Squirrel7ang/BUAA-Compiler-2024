@@ -74,7 +74,7 @@ namespace mips {
             case(20): /* Fall through*/
             case(21): /* Fall through*/
             case(22): /* Fall through*/
-            case(23): return MRT_STATIC;
+            case(23): return MRT_SAVE;
             case(24): /* Fall through*/
             case(25): return MRT_TMP;
             case(26): assert(0); // k0

@@ -5,6 +5,9 @@
 #include "Instructions.hpp"
 
 namespace llvm {
+    int AllocaInst::allocateSpace() const {
+        return _allocaType->getSize();
+    }
 
     void CallInst::print(std::ostream& out) {
         if (!_type->isVoidTy()) {

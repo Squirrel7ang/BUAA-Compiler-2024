@@ -35,11 +35,9 @@ namespace llvm {
         GLOBAL_VARIABLE_T,
         GLOBAL_STRING_T,
 
-        BINARY_INST_T,
         BINARY_OPERATOR_T,
         JUMP_INST_T,
         RETURN_INST_T,
-        UNARY_INST_T,
         UNARY_OPERATOR_T,
         BRANCH_INST_T,
         CALL_INST_T,
@@ -51,8 +49,6 @@ namespace llvm {
         GETCHAR_INST_T,
         PUT_INST_T,
         COMPARE_INST_T,
-        INPUT_INST_T,
-        OUTPUT_INST_T,
     };
 
     class Value;
@@ -168,10 +164,10 @@ namespace llvm {
     using PutInstPtr = s_ptr<PutInst>;
 
     class GetintInst;
-    using GetIntInstPtr = s_ptr<GetintInst>;
+    using GetintInstPtr = s_ptr<GetintInst>;
 
     class GetcharInst;
-    using GetCharInstPtr = s_ptr<GetcharInst>;
+    using GetcharInstPtr = s_ptr<GetcharInst>;
 }
 
 #endif //COMMON_HPP

@@ -16,7 +16,37 @@ namespace llvm {
 
     // TODO: calculate every in and out for each block
     void Function::analizeActiveVariable() {
+        // calculate the use and def of each basicBlock;
+        for (auto& block: _blocks) {
+            block->calUseDef();
+        }
 
+        // add arguments to the first basic block
+        for (auto& arg: _args) {
+            _blocks.front()->addVarIn(arg);
+        }
+
+        bool changed = true;
+        while (changed) {
+            changed = false;
+            for (auto& block: _blocks) {
+                changed |= block->calVarOut();
+                changed |= block->calVarIn();
+            }
+        }
+    }
+
+    /**
+     * calculate the total space this function is going
+     * to use in bytes.
+     * @return total bytes this Function is going to use
+     */
+    int Function::calSpaceUse() {
+        int ret = 0;
+        for (auto& block: _blocks) {
+            ret += block->calSpaceUse();
+        }
+        return ret;
     }
 
     void Function::printRef(std::ostream &out) {

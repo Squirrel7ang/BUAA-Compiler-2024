@@ -49,6 +49,7 @@ int main(int argc, char *argv[]) {
     }
     else {
         auto llvmModule = visitor.getLLVMModule();
+        llvmModule->analyzeActiveVariable();
         llvmModule->print(llvmStream);
     }
 

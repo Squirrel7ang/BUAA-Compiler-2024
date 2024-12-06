@@ -30,4 +30,7 @@ namespace llvm {
         return _usees.at(i)->usee();
     }
 
+    unsigned int User::getUseeSize() {
+        return _usees.size();
+    }
 }
