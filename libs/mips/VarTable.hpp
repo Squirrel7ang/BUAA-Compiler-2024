@@ -21,37 +21,18 @@ namespace mips {
         unsigned int _refCounts;
 
         // storage
-        MipsRegPtr _reg;
-        StackSlotPtr _slot;
-
-        // attributes
-        bool isTemp; // store in t0-t9 or stack/frame
-        bool isSave; // store in s0-s7 or stack/frame
+        VarLocationPtr _location;
     public:
-        explicit Variable(llvm::InstructionPtr inst, unsigned int totalUse, MipsRegPtr& reg);
-
-        explicit Variable(llvm::InstructionPtr inst, unsigned int totalUse, StackSlotPtr &slot);
-
-        void count() {
-            _refCounts++;
-            assert(_refCounts <= _totalCounts);
+        static VariablePtr New(llvm::InstructionPtr inst, unsigned int totalCount) {
+            return std::make_shared<Variable>(inst, totalCount);
         }
-        bool reachTotalUse() {
-            return _refCounts == _totalCounts;
-        }
-        MipsRegPtr getReg() { return _reg; }
     private:
-        void setReg(MipsRegPtr& reg) {
-            _reg = reg;
-        }
+        explicit Variable(llvm::InstructionPtr& inst, unsigned int totalCount);
+        void setLocation(VarLocationPtr loc);
     };
 
     class VarTable {
-    private:
-        std::map<llvm::InstructionPtr, VariablePtr> _varTable;
-    public:
-        MipsRegPtr getMipsReg(llvm::InstructionPtr vp);
-        void countUse(llvm::InstructionPtr vp);
+        std::map<llvm::InstructionPtr, MipsRegPtr> _table;
     };
 }
 

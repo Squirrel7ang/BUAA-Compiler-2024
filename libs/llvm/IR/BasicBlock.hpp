@@ -17,14 +17,14 @@ namespace llvm {
         vector<InstructionPtr> _insts;
         vector<BasicBlockPtr> _preds;
         vector<BasicBlockPtr> _succs;
-        std::set<ValuePtr> _in; // data flow analyze
-        std::set<ValuePtr> _out; // data flow analyze
-        std::set<ValuePtr> _def; // data flow analyze
-        std::set<ValuePtr> _use; // data flow analyze
+        std::set<InstructionPtr> _in; // data flow analyze
+        std::set<InstructionPtr> _out; // data flow analyze
+        std::set<InstructionPtr> _def; // data flow analyze
+        std::set<InstructionPtr> _use; // data flow analyze
         int _spaceUse;
     protected:
-        void addVarUse(ValuePtr vp);
-        void addVarDef(ValuePtr vp);
+        void addVarUse(InstructionPtr vp);
+        void addVarDef(InstructionPtr vp);
     public:
 
         // iterator for instructions inside;
@@ -38,14 +38,14 @@ namespace llvm {
         void addPred(const BasicBlockPtr & block);
         void addSucc(const BasicBlockPtr & block);
         void addInst(s_ptr<BasicBlock> me, InstructionPtr inst);
-        bool addVarIn(ValuePtr vp);
-        bool addVarIn(const std::set<ValuePtr>& vps);
-        bool addVarOut(ValuePtr vp);
-        bool addVarOut(const std::set<ValuePtr>& vps);
-        const std::set<ValuePtr>& getVarIn();
-        const std::set<ValuePtr>& getVarOut();
-        const std::set<ValuePtr>& getVarDef();
-        const std::set<ValuePtr>& getVarUse();
+        bool addVarIn(InstructionPtr vp);
+        bool addVarIn(const std::set<InstructionPtr>& vps);
+        bool addVarOut(InstructionPtr vp);
+        bool addVarOut(const std::set<InstructionPtr>& vps);
+        const std::set<InstructionPtr>& getVarIn();
+        const std::set<InstructionPtr>& getVarOut();
+        const std::set<InstructionPtr>& getVarDef();
+        const std::set<InstructionPtr>& getVarUse();
         void print(std::ostream& out) override;
         bool isEmptyBlock();
         void setIndex(int &index) override;

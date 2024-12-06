@@ -6,13 +6,13 @@
 #include "BasicBlock.hpp"
 
 namespace llvm {
-    void BasicBlock::addVarUse(ValuePtr vp) {
-        if (!_def.contains(vp) && !vp->is(BASIC_BLOCK_T)) {
+    void BasicBlock::addVarUse(InstructionPtr vp) {
+        if (!_def.contains(vp)) {
             _use.insert(vp);
         }
     }
 
-    void BasicBlock::addVarDef(ValuePtr vp) {
+    void BasicBlock::addVarDef(InstructionPtr vp) {
         if (!_use.contains(vp)) {
             _def.insert(vp);
         }
@@ -30,19 +30,19 @@ namespace llvm {
         _succs.push_back(block);
     }
 
-    const std::set<ValuePtr>& BasicBlock::getVarIn() {
+    const std::set<InstructionPtr>& BasicBlock::getVarIn() {
         return _in;
     }
 
-    const std::set<ValuePtr>& BasicBlock::getVarOut() {
+    const std::set<InstructionPtr>& BasicBlock::getVarOut() {
         return _out;
     }
 
-    const std::set<ValuePtr>& BasicBlock::getVarDef() {
+    const std::set<InstructionPtr>& BasicBlock::getVarDef() {
         return _def;
     }
 
-    const std::set<ValuePtr>& BasicBlock::getVarUse() {
+    const std::set<InstructionPtr>& BasicBlock::getVarUse() {
         return _use;
     }
 
@@ -70,7 +70,7 @@ namespace llvm {
         }
     }
 
-    bool BasicBlock::addVarIn(ValuePtr vp) {
+    bool BasicBlock::addVarIn(InstructionPtr vp) {
         bool changed = false;
         if (!_in.contains(vp)) {
             _in.insert(vp);
@@ -79,7 +79,7 @@ namespace llvm {
         return changed;
     }
 
-    bool BasicBlock::addVarIn(const std::set<ValuePtr> &vps) {
+    bool BasicBlock::addVarIn(const std::set<InstructionPtr> &vps) {
         bool changed = false;
         for (auto& vp: vps) {
             if (_in.contains(vp))
@@ -90,7 +90,7 @@ namespace llvm {
         return changed;
     }
 
-    bool BasicBlock::addVarOut(ValuePtr vp) {
+    bool BasicBlock::addVarOut(InstructionPtr vp) {
         bool changed = false;
         if (!_out.contains(vp)) {
             _out.insert(vp);
@@ -99,7 +99,7 @@ namespace llvm {
         return changed;
     }
 
-    bool BasicBlock::addVarOut(const std::set<ValuePtr> &vps) {
+    bool BasicBlock::addVarOut(const std::set<InstructionPtr> &vps) {
         bool changed = false;
         for (auto& vp: vps) {
             if (_out.contains(vp))
@@ -144,7 +144,11 @@ namespace llvm {
         for (auto& inst: _insts) {
             // add use first, then def
             for (int i = 0; i < inst->getUseeSize(); i++) {
-                addVarUse(inst->getUsee(i));
+                auto usee = inst->getUsee(i);
+                if (!usee->is(BASIC_BLOCK_T)) {
+                    auto&& instUsee = std::static_pointer_cast<Instruction>(inst->getUsee(i));
+                    addVarUse(instUsee);
+                }
             }
             if (!inst->getType()->equals(_context->VOID_TY)) {
                 addVarDef(inst);
@@ -171,7 +175,7 @@ namespace llvm {
     bool BasicBlock::calVarIn() {
         bool changed = false;
 
-        std::set<ValuePtr> outCutDef;
+        std::set<InstructionPtr> outCutDef;
         std::set_difference(_out.begin(), _out.end(), _def.begin(), _def.end(),
             std::inserter(outCutDef, outCutDef.begin()));
 

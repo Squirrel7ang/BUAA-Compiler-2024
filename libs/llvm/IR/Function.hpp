@@ -24,10 +24,14 @@ namespace llvm {
         vector<BasicBlockPtr> _blocks;
         vector<ArgumentPtr> _args;
         std::string _name;
-        std::set<ValuePtr> beginOut;
-        std::set<ValuePtr> beginIn;
-        std::set<ValuePtr> exitIn;
-        std::set<ValuePtr> exitOut;
+        std::set<InstructionPtr> beginOut;
+        std::set<InstructionPtr> beginIn;
+        std::set<InstructionPtr> exitIn;
+        std::set<InstructionPtr> exitOut;
+
+        // crossBlockVar
+        std::set<ValuePtr> globalVariables;
+        ConflictEdges conflictEdges;
     public:
         explicit Function(LLVMContextPtr& context, TypePtr ty,
                           std::vector<ArgumentPtr>& parameters, std::string name);
@@ -36,30 +40,26 @@ namespace llvm {
         explicit Function(LLVMContextPtr& context, TypePtr ty, std::string name);
 
         // iterator for basicBlocks and arguments inside;
-        vector<BasicBlockPtr>::iterator blockBegin() {
-            return _blocks.begin();
-        }
-        vector<BasicBlockPtr>::iterator blockEnd() {
-            return _blocks.end();
-        }
-        vector<ArgumentPtr>::iterator argumentBegin() {
-            return _args.begin();
-        }
-        vector<ArgumentPtr>::iterator argumentEnd() {
-            return _args.end();
-        }
-
-        void addBasicBlock(BasicBlockPtr block) {
-            _blocks.push_back(block);
-        }
+        vector<BasicBlockPtr>::iterator blockBegin();
+        vector<BasicBlockPtr>::iterator blockEnd();
+        vector<ArgumentPtr>::iterator argumentBegin();
+        vector<ArgumentPtr>::iterator argumentEnd();
+        void addBasicBlock(BasicBlockPtr block);
         int argNum() { return _args.size(); }
         ArgumentPtr getArg(int i) { return _args.at(i); }
         void setIndex();
         void print(std::ostream& out) override;
         void printRef(std::ostream& out) override;
+
+        // dataflow and optimization
         void clearEmptyBasicBlocks();
-        void analizeActiveVariable();
-        int calSpaceUse();
+        void analyzeActiveVariable();
+        int spaceUse();
+        std::set<ValuePtr>& getGlobalVars() { return globalVariables; }
+        ConflictEdges& getConflictVars() { return conflictEdges; }
+    private:
+        void calConflictVars();
+        void calConflictVars(BasicBlockPtr block);
     };
 }
 

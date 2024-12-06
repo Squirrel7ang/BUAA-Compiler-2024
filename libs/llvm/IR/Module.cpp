@@ -2,16 +2,33 @@
 // Created by tang on 11/6/24.
 //
 
-#include "Module.hpp"
-
 #include <cassert>
-#include <functional>
 
+#include "LLVMContext.hpp"
+#include "Module.hpp"
+#include "GlobalVariable.hpp"
 #include "GlobalString.hpp"
+
 
 namespace llvm {
     Module::Module() {
         _context = std::make_shared<LLVMContext>();
+    }
+
+    vector<FunctionPtr>::iterator Module::functionBegin() {
+        return _functions.begin();
+    }
+
+    vector<FunctionPtr>::iterator Module::functionEnd() {
+        return _functions.end();
+    }
+
+    std::string Module::getSourceName() { return _context->getSourceName(); }
+
+    void Module::clearEmptyBasicBlock() {
+        for (const auto& f: _functions) {
+            f->clearEmptyBasicBlocks();
+        }
     }
 
     LLVMContextPtr Module::context() {
@@ -66,7 +83,7 @@ namespace llvm {
     // TODO:  analyze the active variables in every Function
     void Module::analyzeActiveVariable() {
         for (auto& f: _functions) {
-            f->analizeActiveVariable();
+            f->analyzeActiveVariable();
         }
     }
 }

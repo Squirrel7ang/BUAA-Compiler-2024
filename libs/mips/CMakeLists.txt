@@ -2,8 +2,8 @@ set(LIBRARY_NAME mips)
 
 add_library(${LIBRARY_NAME}
         MipsCommon.hpp
-        Imm.hpp
-        Imm.cpp
+        MipsImm.hpp
+        MipsImm.cpp
         Regs.hpp
         Regs.cpp
         Insts.hpp
@@ -16,8 +16,17 @@ add_library(${LIBRARY_NAME}
         VarTable.cpp
         MipsAsmGen.cpp
         TmpRegTable.cpp
-        Stack.hpp
-        Stack.cpp
+        StackSlot.hpp
+        StackSlot.cpp
+        MipsTranslator.hpp
+        MipsTranslator.cpp
+        MipsRegAllocator.cpp
+        MipsRegAllocator.hpp
+        VarLocation.cpp
+        VarLocation.hpp
+        ConflictGraph.cpp
+        ConflictGraph.hpp
+        SaveRegTable.cpp
 )
 target_link_libraries(${LIBRARY_NAME} PUBLIC llvm)
 

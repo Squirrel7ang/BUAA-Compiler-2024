@@ -11,3 +11,7 @@
 
 - ~~[ ] change all `Type` into `TypePtr`~~
 - [x] fix string const when initializing char array;
+
+## MIPS
+
+- [ ] add the abstraction of variable in mips rather than InstructionPtr.

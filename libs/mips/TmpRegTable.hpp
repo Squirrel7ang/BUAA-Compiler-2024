@@ -12,11 +12,13 @@
 
 namespace mips {
     class TmpRegTable {
-        std::map<MipsRegPtr, llvm::InstructionPtr> _regPool;
+        std::map<MipsRegPtr, VariablePtr> _regPool;
     public:
         explicit TmpRegTable();
         bool isFree();
-        MipsRegPtr allocateReg(llvm::InstructionPtr vp);
+        MipsRegPtr allocateReg();
+
+        void insert(VariablePtr var, MipsRegPtr reg);
     };
 }
 

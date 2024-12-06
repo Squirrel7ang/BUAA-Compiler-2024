@@ -3,6 +3,8 @@
 //
 
 #include "Insts.hpp"
+#include "MipsImm.hpp"
+#include "Regs.hpp"
 
 namespace mips {
     MipsInstType MipsInst::idToType(MipsInstID id) {
@@ -12,7 +14,24 @@ namespace mips {
         else assert(0);
     }
 
-    RInstPtr RInst::New(MipsRegPtr &rs, MipsRegPtr &rt, MipsRegPtr &rd, MipsInstID instID) {
+    void MipsInst::print(std::ostream &out) {
+        assert(0);
+    }
+
+    /******************** R-INST ********************/
+
+    RInst::RInst(const MipsRegPtr& rs,
+                 const MipsRegPtr& rt,
+                 const MipsRegPtr& rd,
+                 MipsInstID instID)
+        : MipsInst(instID), _rs(rs), _rt(rt), _rd(rd), _sa(IMM_ZERO) {
+        assert(MipsInst::idToType(instID) == MIT_R);
+    }
+
+    RInstPtr RInst::New(const MipsRegPtr &rs,
+                        const MipsRegPtr &rt,
+                        const MipsRegPtr &rd,
+                        MipsInstID instID) {
         return std::make_shared<RInst>(rs, rt, rd, instID);
     }
 
@@ -68,11 +87,25 @@ namespace mips {
         _rs->print(out);
     }
 
-    IInstPtr IInst::New(MipsRegPtr &rs, MipsRegPtr &rt, MipsDataPtr &imm, MipsInstID instID) {
+    /******************** I-INST ********************/
+    IInst::IInst(const MipsRegPtr& rs,
+                 const MipsRegPtr& rt,
+                 const MipsDataPtr& imm,
+                 MipsInstID instID)
+        : MipsInst(instID), _rs(rs), _rt(rt), _imm(imm) { }
+
+    IInstPtr IInst::New(const MipsRegPtr &rs,
+                        const MipsRegPtr &rt,
+                        const MipsDataPtr &imm,
+                        MipsInstID instID) {
         return std::make_shared<IInst>(rs, rt, imm, instID);
     }
 
-    JInstPtr JInst::New(MipsDataPtr& imm, MipsInstID instID) {
+    /******************** J-INST ********************/
+    JInst::JInst(const MipsDataPtr imm, MipsInstID instID)
+        : MipsInst(instID), _imm(imm) { }
+
+    JInstPtr JInst::New(const MipsDataPtr& imm, MipsInstID instID) {
         return std::make_shared<JInst>(imm, instID);
     }
 }

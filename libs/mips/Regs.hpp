@@ -8,6 +8,7 @@
 #include <ostream>
 
 #include "MipsCommon.hpp"
+#include "VarLocation.hpp"
 
 namespace mips {
     enum MipsRegType {
@@ -23,19 +24,18 @@ namespace mips {
         MRT_LO,
     };
 
-    class MipsReg {
+    class MipsReg : public VarLocation {
     private:
         int _regNum;
         MipsRegType _type;
     public:
         static MipsRegPtr New(int regNum);
-        bool operator==(const MipsReg & other) const {
-            return other._regNum == this->_regNum;
-        }
+        bool operator==(const MipsReg & other) const;
         void print(std::ostream& out) const;
         static MipsRegType regNumToID(unsigned int n);
+        MipsRegType getType() const { return _type; }
     private:
-        explicit MipsReg(const int regNum) : _regNum(regNum), _type(regNumToID(regNum)) { }
+        explicit MipsReg(int regNum);
     };
 
     static const MipsRegPtr REG_ZERO = MipsReg::New(0);

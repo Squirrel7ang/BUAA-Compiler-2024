@@ -2,8 +2,8 @@
 // Created by tang on 11/7/24.
 //
 
-#ifndef COMMON_HPP
-#define COMMON_HPP
+#ifndef LLVMCOMMON_HPP
+#define LLVMCOMMON_HPP
 
 #include <memory>
 #include <vector>
@@ -73,6 +73,10 @@ namespace llvm {
     class BasicBlock;
     using BasicBlockPtr = s_ptr<BasicBlock>;
 
+    class Instruction;
+    using InstructionPtr = s_ptr<Instruction>;
+    using ConflictEdges = std::vector<std::pair<InstructionPtr, InstructionPtr>>;
+
     class Argument;
     using ArgumentPtr = s_ptr<Argument>;
 
@@ -117,9 +121,6 @@ namespace llvm {
     using GlobalStringPtr = s_ptr<GlobalString>;
 
     /******* INSTRUCTIONS *******/
-
-    class Instruction;
-    using InstructionPtr = s_ptr<Instruction>;
 
     class UnaryInst;
     using UnaryInstPtr = s_ptr<UnaryInst>;
@@ -170,4 +171,4 @@ namespace llvm {
     using GetcharInstPtr = s_ptr<GetcharInst>;
 }
 
-#endif //COMMON_HPP
+#endif //LLVMCOMMON_HPP

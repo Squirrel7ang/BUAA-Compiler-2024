@@ -36,6 +36,9 @@ namespace mips {
     class Variable;
     using VariablePtr = s_ptr<Variable>;
 
+    class VarLocation;
+    using VarLocationPtr = s_ptr<VarLocation>;
+
     class VarTable;
     using VarTablePtr = s_ptr<VarTable>;
 
@@ -44,6 +47,15 @@ namespace mips {
 
     class SaveRegTable;
     using SaveRegTablePtr = s_ptr<SaveRegTable>;
+
+    class MipsTranslator;
+    using MipsTranslatorPtr = s_ptr<MipsTranslator>;
+
+    class MipsRegAllocator;
+    using MipsRegAllocatorPtr = s_ptr<MipsRegAllocator>;
+
+    class ConflictGraph;
+    using ConflictGraphPtr = s_ptr<ConflictGraph>;
 
     class MipsInst;
     using MipsInstPtr = s_ptr<MipsInst>;
@@ -57,8 +69,8 @@ namespace mips {
     class RInst;
     using RInstPtr = s_ptr<RInst>;
 
-    class MipsData;
-    using MipsDataPtr = s_ptr<MipsData>;
+    class MipsImm;
+    using MipsDataPtr = s_ptr<MipsImm>;
 }
 
 #endif //MIPSCOMMON_HPP

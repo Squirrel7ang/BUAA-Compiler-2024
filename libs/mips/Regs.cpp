@@ -11,6 +11,12 @@ namespace mips {
         return std::make_shared<MipsReg>(regNum);
     }
 
+    bool MipsReg::operator==(const MipsReg &other) const {
+        return other._regNum == this->_regNum;
+    }
+
+    MipsReg::MipsReg(int regNum) : VarLocation(VLID_REG), _regNum(regNum), _type(regNumToID(regNum)) { }
+
     void MipsReg::print(std::ostream& out) const {
         switch (_regNum) {
             case(0): out << "$zero"; break;

@@ -10,8 +10,6 @@
 
 #include "Common.hpp"
 #include "Function.hpp"
-#include "GlobalVariable.hpp"
-#include "LLVMContext.hpp"
 
 namespace llvm {
     /**
@@ -38,22 +36,15 @@ namespace llvm {
         void addString(GlobalStringPtr str);
 
         // iterator for functions inside;
-        vector<FunctionPtr>::iterator functionBegin() {
-            return _functions.begin();
-        }
-        vector<FunctionPtr>::iterator functionEnd() {
-            return _functions.end();
-        }
+        vector<FunctionPtr>::iterator functionBegin();
+        vector<FunctionPtr>::iterator functionEnd();
 
         // Printer
-        std::string getSourceName() { return _context->getSourceName(); }
+        std::string getSourceName();
         void print(std::ostream& out);
 
-        void clearEmptyBasicBlock() {
-            for (const auto& f: _functions) {
-                f->clearEmptyBasicBlocks();
-            }
-        }
+        // dataflow
+        void clearEmptyBasicBlock();
         void analyzeActiveVariable();
     };
     using ModulePtr = std::shared_ptr<Module>;

@@ -7,8 +7,6 @@
 #include <cassert>
 
 #include "MipsCommon.hpp"
-#include "Imm.hpp"
-#include "Regs.hpp"
 
 namespace mips {
     enum MipsInstID {
@@ -69,9 +67,18 @@ namespace mips {
     public:
         explicit MipsInst(MipsInstID id) : _id(id), _type(idToType(id)) { }
         static MipsInstType idToType(MipsInstID id);
-        virtual void print(std::ostream& out) = 0;
+        virtual void print(std::ostream& out);
     };
 
+    /**
+     * rd = rs * rt
+     * rd = rt * sa
+     * jalr rd, rs ==> jump to rs, store PC in rd
+     * jr rs
+     * mfhi rd
+     * mthi rs
+     * mult rs, rt
+     */
     class RInst : public MipsInst {
         MipsRegPtr _rs;
         MipsRegPtr _rt;
@@ -79,37 +86,61 @@ namespace mips {
         MipsDataPtr _sa;
 
     public:
-        RInstPtr New(MipsRegPtr& rs, MipsRegPtr& rt, MipsRegPtr& rd, MipsInstID instID);
+        static RInstPtr New(
+            const MipsRegPtr& rs,
+            const MipsRegPtr& rt,
+            const MipsRegPtr& rd,
+            MipsInstID instID
+        );
 
     private:
-        explicit RInst(MipsRegPtr& rs, MipsRegPtr& rt, MipsRegPtr& rd, MipsInstID instID)
-            : MipsInst(instID), _rs(rs), _rt(rt), _rd(rd), _sa(DATA_ZERO) {
-            assert(MipsInst::idToType(instID) == MIT_R);
-        }
+        explicit RInst(
+            const MipsRegPtr& rs,
+            const MipsRegPtr& rt,
+            const MipsRegPtr& rd,
+            MipsInstID instID
+        );
         void print(std::ostream& out) override;
     };
 
+    /**
+     * rt = rs * imm;
+     * sw/lw rt, imm(rs);
+     * beq rs, rt, offset;
+     * lui rt, imm <==> lui rt, imm($zero)
+     */
     class IInst : public MipsInst {
     private:
         MipsRegPtr _rs;
         MipsRegPtr _rt;
         MipsDataPtr _imm;
     public:
-        IInstPtr New(MipsRegPtr& rs, MipsRegPtr& rt, MipsDataPtr& imm, MipsInstID instID);
+        static IInstPtr New(
+            const MipsRegPtr& rs,
+            const MipsRegPtr& rt,
+            const MipsDataPtr& imm,
+            MipsInstID instID
+        );
 
     private:
-        explicit IInst(MipsRegPtr& rs, MipsRegPtr& rt, MipsDataPtr& imm, MipsInstID instID)
-            : MipsInst(instID), _rs(rs), _rt(rt), _imm(imm) { }
+        explicit IInst(
+            const MipsRegPtr& rs,
+            const MipsRegPtr& rt,
+            const MipsDataPtr& imm,
+            MipsInstID instID
+        );
     };
 
+    /**
+     * jal imm
+     */
     class JInst : public MipsInst {
     private:
         MipsDataPtr _imm;
     public:
-        JInstPtr New(MipsDataPtr& imm, MipsInstID instID);
+        static JInstPtr New(const MipsDataPtr& imm, MipsInstID instID);
     private:
-        JInst(MipsDataPtr imm, MipsInstID instID)
-            : MipsInst(instID), _imm(imm) { }
+        explicit JInst(const MipsDataPtr imm, MipsInstID instID);
     };
 }
 

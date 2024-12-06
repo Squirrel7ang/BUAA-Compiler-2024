@@ -18,9 +18,7 @@ namespace mips {
             {REG_T6, nullptr},
             {REG_T7, nullptr},
             {REG_T8, nullptr},
-            {REG_T9, nullptr} })
-    {
-    }
+            {REG_T9, nullptr} }) { }
 
     bool TmpRegTable::isFree() {
         for (auto& pair: _regPool)
@@ -29,13 +27,15 @@ namespace mips {
         return false;
     }
 
-    MipsRegPtr TmpRegTable::allocateReg(llvm::InstructionPtr vp) {
-        for (auto& p: _regPool) {
-            if (p.second == nullptr) {
-                p.second = vp;
-                return p.first;
-            }
-        }
+    MipsRegPtr TmpRegTable::allocateReg() {
+        for (auto& pair: _regPool)
+            if (pair.second == nullptr)
+                return pair.first;
         return nullptr;
     }
+
+    void TmpRegTable::insert(VariablePtr var, MipsRegPtr reg) {
+
+    }
+
 }
