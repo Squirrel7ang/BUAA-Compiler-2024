@@ -11,6 +11,17 @@
 #include "IR/Instructions.hpp"
 
 namespace mips {
+    MipsTranslator::MipsTranslator(llvm::ModulePtr& module)
+        : _llvmModule(module),
+        _varTable(VarTable::New(module)),
+        _allocator(MipsRegAllocator::New(module)) {
+
+    }
+
+    MipsTranslatorPtr MipsTranslator::New(llvm::ModulePtr module) {
+        return std::make_shared<MipsTranslator>(module);
+    }
+
     void MipsTranslator::allocReg() {
         _allocator->allocReg();
     }

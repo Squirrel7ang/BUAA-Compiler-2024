@@ -8,8 +8,6 @@ add_library(${LIBRARY_NAME}
         IR/Value.cpp
         IR/Instructions.cpp
         IR/Instructions.hpp
-        IR/Instruction.cpp
-        IR/Instruction.hpp
         IR/BasicBlock.hpp
         IR/User.hpp
         IR/Module.hpp

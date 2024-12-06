@@ -45,8 +45,8 @@ namespace mips {
             case(23): out << "$s7"; break;
             case(24): out << "$t8"; break;
             case(25): out << "$t9"; break;
-            case(26): assert(0);
-            case(27): assert(0);
+            case(26): out << "$k0"; break;
+            case(27): out << "$k1"; break;
             case(28): assert(0);
             case(29): out << "$sp"; break;
             case(30): assert(0);
@@ -82,9 +82,9 @@ namespace mips {
             case(22): /* Fall through*/
             case(23): return MRT_SAVE;
             case(24): /* Fall through*/
-            case(25): return MRT_TMP;
-            case(26): assert(0); // k0
-            case(27): assert(0); // k1
+            case(25): /* Fall through*/
+            case(26): /* Fall through*/
+            case(27): return MRT_TMP;
             case(28): assert(0); // gp
             case(29): return MRT_SP;
             case(30): assert(0); // fp
@@ -92,4 +92,37 @@ namespace mips {
             default: assert(0);
         }
     }
+
+    static const MipsRegPtr REG_ZERO = MipsReg::New(0);
+    // static const MipsRegPtr REG_AT = MipsReg:New(1);
+    static const MipsRegPtr REG_V0 = MipsReg::New(2);
+    static const MipsRegPtr REG_V1 = MipsReg::New(3);
+    static const MipsRegPtr REG_A0 = MipsReg::New(4);
+    static const MipsRegPtr REG_A1 = MipsReg::New(5);
+    static const MipsRegPtr REG_A2 = MipsReg::New(6);
+    static const MipsRegPtr REG_A3 = MipsReg::New(7);
+    static const MipsRegPtr REG_T0 = MipsReg::New(8);
+    static const MipsRegPtr REG_T1 = MipsReg::New(9);
+    static const MipsRegPtr REG_T2 = MipsReg::New(10);
+    static const MipsRegPtr REG_T3 = MipsReg::New(11);
+    static const MipsRegPtr REG_T4 = MipsReg::New(12);
+    static const MipsRegPtr REG_T5 = MipsReg::New(13);
+    static const MipsRegPtr REG_T6 = MipsReg::New(14);
+    static const MipsRegPtr REG_T7 = MipsReg::New(15);
+    static const MipsRegPtr REG_S0 = MipsReg::New(16);
+    static const MipsRegPtr REG_S1 = MipsReg::New(17);
+    static const MipsRegPtr REG_S2 = MipsReg::New(18);
+    static const MipsRegPtr REG_S3 = MipsReg::New(19);
+    static const MipsRegPtr REG_S4 = MipsReg::New(20);
+    static const MipsRegPtr REG_S5 = MipsReg::New(21);
+    static const MipsRegPtr REG_S6 = MipsReg::New(22);
+    static const MipsRegPtr REG_S7 = MipsReg::New(23);
+    static const MipsRegPtr REG_T8 = MipsReg::New(24);
+    static const MipsRegPtr REG_T9 = MipsReg::New(25);
+    static const MipsRegPtr REG_K0 = MipsReg::New(26);
+    static const MipsRegPtr REG_K1 = MipsReg::New(27);
+    // static const MipsRegPtr REG_GP = MipsReg::New(28);
+    static const MipsRegPtr REG_SP = MipsReg::New(29);
+    // static const MipsRegPtr REG_FP = MipsReg::New(30);
+    static const MipsRegPtr REG_RA = MipsReg::New(31);
 }

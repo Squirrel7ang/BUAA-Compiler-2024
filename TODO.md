@@ -14,4 +14,5 @@
 
 ## MIPS
 
-- [ ] add the abstraction of variable in mips rather than InstructionPtr.
+- [x] add the abstraction of variable in mips rather than InstructionPtr.
+- [ ] the mips library is not compiled ???

@@ -7,30 +7,24 @@
 
 #include <utility>
 #include <map>
+#include <set>
 
+#include "MipsCommon.hpp"
 #include "IR/Common.hpp"
 
 namespace mips {
-    class ConflictNode {
-        llvm::InstructionPtr node;
-        std::vector<llvm::InstructionPtr> next;
-    public:
-        explicit ConflictNode(llvm::InstructionPtr inst) : node(inst) { }
-        explicit ConflictNode(llvm::InstructionPtr inst,
-                              llvm::InstructionPtr target) {
-
-        }
-        void push_back(llvm::InstructionPtr inst) { next.push_back(inst); }
-    };
-
     using ConflictEdge =
-        std::pair<llvm::InstructionPtr, llvm::InstructionPtr>;
+        std::pair<VariablePtr, VariablePtr>;
 
     class ConflictGraph {
-        std::map<llvm::InstructionPtr, ConflictNode> _map;
+        std::set<VariablePtr> _graph;
         std::vector<ConflictEdge> _edges;
+        VarTablePtr _varTable;
     public:
+        static ConflictGraphPtr New(VarTablePtr varTable);
         void insertEdges(llvm::ConflictEdges& edges);
+    private:
+        explicit ConflictGraph(VarTablePtr& varTable);
     };
 }
 

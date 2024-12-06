@@ -7,10 +7,10 @@
 
 #include <cassert>
 
+#include "User.hpp"
 #include "Function.hpp"
 #include "Common.hpp"
 #include "Type.hpp"
-#include "Instruction.hpp"
 
 namespace llvm {
 

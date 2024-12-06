@@ -11,6 +11,10 @@ namespace llvm {
         _users.push_back(use);
     }
 
+    int Value::userCount() {
+        return _users.size();
+    }
+
     UserPtr Value::getUser(unsigned int i) {
         return _users.at(i)->user();
     }

@@ -13,7 +13,20 @@ namespace mips {
         allocTmpReg(_llvmModule);
     }
 
-    void MipsRegAllocator::allocSaveReg(llvm::ModulePtr module) {
+    MipsRegAllocatorPtr MipsRegAllocator::New(llvm::ModulePtr module) {
+        return std::make_shared<MipsRegAllocator>(module);
+    }
+
+    MipsRegAllocator::MipsRegAllocator(llvm::ModulePtr& module)
+        : _llvmModule(module),
+        _varTable(VarTable::New(module)),
+        _graph(ConflictGraph::New(_varTable)),
+        _saveRegTable(),
+        _tmpRegTable() {
+
+    }
+
+    void MipsRegAllocator::allocSaveReg(llvm::ModulePtr& module) {
         auto&& begin = module->functionBegin();
         auto&& end = module->functionEnd();
         for (auto it = begin; it != end; it++) {
@@ -21,7 +34,7 @@ namespace mips {
         }
     }
 
-    void MipsRegAllocator::allocSaveReg(llvm::FunctionPtr func) {
+    void MipsRegAllocator::allocSaveReg(llvm::FunctionPtr& func) {
         auto&& begin = func->blockBegin();
         auto&& end = func->blockEnd();
 
@@ -32,7 +45,7 @@ namespace mips {
         // TODO: color it!!
     }
 
-    void MipsRegAllocator::allocTmpReg(llvm::ModulePtr module) {
+    void MipsRegAllocator::allocTmpReg(llvm::ModulePtr &module) {
         auto&& begin = module->functionBegin();
         auto&& end = module->functionEnd();
         for (auto it = begin; it != end; it++) {
@@ -40,7 +53,7 @@ namespace mips {
         }
     }
 
-    void MipsRegAllocator::allocTmpReg(llvm::FunctionPtr func) {
+    void MipsRegAllocator::allocTmpReg(llvm::FunctionPtr &func) {
         auto&& begin = func->blockBegin();
         auto&& end = func->blockEnd();
         for (auto it = begin; it != end; it++) {
@@ -56,12 +69,12 @@ namespace mips {
         }
     }
 
-    void MipsRegAllocator::allocReg(llvm::InstructionPtr inst, MipsRegPtr reg) {
+    void MipsRegAllocator::allocReg(VariablePtr& var, MipsRegPtr& reg) {
         if (reg->getType() == MRT_SAVE) {
-            _saveRegTable.insert(inst, reg);
+            _saveRegTable->insert(var, reg);
         }
-        else if (reg->getType == MRT_TMP) {
-            _tmpRegTable.
+        else if (reg->getType() == MRT_TMP) {
+            _tmpRegTable->insert(var, reg);
         }
     }
 } // mips

@@ -32,6 +32,7 @@ namespace llvm {
         virtual TypePtr getType() { return this->_type; }
         ValueType getValueType() const { return this->_valueType; }
         virtual bool is(const ValueType vty) const { return _valueType == vty; }
+        int userCount();
 
     protected:
         UserPtr getUser(unsigned int i);

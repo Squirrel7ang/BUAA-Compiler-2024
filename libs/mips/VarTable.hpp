@@ -6,10 +6,11 @@
 #define VARTABLE_HPP
 
 #include <map>
+#include <set>
 
 #include "MipsCommon.hpp"
 #include "IR/Common.hpp"
-#include "IR/Instruction.hpp"
+#include "IR/Instructions.hpp"
 
 namespace mips {
     class Variable {
@@ -22,17 +23,27 @@ namespace mips {
 
         // storage
         VarLocationPtr _location;
+
+        // Conflict Graph
+        std::vector<VariablePtr> next;
     public:
-        static VariablePtr New(llvm::InstructionPtr inst, unsigned int totalCount) {
-            return std::make_shared<Variable>(inst, totalCount);
-        }
+        static VariablePtr New(llvm::InstructionPtr inst);
+        void addConflictVar(VariablePtr var);
     private:
         explicit Variable(llvm::InstructionPtr& inst, unsigned int totalCount);
         void setLocation(VarLocationPtr loc);
     };
 
     class VarTable {
-        std::map<llvm::InstructionPtr, MipsRegPtr> _table;
+    private:
+        std::map<llvm::InstructionPtr, VariablePtr> _vars;
+    public:
+        VariablePtr findVar(llvm::InstructionPtr inst);
+        static VarTablePtr New(llvm::ModulePtr module);
+
+    private:
+        explicit VarTable(llvm::ModulePtr& module);
+        void addVariable(llvm::InstructionPtr& inst, VariablePtr& var);
     };
 }
 

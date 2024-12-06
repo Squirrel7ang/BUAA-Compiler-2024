@@ -8,6 +8,11 @@
 #include "IR/Module.hpp"
 
 namespace mips {
+    MipsAsm::MipsAsm(llvm::ModulePtr& module)
+        : _llvmModule(module), _translator(MipsTranslator::New(module)) {
+
+    }
+
     void MipsAsm::generateMipsAsm() {
 
     }
@@ -16,7 +21,7 @@ namespace mips {
     }
 
     void MipsAsm::translate() {
-        _translator.translate();
+        _translator->translate();
     }
 
     void MipsAsm::allocateRegister() {

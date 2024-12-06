@@ -4,27 +4,28 @@
 
 #include "ConflictGraph.hpp"
 
+#include "VarTable.hpp"
+
 namespace mips {
+    ConflictGraph::ConflictGraph(VarTablePtr& varTable): _varTable(varTable) { }
+
+    ConflictGraphPtr ConflictGraph::New(VarTablePtr varTable) {
+        return std::make_shared<ConflictGraph>(varTable);
+    }
+
     void ConflictGraph::insertEdges(llvm::ConflictEdges& edges) {
         for (auto& edge: edges) {
-            _edges.push_back(edge);
+            auto var0 = _varTable->findVar(edge.first);
+            auto var1 = _varTable->findVar(edge.second);
+            _edges.push_back({var0, var1});
 
-            auto node1 = edge.first;
-            auto node2 = edge.second;
+            if (!_graph.contains(var0))
+                _graph.insert(var0);
+            if (!_graph.contains(var1))
+                _graph.insert(var1);
 
-            if (_map.contains(node1))
-                _map[node1].push_back(edge.second);
-            else {
-                ConflictNode n = ConflictNode(node1, node2);
-                _map.insert({node1, n });
-            }
-
-            if (_map.contains(node2))
-                _map[node2].push_back(edge.second);
-            else {
-                ConflictNode n = ConflictNode(node2, node1);
-                _map.insert({node2, n });
-            }
+            var1->addConflictVar(var0);
+            var0->addConflictVar(var1);
         }
     }
 }

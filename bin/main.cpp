@@ -8,7 +8,9 @@
 #include <string>
 
 #include "IR/IRPrinter.hpp"
+#include "libs/mips/MipsAsmGen.hpp"
 using namespace tang;
+using mips::MipsAsm;
 
 int main(int argc, char *argv[]) {
     std::string input;
@@ -47,11 +49,11 @@ int main(int argc, char *argv[]) {
         reporter.printAll();
         return 0;
     }
-    else {
-        auto llvmModule = visitor.getLLVMModule();
-        llvmModule->analyzeActiveVariable();
-        llvmModule->print(llvmStream);
-    }
+    auto llvmModule = visitor.getLLVMModule();
+    llvmModule->print(llvmStream);
+
+    llvmModule->analyzeActiveVariable();
+    MipsAsm asmGenerator = MipsAsm(llvmModule);
 
 
     return 0;

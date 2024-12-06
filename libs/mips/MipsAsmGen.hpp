@@ -17,8 +17,9 @@ namespace mips {
         // TODO: global variable definition
         // llvm
         llvm::ModulePtr _llvmModule;
-        MipsTranslator _translator;
+        MipsTranslatorPtr _translator;
     public:
+        explicit MipsAsm(llvm::ModulePtr& module);
         void generateMipsAsm();
         void print(std::ostream& out);
 
