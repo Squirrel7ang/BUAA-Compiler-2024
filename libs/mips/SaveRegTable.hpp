@@ -6,18 +6,20 @@
 #define SAVEREGTABLE_HPP
 
 #include <map>
+#include <set>
 
 #include "Regs.hpp"
 #include "IR/Common.hpp"
 
 namespace mips {
     class SaveRegTable {
-        std::map<MipsRegPtr, llvm::InstructionPtr> _regTable;
     public:
+        const std::set<MipsRegPtr> _saveRegPool;
+        const std::map<MipsRegPtr, bool> _used;
         explicit SaveRegTable();
-        bool isFree();
-        MipsRegPtr allocateReg();
-        void insert(VariablePtr inst, MipsRegPtr reg);
+        static SaveRegTablePtr New();
+        int size();
+        void use(const MipsRegPtr & reg);
     };
 }
 

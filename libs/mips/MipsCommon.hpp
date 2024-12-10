@@ -70,7 +70,7 @@ namespace mips {
     using RInstPtr = s_ptr<RInst>;
 
     class MipsImm;
-    using MipsDataPtr = s_ptr<MipsImm>;
+    using MipsImmPtr = s_ptr<MipsImm>;
 }
 
 #endif //MIPSCOMMON_HPP

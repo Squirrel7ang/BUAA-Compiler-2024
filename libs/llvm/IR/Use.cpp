@@ -2,7 +2,12 @@
 // Created by tang on 11/7/24.
 //
 
+#include <cassert>
+
 #include "Use.hpp"
+
+#include "Type.hpp"
+#include "Value.hpp"
 
 namespace llvm {
     UserPtr Use::user() { return _user; }

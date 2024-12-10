@@ -5,12 +5,9 @@
 #ifndef USE_HPP
 #define USE_HPP
 
-#include <vector>
 #include <memory>
 
-#include "Value.hpp"
 #include "Common.hpp"
-#include "Type.hpp"
 
 namespace llvm {
     class Use {

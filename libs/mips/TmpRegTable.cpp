@@ -5,6 +5,7 @@
 #include "TmpRegTable.hpp"
 
 #include "Regs.hpp"
+#include "VarTable.hpp"
 
 namespace mips {
     TmpRegTable::TmpRegTable()
@@ -20,22 +21,37 @@ namespace mips {
             {REG_T8, nullptr},
             {REG_T9, nullptr} }) { }
 
+    void TmpRegTable::checkRefCount() {
+        for (auto& pair: _regPool) {
+            auto var = pair.second;
+            if (var != nullptr && var->reachRefCount()) {
+                pair.second = nullptr;
+            }
+        }
+    }
+
     bool TmpRegTable::isFree() {
-        for (auto& pair: _regPool)
-            if (pair.second == nullptr)
+        checkRefCount();
+        for (auto& pair: _regPool) {
+            if (pair.second == nullptr) {
                 return true;
+            }
+        }
+
         return false;
     }
 
     MipsRegPtr TmpRegTable::allocateReg() {
-        for (auto& pair: _regPool)
-            if (pair.second == nullptr)
+        checkRefCount();
+        for (auto& pair: _regPool) {
+            if (pair.second == nullptr) {
                 return pair.first;
+            }
+        }
         return nullptr;
     }
 
-    void TmpRegTable::insert(VariablePtr var, MipsRegPtr reg) {
-
+    void TmpRegTable::occupyReg(VariablePtr var, MipsRegPtr reg) {
     }
 
 }

@@ -20,8 +20,8 @@ namespace mips {
         static MipsTranslatorPtr New(llvm::ModulePtr module);
         void allocReg();
         void translate();
-    private:
         explicit MipsTranslator(llvm::ModulePtr& module);
+    private:
         void addMipsInst(MipsInstPtr mip);
         void translate_allocStack(int bytes);
         void translate_freeStack(int bytes);

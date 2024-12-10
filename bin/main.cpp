@@ -10,7 +10,6 @@
 #include "IR/IRPrinter.hpp"
 #include "libs/mips/MipsAsmGen.hpp"
 using namespace tang;
-using mips::MipsAsm;
 
 int main(int argc, char *argv[]) {
     std::string input;
@@ -53,7 +52,7 @@ int main(int argc, char *argv[]) {
     llvmModule->print(llvmStream);
 
     llvmModule->analyzeActiveVariable();
-    MipsAsm asmGenerator = MipsAsm(llvmModule);
+    mips::MipsAsm asmGenerator = mips::MipsAsm(llvmModule);
 
 
     return 0;

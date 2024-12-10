@@ -3,29 +3,38 @@
 //
 
 #include "SaveRegTable.hpp"
+#include "Regs.hpp"
 
 namespace mips {
     SaveRegTable::SaveRegTable()
-        : _regTable({
-            {REG_S0, nullptr},
-            {REG_S1, nullptr},
-            {REG_S2, nullptr},
-            {REG_S3, nullptr},
-            {REG_S4, nullptr},
-            {REG_S5, nullptr},
-            {REG_S6, nullptr},
-            {REG_S7, nullptr} }) { }
+        : _saveRegPool({REG_S0,
+            REG_S1,
+            REG_S2,
+            REG_S3,
+            REG_S4,
+            REG_S5,
+            REG_S6,
+            REG_S7}),
+        _used({{REG_S0, false},
+            {REG_S1, false},
+            {REG_S2, false},
+            {REG_S3, false},
+            {REG_S4, false},
+            {REG_S5, false},
+            {REG_S6, false},
+            {REG_S7, false}}) {
 
-    bool SaveRegTable::isFree() {
-        for (auto& pair: _regTable)
-            if (pair.second == nullptr)
-                return true;
-        return false;
     }
 
-    MipsRegPtr SaveRegTable::allocateReg() {
+    SaveRegTablePtr SaveRegTable::New() {
+        return std::make_shared<SaveRegTable>();
     }
 
-    void SaveRegTable::insert(VariablePtr inst, MipsRegPtr reg) {
+    int SaveRegTable::size() {
+        return _saveRegPool.size();
+    }
+
+    void SaveRegTable::use(const MipsRegPtr &reg) {
+
     }
 }

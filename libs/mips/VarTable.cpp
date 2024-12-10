@@ -11,7 +11,36 @@
 
 namespace mips {
     void Variable::addConflictVar(VariablePtr var) {
-        next.push_back(var);
+        next.insert(var);
+    }
+
+    VariablePtr Variable::removeConflictVar(VariablePtr vp) {
+        for (auto it = next.begin(); it != next.end(); ++it) {
+            if (*it == vp) {
+                next.erase(it);
+                break;
+            }
+        }
+        return vp;
+    }
+
+    bool Variable::hasLocation() {
+        return _location != nullptr;
+    }
+
+    int Variable::size() {
+        return _llvmInst->getType()->getSize();
+    }
+
+    void Variable::countOneRef() {
+        _refCounts++;
+    }
+
+    bool Variable::reachRefCount() {
+        if (_refCounts > _totalCounts) {
+            assert(0);
+        }
+        return _refCounts == _totalCounts;
     }
 
     VariablePtr Variable::New(llvm::InstructionPtr inst) {
@@ -20,7 +49,6 @@ namespace mips {
 
     Variable::Variable(llvm::InstructionPtr& inst, unsigned int totalCount)
         : _llvmInst(inst), _totalCounts(totalCount), _refCounts(0) {
-
     }
 
     void Variable::setLocation(VarLocationPtr loc) {
@@ -37,8 +65,10 @@ namespace mips {
                 auto&& instBegin = (*b)->instructionBegin();
                 auto&& instEnd = (*b)->instructionEnd();
                 for (auto i = instBegin; i != instEnd; ++i) {
-                    VariablePtr&& vp = Variable::New(*i);
-                    addVariable(*i, vp);
+                    if (!(*i)->getType()->isVoidTy()) {
+                        VariablePtr&& vp = Variable::New(*i);
+                        addVariable(*i, vp);
+                    }
                 }
             }
         }
@@ -49,7 +79,20 @@ namespace mips {
     }
 
     VariablePtr VarTable::findVar(llvm::InstructionPtr inst) {
-        return _vars[inst];
+        if (_vars.contains(inst)) {
+            return _vars[inst];
+        }
+        else {
+            return nullptr;
+        }
+    }
+
+    std::map<llvm::InstructionPtr, VariablePtr>::iterator VarTable::begin() {
+        return _vars.begin();
+    }
+
+    std::map<llvm::InstructionPtr, VariablePtr>::iterator VarTable::end() {
+        return _vars.begin();
     }
 
     VarTablePtr VarTable::New(llvm::ModulePtr module) {

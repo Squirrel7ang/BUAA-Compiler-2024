@@ -35,7 +35,7 @@ namespace mips {
         return std::make_shared<RInst>(rs, rt, rd, instID);
     }
 
-    void RInst::print(std::ostream& out) override {
+    void RInst::print(std::ostream& out) {
         switch (_id) {
             case MIID_ADD: out << "add"; goto print0;
             case MIID_SUB: out << "sub"; goto print0;
@@ -90,22 +90,30 @@ namespace mips {
     /******************** I-INST ********************/
     IInst::IInst(const MipsRegPtr& rs,
                  const MipsRegPtr& rt,
-                 const MipsDataPtr& imm,
+                 const MipsImmPtr& imm,
                  MipsInstID instID)
         : MipsInst(instID), _rs(rs), _rt(rt), _imm(imm) { }
 
+    void IInst::print(std::ostream &out) {
+        // TODO
+    }
+
     IInstPtr IInst::New(const MipsRegPtr &rs,
                         const MipsRegPtr &rt,
-                        const MipsDataPtr &imm,
+                        const MipsImmPtr &imm,
                         MipsInstID instID) {
         return std::make_shared<IInst>(rs, rt, imm, instID);
     }
 
     /******************** J-INST ********************/
-    JInst::JInst(const MipsDataPtr imm, MipsInstID instID)
+    JInst::JInst(const MipsImmPtr imm, MipsInstID instID)
         : MipsInst(instID), _imm(imm) { }
 
-    JInstPtr JInst::New(const MipsDataPtr& imm, MipsInstID instID) {
+    void JInst::print(std::ostream &out) {
+        // TODO
+    }
+
+    JInstPtr JInst::New(const MipsImmPtr& imm, MipsInstID instID) {
         return std::make_shared<JInst>(imm, instID);
     }
 }

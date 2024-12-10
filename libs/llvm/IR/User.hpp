@@ -7,9 +7,9 @@
 
 #include <memory>
 
-#include "Common.hpp"
+#include "Value.hpp"
 #include "LLVMContext.hpp"
-#include "Use.hpp"
+#include "Common.hpp"
 
 namespace llvm {
     class User : public Value {

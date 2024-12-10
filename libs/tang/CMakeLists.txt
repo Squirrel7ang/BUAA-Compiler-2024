@@ -19,6 +19,9 @@ add_library(${LIBRARY_NAME}
         LLVMVisitor.cpp
         Ast.cpp
 )
-target_link_libraries(${LIBRARY_NAME} PUBLIC llvm)
 
+target_link_libraries(${LIBRARY_NAME} PUBLIC llvm)
 target_include_directories(${LIBRARY_NAME} PUBLIC llvm)
+
+target_link_libraries(${LIBRARY_NAME} PUBLIC mips)
+target_include_directories(${LIBRARY_NAME} PUBLIC mips)

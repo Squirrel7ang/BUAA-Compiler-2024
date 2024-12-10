@@ -5,7 +5,7 @@
 #include "MipsImm.hpp"
 
 namespace mips {
-    MipsDataPtr MipsImm::New(int value) {
+    MipsImmPtr MipsImm::New(int value) {
         return std::make_shared<MipsImm>(value);
     }
 

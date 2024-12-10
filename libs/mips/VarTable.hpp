@@ -25,24 +25,33 @@ namespace mips {
         VarLocationPtr _location;
 
         // Conflict Graph
-        std::vector<VariablePtr> next;
+    public:
+        std::set<VariablePtr> next;
+
     public:
         static VariablePtr New(llvm::InstructionPtr inst);
         void addConflictVar(VariablePtr var);
-    private:
+        VariablePtr removeConflictVar(VariablePtr vp);
         explicit Variable(llvm::InstructionPtr& inst, unsigned int totalCount);
+        bool hasLocation();
         void setLocation(VarLocationPtr loc);
+        int size();
+        void countOneRef();
+        bool reachRefCount();
     };
 
     class VarTable {
     private:
         std::map<llvm::InstructionPtr, VariablePtr> _vars;
     public:
-        VariablePtr findVar(llvm::InstructionPtr inst);
         static VarTablePtr New(llvm::ModulePtr module);
-
-    private:
         explicit VarTable(llvm::ModulePtr& module);
+
+        VariablePtr findVar(llvm::InstructionPtr inst);
+        std::map<llvm::InstructionPtr, VariablePtr>::iterator begin();
+        std::map<llvm::InstructionPtr, VariablePtr>::iterator end();
+        int size() { return _vars.size(); }
+    private:
         void addVariable(llvm::InstructionPtr& inst, VariablePtr& var);
     };
 }

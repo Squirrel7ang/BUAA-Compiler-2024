@@ -15,10 +15,10 @@ namespace mips {
         std::map<MipsRegPtr, VariablePtr> _regPool;
     public:
         explicit TmpRegTable();
+        void checkRefCount();
         bool isFree();
         MipsRegPtr allocateReg();
-
-        void insert(VariablePtr var, MipsRegPtr reg);
+        void occupyReg(VariablePtr var, MipsRegPtr reg);
     };
 }
 

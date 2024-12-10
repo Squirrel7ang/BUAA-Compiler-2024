@@ -15,14 +15,15 @@ namespace mips {
     private:
         llvm::ModulePtr _llvmModule;
         VarTablePtr _varTable;
-        ConflictGraphPtr _graph;
+        StackPtr _stack;
         SaveRegTablePtr _saveRegTable;
         TmpRegTablePtr _tmpRegTable;
+        ConflictGraphPtr _graph;
     public:
         void allocReg();
-        static MipsRegAllocatorPtr New(llvm::ModulePtr module);
+        static MipsRegAllocatorPtr New(llvm::ModulePtr module, VarTablePtr);
+        explicit MipsRegAllocator(llvm::ModulePtr& module, VarTablePtr);
     private:
-        explicit MipsRegAllocator(llvm::ModulePtr& module);
         // allocate Save Register
         void allocSaveReg(llvm::ModulePtr& module);
         void allocSaveReg(llvm::FunctionPtr& func);
@@ -31,9 +32,7 @@ namespace mips {
         void allocTmpReg(llvm::ModulePtr &module);
         void allocTmpReg(llvm::FunctionPtr &module);
         void allocTmpReg(llvm::BasicBlockPtr module);
-
-        // universal allocation of register for variables.
-        void allocReg(VariablePtr& var, MipsRegPtr& reg);
+        void allocTmpReg(VariablePtr &var);
     };
 } // mips
 

@@ -2,19 +2,21 @@
 // Created by tang on 12/6/24.
 //
 
+#include <memory>
+
+#include "IR/Instructions.hpp"
+#include "IR/Common.hpp"
+
+#include "Insts.hpp"
 #include "MipsImm.hpp"
 #include "Regs.hpp"
-#include "Insts.hpp"
 #include "MipsTranslator.hpp"
-
-#include "IR/Common.hpp"
-#include "IR/Instructions.hpp"
 
 namespace mips {
     MipsTranslator::MipsTranslator(llvm::ModulePtr& module)
         : _llvmModule(module),
         _varTable(VarTable::New(module)),
-        _allocator(MipsRegAllocator::New(module)) {
+        _allocator(MipsRegAllocator::New(module, _varTable)) {
 
     }
 
@@ -84,6 +86,7 @@ namespace mips {
     }
 
     void MipsTranslator::translate(llvm::InstructionPtr llvmInst) {
+        auto vty = llvmInst->getValueType();
         switch (llvmInst->getValueType()) {
             case llvm::UNARY_OPERATOR_T:
                 translate(std::static_pointer_cast<llvm::UnaryOperator>(llvmInst));

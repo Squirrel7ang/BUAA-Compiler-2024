@@ -2,8 +2,8 @@
 // Created by tang on 11/26/24.
 //
 
-#ifndef INSTRUCTIONS_HPP
-#define INSTRUCTIONS_HPP
+#ifndef MIPSINSTRUCTION_HPP
+#define MIPSINSTRUCTION_HPP
 #include <cassert>
 
 #include "MipsCommon.hpp"
@@ -83,7 +83,7 @@ namespace mips {
         MipsRegPtr _rs;
         MipsRegPtr _rt;
         MipsRegPtr _rd;
-        MipsDataPtr _sa;
+        MipsImmPtr _sa;
 
     public:
         static RInstPtr New(
@@ -93,7 +93,6 @@ namespace mips {
             MipsInstID instID
         );
 
-    private:
         explicit RInst(
             const MipsRegPtr& rs,
             const MipsRegPtr& rt,
@@ -113,22 +112,22 @@ namespace mips {
     private:
         MipsRegPtr _rs;
         MipsRegPtr _rt;
-        MipsDataPtr _imm;
+        MipsImmPtr _imm;
     public:
         static IInstPtr New(
             const MipsRegPtr& rs,
             const MipsRegPtr& rt,
-            const MipsDataPtr& imm,
+            const MipsImmPtr& imm,
             MipsInstID instID
         );
 
-    private:
         explicit IInst(
             const MipsRegPtr& rs,
             const MipsRegPtr& rt,
-            const MipsDataPtr& imm,
+            const MipsImmPtr& imm,
             MipsInstID instID
         );
+        void print(std::ostream& out) override;
     };
 
     /**
@@ -136,12 +135,12 @@ namespace mips {
      */
     class JInst : public MipsInst {
     private:
-        MipsDataPtr _imm;
+        MipsImmPtr _imm;
     public:
-        static JInstPtr New(const MipsDataPtr& imm, MipsInstID instID);
-    private:
-        explicit JInst(const MipsDataPtr imm, MipsInstID instID);
+        static JInstPtr New(const MipsImmPtr& imm, MipsInstID instID);
+        explicit JInst(const MipsImmPtr imm, MipsInstID instID);
+        void print(std::ostream& out) override;
     };
 }
 
-#endif //INSTRUCTIONS_HPP
+#endif // MIPSINSTRUCTION_HPP

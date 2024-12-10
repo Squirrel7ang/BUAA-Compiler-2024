@@ -2,8 +2,8 @@
 // Created by tang on 11/26/24.
 //
 
-#ifndef MIPSASM_HPP
-#define MIPSASM_HPP
+#ifndef MIPSASMGEN_HPP
+#define MIPSASMGEN_HPP
 
 #include "IR/Common.hpp"
 #include "MipsCommon.hpp"
@@ -33,4 +33,4 @@ namespace mips {
 
 }
 
-#endif //MIPSASM_HPP
+#endif // MIPSASMGEN_HPP
