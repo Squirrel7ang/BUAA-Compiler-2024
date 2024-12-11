@@ -13,10 +13,13 @@ namespace mips {
     class VarLocation {
     private:
         VarLocationID _vlid;
+        unsigned int _offset;
     public:
         virtual ~VarLocation() = default;
 
         explicit VarLocation(VarLocationID id);
+        explicit VarLocation(VarLocationID id, unsigned int offset);
+        unsigned int getInitOffset() { return _offset; }
         virtual bool is(VarLocationID varLocID) {
             return _vlid == varLocID;
         }

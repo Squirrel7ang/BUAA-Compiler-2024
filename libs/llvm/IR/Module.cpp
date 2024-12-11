@@ -23,6 +23,22 @@ namespace llvm {
         return _functions.end();
     }
 
+    vector<GlobalVariablePtr>::iterator Module::globalVarBegin() {
+        return _globalVariables.begin();
+    }
+
+    vector<GlobalVariablePtr>::iterator Module::globalVarEnd() {
+        return _globalVariables.end();
+    }
+
+    vector<GlobalStringPtr>::iterator Module::stringBegin() {
+        return _strings.begin();
+    }
+
+    vector<GlobalStringPtr>::iterator Module::stringEnd() {
+        return _strings.end();
+    }
+
     std::string Module::getSourceName() { return _context->getSourceName(); }
 
     void Module::clearEmptyBasicBlock() {

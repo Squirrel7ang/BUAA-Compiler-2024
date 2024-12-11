@@ -35,6 +35,18 @@ namespace mips {
         return std::make_shared<RInst>(rs, rt, rd, instID);
     }
 
+    RInstPtr RInst::NewSyscall() {
+        return RInst::New(REG_ZERO, REG_ZERO, REG_ZERO, MIID_SYSCALL);
+    }
+
+    RInstPtr RInst::NewJr() {
+        return RInst::New(REG_RA, REG_ZERO, REG_ZERO, MIID_JR);
+    }
+
+    RInstPtr RInst::NewMove(const MipsRegPtr &rt, const MipsRegPtr &rd) {
+        return RInst::New(REG_ZERO, rt, rd, MIID_MOVE);
+    }
+
     void RInst::print(std::ostream& out) {
         switch (_id) {
             case MIID_ADD: out << "add"; goto print0;
@@ -103,6 +115,14 @@ namespace mips {
                         const MipsImmPtr &imm,
                         MipsInstID instID) {
         return std::make_shared<IInst>(rs, rt, imm, instID);
+    }
+
+    IInstPtr IInst::NewLi(const MipsRegPtr &rt, const MipsImmPtr &imm) {
+        return New(REG_ZERO, rt, imm, MIID_LI);
+    }
+
+    IInstPtr IInst::NewLa(const MipsRegPtr &rt, const MipsImmPtr &imm) {
+        return New(REG_ZERO, rt, imm, MIID_LA);
     }
 
     /******************** J-INST ********************/

@@ -32,7 +32,24 @@ namespace llvm {
         virtual TypePtr getType() { return this->_type; }
         virtual ValueType getValueType() const { return this->_valueType; }
         virtual bool is(const ValueType vty) const { return _valueType == vty; }
+        bool isInst() {
+            return _valueType == UNARY_OPERATOR_T ||
+                _valueType == BINARY_OPERATOR_T ||
+                _valueType == COMPARE_INST_T ||
+                _valueType == BRANCH_INST_T ||
+                _valueType == JUMP_INST_T ||
+                _valueType == LOAD_INST_T ||
+                _valueType == STORE_INST_T ||
+                _valueType == PUT_INST_T ||
+                _valueType == GETINT_INST_T ||
+                _valueType == GETCHAR_INST_T ||
+                _valueType == GETELEPTR_INST_T ||
+                _valueType == CALL_INST_T ||
+                _valueType == ALLOCA_INST_T ||
+                _valueType == RETURN_INST_T;
+        }
         int userCount();
+        int getIndex() { return _index; }
 
     protected:
         UserPtr getUser(unsigned int i);

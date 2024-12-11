@@ -35,6 +35,8 @@ namespace llvm {
         void printRef(std::ostream& out) override {
             out << "@" << _name;
         }
+        std::string getName() { return _name; }
+        ConstantDataPtr getInitVal() { return _initVal; }
     };
     using GlobalVariablePtr = std::shared_ptr<GlobalVariable>;
 }

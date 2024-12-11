@@ -32,9 +32,12 @@ namespace mips {
         static VariablePtr New(llvm::InstructionPtr inst);
         void addConflictVar(VariablePtr var);
         VariablePtr removeConflictVar(VariablePtr vp);
+        MipsRegPtr getTargetReg();
         explicit Variable(llvm::InstructionPtr& inst, unsigned int totalCount);
         bool hasLocation();
         void setLocation(VarLocationPtr loc);
+        VarLocationPtr getLocation() { return _location; }
+        void setOffset(unsigned int offset);
         int size();
         void countOneRef();
         bool reachRefCount();

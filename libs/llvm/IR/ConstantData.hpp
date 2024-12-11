@@ -11,8 +11,10 @@
 namespace llvm {
     class ConstantData : public Constant {
     private:
-        vector<int> _data;
         int _length;
+    public:
+        vector<int> _data;
+
     public:
         explicit ConstantData(LLVMContextPtr& context, TypePtr ty,
                               vector<int>& data, int length, bool pad)
@@ -28,6 +30,7 @@ namespace llvm {
             _data.push_back(data);
         }
     public:
+        int size() { return _length; }
         void print(std::ostream& out) override {
             if (_length < 0) {
                 out << _data.at(0);
@@ -45,6 +48,11 @@ namespace llvm {
         }
         void printRef(std::ostream &out) override {
             print(out);
+        }
+
+        int getVal(unsigned int i) {
+            assert(i < _length);
+            return _data[i];
         }
     };
 }

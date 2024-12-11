@@ -11,7 +11,10 @@
 namespace mips {
     void MipsRegAllocator::allocReg() {
         allocSaveReg(_llvmModule);
+        allocStackReg(_llvmModule);
+        // TODO: handle geteleptr inst. Such inst should always be a none-cross-block variable
         allocTmpReg(_llvmModule);
+        handleGetElePtr(_llvmModule);
     }
 
     MipsRegAllocatorPtr MipsRegAllocator::New(llvm::ModulePtr module, VarTablePtr varTable) {
@@ -43,6 +46,37 @@ namespace mips {
         // during dataflow analysis.
         _graph->insertEdges(func->getConflictVars());
         _graph->dyeEveryNode();
+    }
+
+    void MipsRegAllocator::allocStackReg(const llvm::ModulePtr &module) {
+        auto&& funcBegin = module->functionBegin();
+        auto&& funcEnd = module->functionEnd();
+        for (auto f = funcBegin; f != funcEnd; ++f) {
+            auto&& blockBegin = (*f)->blockBegin();
+            auto&& blockEnd = (*f)->blockEnd();
+            for (auto b = blockBegin; b != blockEnd; ++b) {
+                auto&& instBegin = (*b)->instructionBegin();
+                auto&& instEnd = (*b)->instructionEnd();
+                for (auto i = instBegin; i != instEnd; ++i) {
+                    if ((*i)->getValueType() == llvm::ALLOCA_INST_T) {
+                        allocStackReg(*i);
+                    }
+                }
+            }
+        }
+    }
+
+    void MipsRegAllocator::allocStackReg(llvm::InstructionPtr inst) {
+        auto var = _varTable->findVar(inst);
+        assert(!var->hasLocation());
+
+        auto ty = std::dynamic_pointer_cast<llvm::PointerType>(inst->getType());
+        unsigned int size = ty->getSize();
+
+        auto slot = _stack->allocateSlot(size);
+        MipsRegPtr spWithOffset = MipsReg::New(REG_SP_NUM, slot->getOffset());
+
+        var->setLocation(spWithOffset);
     }
 
     void MipsRegAllocator::allocTmpReg(llvm::ModulePtr &module) {
@@ -83,4 +117,37 @@ namespace mips {
             var->setLocation(slot);
         }
     }
+
+    void MipsRegAllocator::handleGetElePtr(const llvm::ModulePtr &module) {
+        auto&& funcBegin = module->functionBegin();
+        auto&& funcEnd = module->functionEnd();
+        for (auto f = funcBegin; f != funcEnd; ++f) {
+            auto&& blockBegin = (*f)->blockBegin();
+            auto&& blockEnd = (*f)->blockEnd();
+            for (auto b = blockBegin; b != blockEnd; ++b) {
+                auto&& instBegin = (*b)->instructionBegin();
+                auto&& instEnd = (*b)->instructionEnd();
+                for (auto i = instBegin; i != instEnd; ++i) {
+                    if ((*i)->getValueType() == llvm::GETELEPTR_INST_T) {
+                        handleGetElePtr(*i);
+                    }
+                }
+            }
+        }
+    }
+
+    void MipsRegAllocator::handleGetElePtr(llvm::InstructionPtr inst) {
+        auto _usee = inst->getUsee(0);
+        if (_usee->is(llvm::GLOBAL_VARIABLE_T)) {
+            return;
+        }
+        assert(_usee->isInst());
+        auto prevInst = std::dynamic_pointer_cast<llvm::Instruction>(_usee);
+        assert(prevInst->getType()->isPointer());
+
+        auto curVar = _varTable->findVar(inst);
+        auto prevVar = _varTable->findVar(prevInst);
+        curVar->setOffset(prevVar->getLocation()->getInitOffset());
+    }
+
 } // mips

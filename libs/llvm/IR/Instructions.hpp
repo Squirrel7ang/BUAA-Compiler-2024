@@ -35,6 +35,7 @@ namespace llvm {
                             ValuePtr vp1, UnaryOpID uoid);
         void print(std::ostream& out) override;
         bool is(ValueType vty) const override;
+        UnaryOpID getUnaryOpId() { return _uoid; }
     };
 
     class BinaryInst : public Instruction {
@@ -59,6 +60,7 @@ namespace llvm {
                             ValuePtr vp1, ValuePtr vp2, BinaryOpID boid);
         void print(std::ostream& out);
         bool is(ValueType vty) const override;
+        BinaryOpID getBinaryOpId() { return _boid; }
     };
 
     enum CompareInstID {
@@ -76,6 +78,7 @@ namespace llvm {
                             ValuePtr vp1, ValuePtr vp2, CompareInstID ciid);
         void print(std::ostream& out) override;
         bool is(ValueType vty) const override;
+        CompareInstID getCompareId() { return _ciid; }
     };
 
     class AllocaInst : public Instruction {
@@ -161,6 +164,7 @@ namespace llvm {
         explicit PutInst(LLVMContextPtr& context, ValuePtr value, PutInstID piid);
         void print(std::ostream &out) override;
         bool is(ValueType vty) const override;
+        PutInstID getPutID() { return _piid; }
     };
 
     class GetintInst : public Instruction {

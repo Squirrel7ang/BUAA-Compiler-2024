@@ -11,12 +11,14 @@ namespace mips {
     class MipsImm {
         int _val;
     public:
+        virtual ~MipsImm() = default;
         static MipsImmPtr New(int value);
-        void print(std::ostream& out) const;
         explicit MipsImm(int value);
+        virtual void print(std::ostream& out) const;
     };
 
     static const MipsImmPtr IMM_ZERO = MipsImm::New(0);
+    static const MipsImmPtr IMM_TRUNC_BYTE = MipsImm::New(0x000000ff);
 }
 
 #endif //MIPSIMM_HPP

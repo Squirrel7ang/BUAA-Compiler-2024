@@ -28,11 +28,23 @@ namespace mips {
         void allocSaveReg(llvm::ModulePtr& module);
         void allocSaveReg(llvm::FunctionPtr& func);
 
+        // allocate sp for llvm::alloca inst
+        void allocStackReg(const llvm::ModulePtr & module);
+        void allocStackReg(llvm::InstructionPtr inst);
+
         // allocate temp register
         void allocTmpReg(llvm::ModulePtr &module);
         void allocTmpReg(llvm::FunctionPtr &module);
         void allocTmpReg(llvm::BasicBlockPtr module);
         void allocTmpReg(VariablePtr &var);
+
+        // handle GetElePtr inst
+        void handleGetElePtr(const llvm::ModulePtr & module);
+
+        void handleGetElePtr(llvm::InstructionPtr inst);
+
+        void handleGetElePtr(VariablePtr var);
+
     };
 } // mips
 

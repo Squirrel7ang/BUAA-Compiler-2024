@@ -28,7 +28,6 @@ namespace llvm {
         ARGUMENT_T,
         BASIC_BLOCK_T,
 
-        CONSTANT_T,
         CONSTANT_DATA_T,
 
         FUNCTION_T,

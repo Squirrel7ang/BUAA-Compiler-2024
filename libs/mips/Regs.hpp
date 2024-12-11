@@ -26,15 +26,18 @@ namespace mips {
 
     class MipsReg : public VarLocation {
     private:
-        int _regNum;
+        unsigned int _regNum;
         MipsRegType _type;
     public:
-        static MipsRegPtr New(int regNum);
+        explicit MipsReg(unsigned int regNum);
+        explicit MipsReg(unsigned int regNum, int offset);
+        static MipsRegPtr New(unsigned int regNum);
+        static MipsRegPtr New(unsigned int regNum, int offset);
         bool operator==(const MipsReg & other) const;
         void print(std::ostream& out) const;
+        unsigned int getRegNum();
         static MipsRegType regNumToID(unsigned int n);
         MipsRegType getType() const { return _type; }
-        explicit MipsReg(int regNum);
     };
 
     static const MipsRegPtr REG_ZERO = MipsReg::New(0);
@@ -69,6 +72,39 @@ namespace mips {
     static const MipsRegPtr REG_SP = MipsReg::New(29);
     // static const MipsRegPtr REG_FP = MipsReg::New(30);
     static const MipsRegPtr REG_RA = MipsReg::New(31);
+
+    const int REG_ZERO_NUM = 0;
+    // const int REG_AT_NUM = 1;
+    const int REG_V0_NUM = 2;
+    const int REG_V1_NUM = 3;
+    const int REG_A0_NUM = 4;
+    const int REG_A1_NUM = 5;
+    const int REG_A2_NUM = 6;
+    const int REG_A3_NUM = 7;
+    const int REG_T0_NUM = 8;
+    const int REG_T1_NUM = 9;
+    const int REG_T2_NUM = 10;
+    const int REG_T3_NUM = 11;
+    const int REG_T4_NUM = 12;
+    const int REG_T5_NUM = 13;
+    const int REG_T6_NUM = 14;
+    const int REG_T7_NUM = 15;
+    const int REG_S0_NUM = 16;
+    const int REG_S1_NUM = 17;
+    const int REG_S2_NUM = 18;
+    const int REG_S3_NUM = 19;
+    const int REG_S4_NUM = 20;
+    const int REG_S5_NUM = 21;
+    const int REG_S6_NUM = 22;
+    const int REG_S7_NUM = 23;
+    const int REG_T8_NUM = 24;
+    const int REG_T9_NUM = 25;
+    const int REG_K0_NUM = 26;
+    const int REG_K1_NUM = 27;
+    // const int REG_GP_NUM = 28;
+    const int REG_SP_NUM = 29;
+    // const int REG_FP_NUM = 30;
+    const int REG_RA_NUM = 31;
 }
 
 #endif // MIPSREGISTERS_HPP

@@ -11,47 +11,27 @@
 namespace mips {
     enum MipsInstID {
         // R-Inst
-        MIID_ADD,
-        MIID_SUB,
-        MIID_MULT,
-        MIID_DIV,
-
-        MIID_AND,
-        MIID_OR,
-        MIID_XOR,
-
-        MIID_SLL,
-        MIID_SRA,
-        MIID_SRL,
-
-        MIID_MFHI,
-        MIID_MFLO,
-        MIID_MTHI,
-        MIID_MTLO,
-
+        MIID_ADD, MIID_SUB, MIID_MULT, MIID_DIV, // algo
+        MIID_AND, MIID_OR, MIID_XOR, // logic
+        MIID_SLL, MIID_SRA, MIID_SRL, // shift
+        MIID_MFHI, MIID_MFLO, MIID_MTHI, MIID_MTLO, // mul/div
         MIID_JR,
+        MIID_SYSCALL,
+
+        MIID_SLT, MIID_SLE, MIID_SGT, MIID_SGE, MIID_SEQ, MIID_SNE, // pseudo
+        MIID_MOVE, // pseudo
 
         // I-Inst
-        MIID_ADDI,
-        MIID_SUBI,
-        MIID_MULI,
-        MIID_DIVI,
+        MIID_LW, /*MIID_LH,*/ MIID_LB, // load
+        MIID_SW, /*MIID_SH,*/ MIID_SB, // store
+        MIID_ADDI, MIID_SUBI, MIID_MULI, MIID_DIVI, // algo
+        MIID_ANDI, MIID_ORI, // logic
+        MIID_B, MIID_BEQ, MIID_BNE, MIID_BGE, MIID_BGT, MIID_BLE, MIID_BLT, // branch
 
-        MIID_ANDI,
-        MIID_ORI,
-
-        MIID_B,
-        MIID_BEQ,
-        MIID_BNE,
-        MIID_BGE,
-        MIID_BGT,
-        MIID_BLE,
-        MIID_BLT,
+        MIID_LI, MIID_LA, // pseudo
 
         // J-Inst
-        MIID_J,
-        MIID_JAL,
-        MIID_JALR,
+        MIID_J, MIID_JAL, MIID_JALR, // jump
     };
 
     enum MipsInstType {
@@ -65,6 +45,7 @@ namespace mips {
         MipsInstType _type;
         MipsInstID _id;
     public:
+        virtual ~MipsInst() = default;
         explicit MipsInst(MipsInstID id) : _id(id), _type(idToType(id)) { }
         static MipsInstType idToType(MipsInstID id);
         virtual void print(std::ostream& out);
@@ -92,6 +73,9 @@ namespace mips {
             const MipsRegPtr& rd,
             MipsInstID instID
         );
+        static RInstPtr NewSyscall();
+        static RInstPtr NewJr();
+        static RInstPtr NewMove(const MipsRegPtr& rt, const MipsRegPtr& rd);
 
         explicit RInst(
             const MipsRegPtr& rs,
@@ -120,6 +104,12 @@ namespace mips {
             const MipsImmPtr& imm,
             MipsInstID instID
         );
+        static IInstPtr NewLi(
+            const MipsRegPtr& rt,
+            const MipsImmPtr& imm);
+        static IInstPtr NewLa(
+            const MipsRegPtr& rt,
+            const MipsImmPtr& imm);
 
         explicit IInst(
             const MipsRegPtr& rs,

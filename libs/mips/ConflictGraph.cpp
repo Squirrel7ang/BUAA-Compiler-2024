@@ -12,6 +12,9 @@ namespace mips {
     ConflictGraph::ConflictGraph(VarTablePtr& varTable, SaveRegTablePtr& srtp, StackPtr sp)
         : _varTable(varTable), _saveRegTable(srtp) {
         for (auto pair = varTable->begin(); pair != varTable->end(); ++pair) {
+            if ((*pair).first->is(llvm::ALLOCA_INST_T)) {
+                continue;
+            }
             auto var = (*pair).second;
             _vars.insert(var);
         }
@@ -23,6 +26,10 @@ namespace mips {
 
     void ConflictGraph::insertEdges(llvm::ConflictEdges& edges) {
         for (auto& edge: edges) {
+            if (edge.first->is(llvm::ALLOCA_INST_T) ||
+                edge.second->is(llvm::ALLOCA_INST_T)) {
+                continue;
+            }
             auto var0 = _varTable->findVar(edge.first);
             auto var1 = _varTable->findVar(edge.second);
             _edges.push_back({var0, var1});

@@ -27,6 +27,10 @@ add_library(${LIBRARY_NAME}
         ConflictGraph.cpp
         ConflictGraph.hpp
         SaveRegTable.cpp
+        MipsData.cpp
+        MipsData.hpp
+        MipsLabel.cpp
+        MipsLabel.hpp
 )
 target_link_libraries(${LIBRARY_NAME} PUBLIC llvm)
 target_include_directories(${LIBRARY_NAME} PUBLIC llvm)

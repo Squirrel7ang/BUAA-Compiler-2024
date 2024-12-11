@@ -6,6 +6,8 @@
 
 #include "VarTable.hpp"
 
+#include "Regs.hpp"
+#include "VarLocation.hpp"
 #include "IR/Instructions.hpp"
 #include "IR/Module.hpp"
 
@@ -22,6 +24,17 @@ namespace mips {
             }
         }
         return vp;
+    }
+
+    MipsRegPtr Variable::getTargetReg() {
+        MipsRegPtr targetReg;
+        if (_location->is(VLID_REG)) {
+            targetReg = std::static_pointer_cast<MipsReg>(_location);
+        }
+        else {
+            targetReg = REG_K0;
+        }
+        return targetReg;
     }
 
     bool Variable::hasLocation() {
@@ -55,6 +68,13 @@ namespace mips {
         _location = loc;
     }
 
+    void Variable::setOffset(unsigned int offset) {
+        assert(_location->is(VLID_REG));
+        auto reg = std::static_pointer_cast<MipsReg>(_location);
+        auto newReg = MipsReg::New(reg->getRegNum(), offset);
+        setLocation(newReg);
+    }
+
     VarTable::VarTable(llvm::ModulePtr& module) {
         auto&& funcBegin = module->functionBegin();
         auto&& funcEnd = module->functionEnd();
@@ -83,6 +103,7 @@ namespace mips {
             return _vars[inst];
         }
         else {
+            assert(0);
             return nullptr;
         }
     }

@@ -28,6 +28,7 @@ namespace mips {
         static StackSlotPtr New(unsigned int size, unsigned int pos);
         explicit StackSlot(unsigned int size, unsigned int pos);
         unsigned int getSize() { return _bytes; }
+        unsigned int getOffset() { return _pos; }
     };
 }
 

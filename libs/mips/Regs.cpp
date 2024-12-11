@@ -7,15 +7,27 @@
 #include "Regs.hpp"
 
 namespace mips {
-    MipsRegPtr MipsReg::New(int regNum) {
+    MipsRegPtr MipsReg::New(unsigned int regNum) {
         return std::make_shared<MipsReg>(regNum);
+    }
+
+    MipsRegPtr MipsReg::New(unsigned int regNum, int offset) {
+        return std::make_shared<MipsReg>(regNum, offset);
     }
 
     bool MipsReg::operator==(const MipsReg &other) const {
         return other._regNum == this->_regNum;
     }
 
-    MipsReg::MipsReg(int regNum) : VarLocation(VLID_REG), _regNum(regNum), _type(regNumToID(regNum)) { }
+    MipsReg::MipsReg(unsigned int regNum, int offset)
+        : VarLocation(VLID_REG, offset),
+        _regNum(regNum),
+        _type(regNumToID(regNum)) { }
+
+    MipsReg::MipsReg(unsigned int regNum)
+        : VarLocation(VLID_REG),
+        _regNum(regNum),
+        _type(regNumToID(regNum)) { }
 
     void MipsReg::print(std::ostream& out) const {
         switch (_regNum) {
@@ -53,6 +65,10 @@ namespace mips {
             case(31): out << "$ra"; break;
             default: assert(0);
         }
+    }
+
+    unsigned int MipsReg::getRegNum() {
+        return _regNum;
     }
 
     MipsRegType MipsReg::regNumToID(unsigned int n) {

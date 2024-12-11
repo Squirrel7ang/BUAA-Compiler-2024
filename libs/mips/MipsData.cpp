@@ -1,0 +1,91 @@
+//
+// Created by tang on 12/10/24.
+//
+
+#include "MipsData.hpp"
+
+#include "IR/Module.hpp"
+
+namespace mips {
+    MipsDataPtr MipsData::New(llvm::GlobalVariablePtr) {
+
+    }
+
+    MipsDataPtr MipsData::New(llvm::GlobalStringPtr) {
+
+    }
+
+    MipsData::MipsData(llvm::GlobalVariablePtr gvp) : MipsImm(0), _name(gvp->getName()) {
+        // _dataType
+        llvm::IntegerTypePtr ity;
+        if (gvp->getType()->isInteger()) {
+            ity = std::static_pointer_cast<llvm::IntegerType>(gvp->getType());
+        }
+        else if (gvp->getType()->isPointer()) {
+            auto&& pty = std::dynamic_pointer_cast<llvm::PointerType>(gvp->getType());
+            auto&& aty = std::dynamic_pointer_cast<llvm::ArrayType>(pty->getBasicType());
+            ity = std::dynamic_pointer_cast<llvm::IntegerType>(aty->getBasicType());
+        }
+        else
+            assert(0);
+
+        int size = ity->getSize();
+        if (size == 1) _dataType = MDT_BYTE;
+        else if (size == 4) _dataType = MDT_WORD;
+        else assert(0);
+
+        // initVals
+        _initVals = gvp->getInitVal()->_data;
+    }
+
+    MipsData::MipsData(llvm::GlobalStringPtr gsp)
+        : MipsImm(0), _name(gsp->getName()), _dataType(MDT_STR) {
+    }
+
+    void MipsData::print(std::ostream &out) const {
+
+    }
+
+    DataTablePtr DataTable::New(llvm::ModulePtr module) {
+        return std::make_shared<DataTable>(module);
+    }
+
+    DataTable::DataTable(llvm::ModulePtr module) {
+        auto&& globalVarBegin = module->globalVarBegin();
+        auto&& globalVarEnd = module->globalVarEnd();
+        for (auto it = globalVarBegin; it != globalVarEnd; ++it) {
+            addGlobalValue(*it, MipsData::New(*it));
+        }
+
+        auto&& stringBegin = module->stringBegin();
+        auto&& stringEnd = module->stringEnd();
+        for (auto it = stringBegin; it != stringEnd; ++it) {
+            addGlobalValue(*it, MipsData::New(*it));
+        }
+    }
+
+    MipsDataPtr DataTable::findData(llvm::GlobalValuePtr gvp) {
+        if (_table.contains(gvp)) {
+            return _table[gvp];
+        }
+        else {
+            return nullptr;
+        }
+    }
+
+    std::map<llvm::GlobalValuePtr, MipsDataPtr>::iterator DataTable::begin() {
+        return _table.begin();
+    }
+
+    std::map<llvm::GlobalValuePtr, MipsDataPtr>::iterator DataTable::end() {
+        return _table.end();
+    }
+
+    void DataTable::addGlobalValue(llvm::GlobalVariablePtr gvp, MipsDataPtr mdp) {
+        _table.insert({gvp, mdp});
+    }
+
+    void DataTable::addGlobalValue(llvm::GlobalStringPtr gsp, MipsDataPtr mdp) {
+        _table.insert({gsp, mdp});
+    }
+}

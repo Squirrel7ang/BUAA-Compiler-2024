@@ -40,6 +40,7 @@ namespace llvm {
         void printRef(std::ostream &out) override {
             out << '@' << name;
         }
+        std::string getName() { return name; }
     private:
         void toAscii() {
             for (int i = 0; i < escapeString.size(); i++) {

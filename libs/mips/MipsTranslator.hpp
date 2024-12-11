@@ -14,20 +14,26 @@ namespace mips {
     private:
         llvm::ModulePtr _llvmModule;
         VarTablePtr _varTable;
+        DataTablePtr _dataTable;
+        LabelTablePtr _labelTable;
         MipsRegAllocatorPtr _allocator;
         std::vector<MipsInstPtr> _mipsInsts; // the generated asm in .text field
+        // std::vector<MipsDataPtr> _mipsDatas;
     public:
         static MipsTranslatorPtr New(llvm::ModulePtr module);
+        explicit MipsTranslator(llvm::ModulePtr& module);
         void allocReg();
         void translate();
-        explicit MipsTranslator(llvm::ModulePtr& module);
     private:
         void addMipsInst(MipsInstPtr mip);
+
         void translate_allocStack(int bytes);
         void translate_freeStack(int bytes);
 
         // translate module
         void translate(llvm::ModulePtr llvmModule);
+        void translate(llvm::GlobalStringPtr llvmString);
+        void translate(llvm::GlobalVariablePtr llvmGlobalVar);
         void translate(llvm::FunctionPtr llvmFunc);
         void translate(llvm::BasicBlockPtr llvmBlock);
         void translate(llvm::InstructionPtr llvmInst);
@@ -48,6 +54,20 @@ namespace mips {
         void translate(llvm::CallInstPtr cip);
         void translate(llvm::AllocaInstPtr aip);
         void translate(llvm::ReturnInstPtr rip);
+
+        MipsRegPtr readToReg(llvm::ValuePtr vp, bool firstOp);
+        MipsRegPtr readToReg(llvm::InstructionPtr inst, bool firstOp);
+        MipsRegPtr readToReg(llvm::GlobalVariablePtr var, bool firstOp);
+        MipsRegPtr readToReg(llvm::GlobalStringPtr str, bool firstOp);
+        MipsRegPtr readToReg(llvm::ConstantDataPtr data, bool firstOp);
+
+        MipsImmPtr readToImm(llvm::ValuePtr vp);
+        MipsImmPtr readToImm(llvm::ConstantDataPtr vp);
+        MipsImmPtr readToImm(llvm::BasicBlockPtr vp);
+        MipsImmPtr readToImm(llvm::GlobalVariablePtr vp);
+        MipsImmPtr readToImm(llvm::GlobalStringPtr vp);
+
+        void writeBackReg(MipsRegPtr & reg, VariablePtr & var);
     };
 }
 

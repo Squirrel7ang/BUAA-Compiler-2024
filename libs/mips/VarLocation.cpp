@@ -7,4 +7,8 @@
 namespace mips {
     VarLocation::VarLocation(VarLocationID id)
         : _vlid(id) { }
+
+    VarLocation::VarLocation(VarLocationID id, unsigned int offset)
+        : _vlid(id), _offset(offset) {
+    }
 } // mips

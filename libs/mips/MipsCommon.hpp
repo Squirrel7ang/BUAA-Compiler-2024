@@ -24,6 +24,15 @@ namespace mips {
     class MipsController;
     using MipsControllerPtr = s_ptr<MipsController>;
 
+    class MipsData;
+    using MipsDataPtr = s_ptr<MipsData>;
+
+    class MipsLabel;
+    using MipsLabelPtr = s_ptr<MipsLabel>;
+
+    class LabelTable;
+    using LabelTablePtr = s_ptr<LabelTable>;
+
     class MipsReg;
     using MipsRegPtr = s_ptr<MipsReg>;
 
@@ -41,6 +50,9 @@ namespace mips {
 
     class VarTable;
     using VarTablePtr = s_ptr<VarTable>;
+
+    class DataTable;
+    using DataTablePtr = s_ptr<DataTable>;
 
     class TmpRegTable;
     using TmpRegTablePtr = s_ptr<TmpRegTable>;
