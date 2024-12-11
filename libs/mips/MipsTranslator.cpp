@@ -299,13 +299,11 @@ namespace mips {
     }
 
     void MipsTranslator::translate(llvm::LoadInstPtr lip) {
-        assert(lip->getType()->isPointer());
         auto var = _varTable->findVar(lip);
         auto usee0 = lip->getUsee(0);
 
         auto targetReg = var->getTargetReg();
-        auto&& llvmType = std::static_pointer_cast<llvm::PointerType>(lip->getType());
-        unsigned int size = llvmType->getBasicType()->getSize();
+        unsigned int size = lip->getType()->getSize();
         assert(size == 1 || size == 4);
 
         MipsInstPtr inst0, inst1;
@@ -387,27 +385,30 @@ namespace mips {
         MipsRegPtr reg;
         MipsImmPtr imm;
         switch (pip->getPutID()) {
-            case llvm::PIID_CH:
+            case llvm::PIID_CH: {
                 reg = readToReg(usee0, true);
                 imm = MipsImm::New(11);
                 addMipsInst(RInst::NewMove(reg, REG_A0));
                 addMipsInst(IInst::NewLi(REG_V0, imm));
                 addMipsInst(RInst::NewSyscall());
                 break;
-            case llvm::PIID_INT:
+            }
+            case llvm::PIID_INT: {
                 reg = readToReg(usee0, true);
                 imm = MipsImm::New(1);
                 addMipsInst(RInst::NewMove(reg, REG_A0));
                 addMipsInst(IInst::NewLi(REG_V0, imm));
                 addMipsInst(RInst::NewSyscall());
                 break;
-            case llvm::PIID_STR:
+            }
+            case llvm::PIID_STR: {
                 MipsImmPtr strAddr = readToImm(usee0);
                 imm = MipsImm::New(4);
                 addMipsInst(IInst::NewLa(REG_A0, strAddr));;
                 addMipsInst(IInst::NewLi(REG_V0, imm));
                 addMipsInst(RInst::NewSyscall());
                 break;
+            }
             default: assert(0);
         }
     }

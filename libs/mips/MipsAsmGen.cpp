@@ -14,16 +14,9 @@ namespace mips {
     }
 
     void MipsAsm::generateMipsAsm() {
-
-    }
-
-    void MipsAsm::print(std::ostream &out) {
-    }
-
-    void MipsAsm::translate() {
         _translator->translate();
     }
 
-    void MipsAsm::allocateRegister() {
+    void MipsAsm::print(std::ostream &out) {
     }
 }

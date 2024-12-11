@@ -52,7 +52,9 @@ int main(int argc, char *argv[]) {
     llvmModule->print(llvmStream);
 
     llvmModule->analyzeActiveVariable();
-    mips::MipsAsm asmGenerator = mips::MipsAsm(llvmModule);
+    auto asmGenerator = mips::MipsAsm(llvmModule);
+    asmGenerator.generateMipsAsm();
+    auto translator = asmGenerator.getTranslator();
 
 
     return 0;

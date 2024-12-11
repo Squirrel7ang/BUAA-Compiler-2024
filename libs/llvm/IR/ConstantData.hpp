@@ -30,7 +30,7 @@ namespace llvm {
             _data.push_back(data);
         }
     public:
-        int size() { return _length; }
+        int size() { return _data.size(); }
         void print(std::ostream& out) override {
             if (_length < 0) {
                 out << _data.at(0);

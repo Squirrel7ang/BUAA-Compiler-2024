@@ -12,8 +12,8 @@ namespace llvm {
 
     class GlobalString : public GlobalValue {
         std::string name;
-        std::string escapeString;
-        std::string asciiString;
+        std::string escapeString; // no \0, with \n
+        std::string asciiString; // no \n, with \0
         unsigned int size;
     public:
         explicit GlobalString(LLVMContextPtr& context, TypePtr ty, std::string& name, std::string& escString)
@@ -41,6 +41,7 @@ namespace llvm {
             out << '@' << name;
         }
         std::string getName() { return name; }
+        std::string getMipsData() { return asciiString; }
     private:
         void toAscii() {
             for (int i = 0; i < escapeString.size(); i++) {

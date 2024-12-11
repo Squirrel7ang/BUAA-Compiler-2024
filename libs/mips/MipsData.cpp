@@ -7,12 +7,12 @@
 #include "IR/Module.hpp"
 
 namespace mips {
-    MipsDataPtr MipsData::New(llvm::GlobalVariablePtr) {
-
+    MipsDataPtr MipsData::New(llvm::GlobalVariablePtr var) {
+        return std::make_shared<MipsData>(var);
     }
 
-    MipsDataPtr MipsData::New(llvm::GlobalStringPtr) {
-
+    MipsDataPtr MipsData::New(llvm::GlobalStringPtr str) {
+        return std::make_shared<MipsData>(str);
     }
 
     MipsData::MipsData(llvm::GlobalVariablePtr gvp) : MipsImm(0), _name(gvp->getName()) {
@@ -40,6 +40,11 @@ namespace mips {
 
     MipsData::MipsData(llvm::GlobalStringPtr gsp)
         : MipsImm(0), _name(gsp->getName()), _dataType(MDT_STR) {
+
+        std::string str = gsp->getMipsData();
+        for (auto ch: str) {
+            _initVals.push_back((int) ch);
+        }
     }
 
     void MipsData::print(std::ostream &out) const {

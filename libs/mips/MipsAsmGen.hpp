@@ -22,13 +22,7 @@ namespace mips {
         explicit MipsAsm(llvm::ModulePtr& module);
         void generateMipsAsm();
         void print(std::ostream& out);
-
-    // translation
-    private:
-        void translate();
-        // register designation
-    public:
-        void allocateRegister();
+        MipsTranslatorPtr getTranslator() { return _translator; }
     };
 
 }

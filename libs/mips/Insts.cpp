@@ -9,8 +9,8 @@
 namespace mips {
     MipsInstType MipsInst::idToType(MipsInstID id) {
         if (MIID_J <= id && id <= MIID_JALR) { return MIT_J; }
-        else if (MIID_ADDI <= id && id <= MIID_BLT) { return MIT_I; }
-        else if (MIID_ADD <= id && id <= MIID_JR) { return MIT_R; }
+        else if (MIID_ADDI <= id && id <= MIID_LA) { return MIT_I; }
+        else if (MIID_ADD <= id && id <= MIID_MOVE) { return MIT_R; }
         else assert(0);
     }
 

@@ -111,6 +111,7 @@ namespace mips {
         bool flag = true;
         while (flag) {
             flag = false;
+            if (_vars.size() <= 1) { break; }
             for (const auto & var : _vars) {
                 if (var->next.size() < _saveRegTable->size()) {
                     setVarAllocStatus(var, SRAS_ALLOCATED);
@@ -120,20 +121,24 @@ namespace mips {
             }
         }
 
-        // remove the rest of the node except the first one
-        auto it = _vars.begin();
-        ++it;
-        for (; it != _vars.end(); ++it) {
-            setVarAllocStatus(*it, SRAS_NONE);
-            deleteVariable(*it);
+        if (!_vars.empty()) {
+            // remove the rest of the node except the first one
+            auto it = _vars.begin();
+            ++it;
+            for (; it != _vars.end(); ++it) {
+                setVarAllocStatus(*it, SRAS_NONE);
+                deleteVariable(*it);
+            }
         }
 
-        // mark the last variable to be allocated.
-        auto lastVar = *(_vars.begin());
-        setVarAllocStatus(lastVar, SRAS_ALLOCATED);
+        if (!_vars.empty()) {
+            // mark the last variable to be allocated.
+            auto lastVar = *(_vars.begin());
+            setVarAllocStatus(lastVar, SRAS_ALLOCATED);
+            dyeVar(lastVar);
+        }
 
         // now insert them back and dye each and every node.
-        dyeVar(lastVar);
         for (auto& var: _deleteSequence) {
             insertBack(var);
             dyeVar(var);

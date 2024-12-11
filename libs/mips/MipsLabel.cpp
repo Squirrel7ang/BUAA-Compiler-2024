@@ -41,7 +41,7 @@ namespace mips {
         }
     }
 
-    MipsLabelPtr LabelTable::findData(llvm::BasicBlockPtr bb) {
+    MipsLabelPtr LabelTable::findLabel(llvm::BasicBlockPtr bb) {
         if (_table.contains(bb)) {
             return _table[bb];
         }

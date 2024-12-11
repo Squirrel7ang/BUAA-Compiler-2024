@@ -25,8 +25,8 @@ namespace mips {
         : _llvmModule(module),
         _varTable(varTable),
         _stack(Stack::New()),
-        _saveRegTable(),
-        _tmpRegTable(),
+        _saveRegTable(SaveRegTable::New()),
+        _tmpRegTable(TmpRegTable::New()),
         _graph(ConflictGraph::New(_varTable, _saveRegTable, _stack)) {
     }
 
@@ -99,9 +99,11 @@ namespace mips {
         auto&& begin = block->instructionBegin();
         auto&& end = block->instructionEnd();
         for (auto it = begin; it != end; ++it) {
-            auto var = _varTable->findVar(*it);
-            if (!var->hasLocation() && var != nullptr) {
-                allocTmpReg(var);
+            if (!(*it)->getType()->isVoidTy()) {
+                auto var = _varTable->findVar(*it);
+                if (!var->hasLocation() && var != nullptr) {
+                    allocTmpReg(var);
+                }
             }
         }
     }

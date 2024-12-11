@@ -8,6 +8,10 @@
 #include "VarTable.hpp"
 
 namespace mips {
+    TmpRegTablePtr TmpRegTable::New() {
+        return std::make_shared<TmpRegTable>();
+    }
+
     TmpRegTable::TmpRegTable()
         : _regPool({
             {REG_T0, nullptr},

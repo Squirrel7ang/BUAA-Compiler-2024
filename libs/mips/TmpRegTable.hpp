@@ -14,6 +14,7 @@ namespace mips {
     class TmpRegTable {
         std::map<MipsRegPtr, VariablePtr> _regPool;
     public:
+        static TmpRegTablePtr New();
         explicit TmpRegTable();
         void checkRefCount();
         bool isFree();

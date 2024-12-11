@@ -22,10 +22,10 @@ namespace mips {
         MIID_MOVE, // pseudo
 
         // I-Inst
-        MIID_LW, /*MIID_LH,*/ MIID_LB, // load
-        MIID_SW, /*MIID_SH,*/ MIID_SB, // store
         MIID_ADDI, MIID_SUBI, MIID_MULI, MIID_DIVI, // algo
         MIID_ANDI, MIID_ORI, // logic
+        MIID_LW, /*MIID_LH,*/ MIID_LB, // load
+        MIID_SW, /*MIID_SH,*/ MIID_SB, // store
         MIID_B, MIID_BEQ, MIID_BNE, MIID_BGE, MIID_BGT, MIID_BLE, MIID_BLT, // branch
 
         MIID_LI, MIID_LA, // pseudo
