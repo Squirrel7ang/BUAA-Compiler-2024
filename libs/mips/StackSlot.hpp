@@ -18,6 +18,7 @@ namespace mips {
         explicit Stack();
         static StackPtr New();
         StackSlotPtr allocateSlot(unsigned int size);
+        unsigned int getSize() { return _size; }
     };
 
     class StackSlot : public VarLocation {

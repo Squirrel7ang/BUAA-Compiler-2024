@@ -15,14 +15,15 @@ namespace mips {
     private:
         llvm::ModulePtr _llvmModule;
         VarTablePtr _varTable;
-        StackPtr _stack;
+        StackPtr _curStack;
+        std::map<llvm::FunctionPtr, StackPtr>& _stacks;
         SaveRegTablePtr _saveRegTable;
         TmpRegTablePtr _tmpRegTable;
         ConflictGraphPtr _graph;
     public:
         void allocReg();
-        static MipsRegAllocatorPtr New(llvm::ModulePtr module, VarTablePtr);
-        explicit MipsRegAllocator(llvm::ModulePtr& module, VarTablePtr);
+        static MipsRegAllocatorPtr New(llvm::ModulePtr module, VarTablePtr, std::map<llvm::FunctionPtr, StackPtr>& stacks);
+        explicit MipsRegAllocator(llvm::ModulePtr& module, VarTablePtr, std::map<llvm::FunctionPtr, StackPtr>& stacks);
     private:
         // allocate Save Register
         void allocSaveReg(llvm::ModulePtr& module);

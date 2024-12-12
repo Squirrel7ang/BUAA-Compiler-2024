@@ -12,22 +12,21 @@ namespace mips {
     void MipsRegAllocator::allocReg() {
         allocSaveReg(_llvmModule);
         allocStackReg(_llvmModule);
-        // TODO: handle geteleptr inst. Such inst should always be a none-cross-block variable
         allocTmpReg(_llvmModule);
         handleGetElePtr(_llvmModule);
     }
 
-    MipsRegAllocatorPtr MipsRegAllocator::New(llvm::ModulePtr module, VarTablePtr varTable) {
-        return std::make_shared<MipsRegAllocator>(module, varTable);
+    MipsRegAllocatorPtr MipsRegAllocator::New(llvm::ModulePtr module, VarTablePtr varTable, std::map<llvm::FunctionPtr, StackPtr>& stacks) {
+        return std::make_shared<MipsRegAllocator>(module, varTable, stacks);
     }
 
-    MipsRegAllocator::MipsRegAllocator(llvm::ModulePtr& module, VarTablePtr varTable)
+    MipsRegAllocator::MipsRegAllocator(llvm::ModulePtr& module, VarTablePtr varTable, std::map<llvm::FunctionPtr, StackPtr>& stacks)
         : _llvmModule(module),
         _varTable(varTable),
-        _stack(Stack::New()),
+        _stacks(stacks),
         _saveRegTable(SaveRegTable::New()),
         _tmpRegTable(TmpRegTable::New()),
-        _graph(ConflictGraph::New(_varTable, _saveRegTable, _stack)) {
+        _graph(ConflictGraph::New(_varTable, _saveRegTable)) {
     }
 
     void MipsRegAllocator::allocSaveReg(llvm::ModulePtr& module) {
@@ -44,6 +43,8 @@ namespace mips {
 
         // the edge of the conflict graph should be calculated
         // during dataflow analysis.
+        _curStack = _stacks[func];
+        _graph->setStack(_curStack);
         _graph->insertEdges(func->getConflictVars());
         _graph->dyeEveryNode();
     }
@@ -52,6 +53,7 @@ namespace mips {
         auto&& funcBegin = module->functionBegin();
         auto&& funcEnd = module->functionEnd();
         for (auto f = funcBegin; f != funcEnd; ++f) {
+            _curStack = _stacks[*f];
             auto&& blockBegin = (*f)->blockBegin();
             auto&& blockEnd = (*f)->blockEnd();
             for (auto b = blockBegin; b != blockEnd; ++b) {
@@ -73,7 +75,7 @@ namespace mips {
         auto ty = std::dynamic_pointer_cast<llvm::PointerType>(inst->getType());
         unsigned int size = ty->getSize();
 
-        auto slot = _stack->allocateSlot(size);
+        auto slot = _curStack->allocateSlot(size);
         MipsRegPtr spWithOffset = MipsReg::New(REG_SP_NUM, slot->getOffset());
 
         var->setLocation(spWithOffset);
@@ -90,6 +92,8 @@ namespace mips {
     void MipsRegAllocator::allocTmpReg(llvm::FunctionPtr &func) {
         auto&& begin = func->blockBegin();
         auto&& end = func->blockEnd();
+
+        _curStack = _stacks[func];
         for (auto it = begin; it != end; ++it) {
             allocTmpReg(*it);
         }
@@ -115,7 +119,7 @@ namespace mips {
             _tmpRegTable->occupyReg(var, reg);
         }
         else {
-            auto slot = _stack->allocateSlot(var->size());
+            auto slot = _curStack->allocateSlot(var->size());
             var->setLocation(slot);
         }
     }
@@ -124,6 +128,7 @@ namespace mips {
         auto&& funcBegin = module->functionBegin();
         auto&& funcEnd = module->functionEnd();
         for (auto f = funcBegin; f != funcEnd; ++f) {
+            _curStack = _stacks[*f];
             auto&& blockBegin = (*f)->blockBegin();
             auto&& blockEnd = (*f)->blockEnd();
             for (auto b = blockBegin; b != blockEnd; ++b) {

@@ -24,6 +24,7 @@ int main(int argc, char *argv[]) {
     std::string visitorOut = "symbol.txt";
     std::string errOut = "error.txt";
     std::string llvmOut = "llvm_ir.txt";
+    std::string mipsOut = "mips.txt";
 
     std::ifstream infile(input, std::ios::in);
     std::ofstream lexerStream;
@@ -31,12 +32,14 @@ int main(int argc, char *argv[]) {
     std::ofstream visitorStream;
     std::ofstream erroutStream;
     std::ofstream llvmStream;
+    std::ofstream mipsStream;
 
     lexerStream.open(lexerOut, std::ios::out);
     parserStream.open(parserOut, std::ios::out);
     visitorStream.open(visitorOut, std::ios::out);
     erroutStream.open(errOut, std::ios::out);
     llvmStream.open(llvmOut, std::ios::out);
+    mipsStream.open(mipsOut, std::ios::out);
 
     auto reporter = ErrorReporter(erroutStream);
     auto lexer = Lexer(infile, input, lexerStream, reporter);
@@ -54,7 +57,8 @@ int main(int argc, char *argv[]) {
     llvmModule->analyzeActiveVariable();
     auto asmGenerator = mips::MipsAsm(llvmModule);
     asmGenerator.generateMipsAsm();
-    auto translator = asmGenerator.getTranslator();
+    asmGenerator.print(mipsStream);
+    // auto translator = asmGenerator.getTranslator();
 
 
     return 0;

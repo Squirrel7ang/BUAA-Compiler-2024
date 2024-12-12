@@ -9,7 +9,7 @@
 #include "VarTable.hpp"
 
 namespace mips {
-    ConflictGraph::ConflictGraph(VarTablePtr& varTable, SaveRegTablePtr& srtp, StackPtr sp)
+    ConflictGraph::ConflictGraph(VarTablePtr& varTable, SaveRegTablePtr& srtp)
         : _varTable(varTable), _saveRegTable(srtp) {
         for (auto pair = varTable->begin(); pair != varTable->end(); ++pair) {
             if ((*pair).first->is(llvm::ALLOCA_INST_T)) {
@@ -20,8 +20,8 @@ namespace mips {
         }
     }
 
-    ConflictGraphPtr ConflictGraph::New(VarTablePtr varTable, SaveRegTablePtr& srtp, StackPtr sp) {
-        return std::make_shared<ConflictGraph>(varTable, srtp, sp);
+    ConflictGraphPtr ConflictGraph::New(VarTablePtr varTable, SaveRegTablePtr& srtp) {
+        return std::make_shared<ConflictGraph>(varTable, srtp);
     }
 
     void ConflictGraph::insertEdges(llvm::ConflictEdges& edges) {
@@ -143,5 +143,9 @@ namespace mips {
             insertBack(var);
             dyeVar(var);
         }
+    }
+
+    void ConflictGraph::setStack(StackPtr stack) {
+        this->_stack = stack;
     }
 }

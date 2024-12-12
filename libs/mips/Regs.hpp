@@ -34,6 +34,7 @@ namespace mips {
         static MipsRegPtr New(unsigned int regNum);
         static MipsRegPtr New(unsigned int regNum, int offset);
         bool operator==(const MipsReg & other) const;
+        bool operator!=(const MipsReg & other) const;
         void print(std::ostream& out) const;
         unsigned int getRegNum();
         static MipsRegType regNumToID(unsigned int n);

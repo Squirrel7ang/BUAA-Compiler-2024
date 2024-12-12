@@ -38,6 +38,7 @@ namespace llvm {
         // iterator for functions inside;
         vector<FunctionPtr>::iterator functionBegin();
         vector<FunctionPtr>::iterator functionEnd();
+        FunctionPtr getMainFunc();
 
         // iterator for globalVariables;
         vector<GlobalVariablePtr>::iterator globalVarBegin();

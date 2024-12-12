@@ -118,6 +118,7 @@ namespace llvm {
     public:
         explicit CallInst(LLVMContextPtr& context, TypePtr ty, ValuePtr func, vector<ValuePtr> & args);
         explicit CallInst(LLVMContextPtr& context, TypePtr ty, ValuePtr func);
+        FunctionPtr getFunc() { return _func; }
         void print(std::ostream& out) override;
         bool is(ValueType vty) const override;
     };

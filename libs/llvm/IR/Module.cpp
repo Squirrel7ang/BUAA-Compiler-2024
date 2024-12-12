@@ -23,6 +23,10 @@ namespace llvm {
         return _functions.end();
     }
 
+    FunctionPtr Module::getMainFunc() {
+        return _functions.back();
+    }
+
     vector<GlobalVariablePtr>::iterator Module::globalVarBegin() {
         return _globalVariables.begin();
     }

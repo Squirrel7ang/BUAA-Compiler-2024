@@ -48,7 +48,30 @@ namespace mips {
     }
 
     void MipsData::print(std::ostream &out) const {
+        out << "  " << _name << ": ";
+        if (_dataType == MDT_WORD) {
+            out << ".word ";
+            for (const auto& i: _initVals) {
+                out << i << ' ';
+            }
+        }
+        else if (_dataType == MDT_BYTE) {
+            out << ".byte ";
+            for (const auto& i: _initVals) {
+                out << i << ' ';
+            }
+        }
+        else if (_dataType == MDT_STR) {
+            out << ".asciiz \"";
+            for (const auto& i: _initVals) {
+                char ch = (char) i;
+                if (ch == '\n') out << "\n";
+                else out << ch ;
+            }
+            out << "\"";
+        }
 
+        out << std::endl;
     }
 
     DataTablePtr DataTable::New(llvm::ModulePtr module) {

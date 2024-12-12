@@ -34,10 +34,11 @@ namespace mips {
         std::map<VariablePtr, std::set<VariablePtr>> _deletedEdges;
         std::vector<VariablePtr> _deleteSequence;
     public:
-        static ConflictGraphPtr New(VarTablePtr, SaveRegTablePtr&, StackPtr);
-        explicit ConflictGraph(VarTablePtr& varTable, SaveRegTablePtr&, StackPtr);
+        static ConflictGraphPtr New(VarTablePtr, SaveRegTablePtr&);
+        explicit ConflictGraph(VarTablePtr& varTable, SaveRegTablePtr&);
         void insertEdges(llvm::ConflictEdges& edges);
         void dyeEveryNode();
+        void setStack(StackPtr stack);
     private:
         void deleteVariable(VariablePtr vp);
         void setVarAllocStatus(VariablePtr vp, SaveRegAllocStatus newStatus);

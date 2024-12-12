@@ -22,7 +22,7 @@ namespace mips {
         MIID_MOVE, // pseudo
 
         // I-Inst
-        MIID_ADDI, MIID_SUBI, MIID_MULI, MIID_DIVI, // algo
+        MIID_ADDI, MIID_SUBI, // algo
         MIID_ANDI, MIID_ORI, // logic
         MIID_LW, /*MIID_LH,*/ MIID_LB, // load
         MIID_SW, /*MIID_SH,*/ MIID_SB, // store
@@ -31,7 +31,7 @@ namespace mips {
         MIID_LI, MIID_LA, // pseudo
 
         // J-Inst
-        MIID_J, MIID_JAL, MIID_JALR, // jump
+        MIID_J, MIID_JAL, // jump
     };
 
     enum MipsInstType {
@@ -44,10 +44,12 @@ namespace mips {
     protected:
         MipsInstType _type;
         MipsInstID _id;
+        MipsLabelPtr _label;
     public:
         virtual ~MipsInst() = default;
         explicit MipsInst(MipsInstID id) : _id(id), _type(idToType(id)) { }
         static MipsInstType idToType(MipsInstID id);
+        void setLabel(MipsLabelPtr label) { _label = label; }
         virtual void print(std::ostream& out);
     };
 
@@ -73,9 +75,21 @@ namespace mips {
             const MipsRegPtr& rd,
             MipsInstID instID
         );
+
+        static RInstPtr New(
+            const MipsRegPtr &rs,
+            const MipsRegPtr &rt,
+            const MipsRegPtr &rd,
+            const MipsImmPtr &imm,
+            MipsInstID instID
+        );
+
         static RInstPtr NewSyscall();
         static RInstPtr NewJr();
         static RInstPtr NewMove(const MipsRegPtr& rt, const MipsRegPtr& rd);
+
+        RInst(const MipsRegPtr &rs, const MipsRegPtr &rt, const MipsRegPtr &rd, const MipsImmPtr &imm,
+              MipsInstID instID);
 
         explicit RInst(
             const MipsRegPtr& rs,

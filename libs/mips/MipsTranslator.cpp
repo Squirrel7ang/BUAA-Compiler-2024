@@ -21,36 +21,58 @@ namespace mips {
         : _llvmModule(module),
         _varTable(VarTable::New(module)),
         _dataTable(DataTable::New(module)),
+        _stacks(),
         _labelTable(LabelTable::New(module)),
-        _allocator(MipsRegAllocator::New(module, _varTable)) {
-
+        _allocator(MipsRegAllocator::New(module, _varTable, _stacks)),
+        _labelInst(false)
+    {
+        auto&& funcBegin = module->functionBegin();
+        auto&& funcEnd = module->functionEnd();
+        for (auto it = funcBegin; it != funcEnd; ++it) {
+            _stacks.insert({*it, Stack::New()});
+        }
     }
 
     MipsTranslatorPtr MipsTranslator::New(llvm::ModulePtr module) {
         return std::make_shared<MipsTranslator>(module);
     }
 
-    void MipsTranslator::allocReg() {
-        _allocator->allocReg();
-    }
-
     void MipsTranslator::translate() {
-        allocReg();
+        _allocator->allocReg();
         translate(_llvmModule);
     }
 
+    void MipsTranslator::print(std::ostream &out) {
+        // output data
+        out << ".data" << std::endl;
+        for (auto it = _dataTable->begin(); it != _dataTable->end(); ++it) {
+            (*it).second->print(out);
+            out << std::endl;
+        }
+
+        out << std::endl << ".text" << std::endl;
+        for (auto inst: _mipsInsts) {
+            inst->print(out);
+        }
+
+    }
+
     void MipsTranslator::addMipsInst(MipsInstPtr mip) {
+        if (_labelInst) {
+            mip->setLabel(_curLabel);
+            _labelInst = false;
+        }
         _mipsInsts.push_back(mip);
     }
 
     void MipsTranslator::translate_allocStack(int bytes) {
+        bytes = -bytes; // add in opposite direction
         auto imm = MipsImm::New(bytes);
         auto rip = IInst::New(REG_SP, REG_SP, imm, MIID_ADDI);
         addMipsInst(rip);
     }
 
     void MipsTranslator::translate_freeStack(int bytes) {
-        bytes = -bytes; // add in opposite direction
         auto imm = MipsImm::New(bytes);
         auto rip = IInst::New(REG_SP, REG_SP, imm, MIID_ADDI);
         addMipsInst(rip);
@@ -96,8 +118,8 @@ namespace mips {
         //     translate(*it);
         // }
 
-        // allocate stack space
-        translate_allocStack(llvmFunc->spaceUse());
+        unsigned int size = _stacks[llvmFunc]->getSize();
+        translate_allocStack(size);
 
         // basicBlock
         auto&& blockBegin = llvmFunc->blockBegin();
@@ -105,11 +127,15 @@ namespace mips {
         for (auto it = blockBegin; it != blockEnd; ++it) {
             translate(*it);
         }
+
+        translate_freeStack(size);
     }
 
     void MipsTranslator::translate(llvm::BasicBlockPtr llvmBlock) {
         auto&& beginIter = llvmBlock->instructionBegin();
         auto&& endIter = llvmBlock->instructionEnd();
+        _labelInst = true;
+        _curLabel = _labelTable->findLabel(llvmBlock);
         for (auto it = beginIter; it != endIter; ++it) {
             translate(*it);
         }
@@ -169,7 +195,6 @@ namespace mips {
     }
 
     void MipsTranslator::translate(llvm::UnaryOperatorPtr uop) {
-        // TODO: might be a problem, because op0 might be a llvm::Constant.
         auto var = _varTable->findVar(uop);
 
         auto usee0 = uop->getUsee(0);
@@ -179,11 +204,10 @@ namespace mips {
 
         switch (uop->getUnaryOpId()) {
             case llvm::UOID_ZEXT:
-                // Do nothing
+                addMipsInst(RInst::NewMove(reg0, targetReg));
                 break;
             case llvm::UOID_TRUNC: {
-                auto inst = IInst::New(reg0, targetReg, IMM_TRUNC_BYTE, MIID_ANDI);
-                addMipsInst(inst);
+                addMipsInst(IInst::New(reg0, targetReg, IMM_TRUNC_BYTE, MIID_ANDI));
                 break;
             }
             default: assert(0);
@@ -209,26 +233,19 @@ namespace mips {
                 addMipsInst(inst0);
                 break;
             case llvm::BOID_SUB:
-                inst0 = RInst::New(reg0, reg1, targetReg, MIID_SUB);
-                addMipsInst(inst0);
+                addMipsInst(RInst::New(reg0, reg1, targetReg, MIID_SUB));
                 break;
             case llvm::BOID_MUL:
-                inst0 = RInst::New(reg0, reg1, REG_ZERO, MIID_MULT);
-                inst1 = RInst::New(REG_ZERO, REG_ZERO, targetReg, MIID_MFLO);
-                addMipsInst(inst0);
-                addMipsInst(inst1);
+                addMipsInst(RInst::New(reg0, reg1, REG_ZERO, MIID_MULT));
+                addMipsInst(RInst::New(REG_ZERO, REG_ZERO, targetReg, MIID_MFLO));
                 break;
             case llvm::BOID_DIV:
-                inst0 = RInst::New(reg0, reg1, REG_ZERO, MIID_DIV);
-                inst1 = RInst::New(REG_ZERO, REG_ZERO, targetReg, MIID_MFLO);
-                addMipsInst(inst0);
-                addMipsInst(inst1);
+                addMipsInst(RInst::New(reg0, reg1, REG_ZERO, MIID_DIV));
+                addMipsInst(RInst::New(REG_ZERO, REG_ZERO, targetReg, MIID_MFLO));
                 break;
             case llvm::BOID_REM:
-                inst0 = RInst::New(reg0, reg1, REG_ZERO, MIID_DIV);
-                inst1 = RInst::New(REG_ZERO, REG_ZERO, targetReg, MIID_MFHI);
-                addMipsInst(inst0);
-                addMipsInst(inst1);
+                addMipsInst(RInst::New(reg0, reg1, REG_ZERO, MIID_DIV));
+                addMipsInst(RInst::New(REG_ZERO, REG_ZERO, targetReg, MIID_MFHI));
                 break;
             default: assert(0);
         }
@@ -247,28 +264,22 @@ namespace mips {
         MipsInstPtr inst;
         switch (cip->getCompareId()) {
             case llvm::CIID_EQ:
-                inst = RInst::New(reg0, reg1, targetReg, MIID_SEQ);
-                addMipsInst(inst);
+                addMipsInst(RInst::New(reg0, reg1, targetReg, MIID_SEQ));
                 break;
             case llvm::CIID_NE:
-                inst = RInst::New(reg0, reg1, targetReg, MIID_SNE);
-                addMipsInst(inst);
+                addMipsInst(RInst::New(reg0, reg1, targetReg, MIID_SNE));
                 break;
             case llvm::CIID_SLE:
-                inst = RInst::New(reg0, reg1, targetReg, MIID_SLE);
-                addMipsInst(inst);
+                addMipsInst(RInst::New(reg0, reg1, targetReg, MIID_SLE));
                 break;
             case llvm::CIID_SLT:
-                inst = RInst::New(reg0, reg1, targetReg, MIID_SLT);
-                addMipsInst(inst);
+                addMipsInst(RInst::New(reg0, reg1, targetReg, MIID_SLT));
                 break;
             case llvm::CIID_SGE:
-                inst = RInst::New(reg0, reg1, targetReg, MIID_SGE);
-                addMipsInst(inst);
+                addMipsInst(RInst::New(reg0, reg1, targetReg, MIID_SGE));
                 break;
             case llvm::CIID_SGT:
-                inst = RInst::New(reg0, reg1, targetReg, MIID_SGT);
-                addMipsInst(inst);
+                addMipsInst(RInst::New(reg0, reg1, targetReg, MIID_SGT));
                 break;
             default: assert(0);
         }
@@ -440,9 +451,69 @@ namespace mips {
     }
 
     void MipsTranslator::translate(llvm::GetElePtrInstPtr gepip) {
+        auto var = _varTable->findVar(gepip);
+        auto targetReg = var->getTargetReg();
+
+        auto usee0 = gepip->getUsee(0);
+        auto usee1 = gepip->getUsee(1);
+        auto ptrReg = readToReg(usee0, true);
+        auto offsetReg = readToReg(usee1, false);
+
+        auto&& ty = gepip->getType();
+        assert(ty->isPointer());
+        auto&& ptrTy = std::static_pointer_cast<llvm::PointerType>(ty);
+        auto&& basicTy = ptrTy->getBasicType();
+        unsigned int size = basicTy->getSize();
+
+        if (size == 4) {
+            auto imm = MipsImm::New(2);
+            addMipsInst(RInst::New(REG_ZERO, offsetReg, offsetReg, imm, MIID_SLL));
+        }
+        addMipsInst(RInst::New(offsetReg, ptrReg, REG_K0, MIID_ADD));
+        writeBackReg(REG_K0, var);
     }
 
     void MipsTranslator::translate(llvm::CallInstPtr cip) {
+        // move sp
+        llvm::FunctionPtr func = cip->getFunc();
+        unsigned int argSize = cip->getUseeSize();
+        unsigned int stackSize = 4 * (19 + argSize); // 10 tmpReg, 8 SaveReg, 1 Ra, argSize arg
+        MipsImmPtr stackOffset = MipsImm::New(stackSize);
+        addMipsInst(IInst::New(REG_SP, REG_SP, stackOffset, MIID_SUBI));
+
+
+        MipsImmPtr imm;
+        // store ra
+        int offset = 0;
+        imm = MipsImm::New(offset);
+
+        addMipsInst(IInst::New(REG_SP, ))
+
+
+        // store args
+        for (int i = 0; i < 4 && i < cip->getUseeSize(); i++) {
+
+        }
+
+        for (int i = 4; i < cip->getUseeSize(); i++) {
+
+        }
+
+        // store SaveReg
+
+        // store TmpReg
+        addMipsInst(IInst::New(REG_SP, MIID_SW));
+
+        // call
+
+        // load TmpReg
+
+        // load SaveReg
+
+        // load ra
+
+        // move sp
+        addMipsInst(IInst::New(REG_SP, REG_SP, stackOffset, MIID_ADDI));
     }
 
     void MipsTranslator::translate(llvm::AllocaInstPtr aip) {
@@ -503,36 +574,24 @@ namespace mips {
     }
 
     MipsRegPtr MipsTranslator::readToReg(llvm::GlobalVariablePtr var, bool firstOp) {
-        // TODO: no need to load out
-        assert(0);
         auto offset = _dataTable->findData(var);
         MipsRegPtr reg;
         if (firstOp)  reg = REG_K0;
         else reg = REG_K1;
-        if (offset->isWord()) {
-            auto&& inst = IInst::New(REG_ZERO, reg, offset, MIID_LW);
-            addMipsInst(inst);
-        }
-        else if (offset->isByte()) {
-            auto&& inst = IInst::New(REG_ZERO, reg, offset, MIID_LB);
-            addMipsInst(inst);
-        }
-        else
-            assert(0);
+
+        assert(offset->isByte() || offset->isWord());
+        addMipsInst(IInst::NewLa(reg, offset));
         return reg;
     }
 
     MipsRegPtr MipsTranslator::readToReg(llvm::GlobalStringPtr str, bool firstOp) {
-        // TODO: no need to load out
-        assert(0);
         auto offset = _dataTable->findData(str);
         MipsRegPtr reg;
         if (firstOp)  reg = REG_K0;
         else reg = REG_K1;
 
         assert(offset->isString());
-        auto&& inst = IInst::New(REG_ZERO, reg, offset, MIID_LB);
-        addMipsInst(inst);
+        addMipsInst(IInst::NewLa(reg, offset));
         return reg;
     }
 
@@ -588,7 +647,23 @@ namespace mips {
         return data;
     }
 
-    void MipsTranslator::writeBackReg(MipsRegPtr & reg, VariablePtr & var) {
-        // TODO
+    void MipsTranslator::writeBackReg(const MipsRegPtr & reg, VariablePtr & var) {
+        if (var->getLocation()->is(VLID_REG)) {
+            auto loc = std::static_pointer_cast<MipsReg>(var->getLocation());
+            if (*reg != *loc) {
+                addMipsInst(RInst::NewMove(reg, loc));
+            }
+        }
+        else {
+            auto offset = var->getLocation()->getInitOffset();
+            auto imm = MipsImm::New(offset);
+            if (var->size() == 1) {
+                addMipsInst(IInst::New(REG_SP, REG_K0, imm, MIID_SB));
+            }
+            else if (var->size() == 4) {
+                addMipsInst(IInst::New(REG_SP, REG_K0, imm, MIID_SW));
+            }
+            else assert(0);
+        }
     }
 }

@@ -18,5 +18,6 @@ namespace mips {
     }
 
     void MipsAsm::print(std::ostream &out) {
+        _translator->print(out);
     }
 }

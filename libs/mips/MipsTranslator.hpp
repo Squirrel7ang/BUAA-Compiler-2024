@@ -12,6 +12,7 @@
 namespace mips {
     class MipsTranslator {
     private:
+        std::map<llvm::FunctionPtr, StackPtr> _stacks;
         llvm::ModulePtr _llvmModule;
         VarTablePtr _varTable;
         DataTablePtr _dataTable;
@@ -19,12 +20,15 @@ namespace mips {
         MipsRegAllocatorPtr _allocator;
         std::vector<MipsInstPtr> _mipsInsts; // the generated asm in .text field
         // std::vector<MipsDataPtr> _mipsDatas;
+    private:
+        bool _labelInst;
+        MipsLabelPtr _curLabel;
     public:
         static MipsTranslatorPtr New(llvm::ModulePtr module);
         explicit MipsTranslator(llvm::ModulePtr& module);
         void translate();
+        void print(std::ostream& out);
     private:
-        void allocReg();
         void addMipsInst(MipsInstPtr mip);
 
         void translate_allocStack(int bytes);
@@ -67,7 +71,7 @@ namespace mips {
         MipsImmPtr readToImm(llvm::GlobalVariablePtr vp);
         MipsImmPtr readToImm(llvm::GlobalStringPtr vp);
 
-        void writeBackReg(MipsRegPtr & reg, VariablePtr & var);
+        void writeBackReg(const MipsRegPtr & reg, VariablePtr & var);
     };
 }
 

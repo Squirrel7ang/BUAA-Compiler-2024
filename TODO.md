@@ -15,4 +15,5 @@
 ## MIPS
 
 - [x] add the abstraction of variable in mips rather than InstructionPtr.
-- [ ] the mips library is not compiled ???
+- [x] the mips library is not compiled ??? Macros of header are duplicated
+- [ ] calculate offset for a 4 byte variable. offset should be timed by 4

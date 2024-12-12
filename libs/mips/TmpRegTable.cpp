@@ -12,6 +12,10 @@ namespace mips {
         return std::make_shared<TmpRegTable>();
     }
 
+    unsigned int TmpRegTable::size() {
+        return _regPool.size();
+    }
+
     TmpRegTable::TmpRegTable()
         : _regPool({
             {REG_T0, nullptr},

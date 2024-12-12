@@ -19,6 +19,10 @@ namespace mips {
         return other._regNum == this->_regNum;
     }
 
+    bool MipsReg::operator!=(const MipsReg &other) const {
+        return other._regNum != this->_regNum;
+    }
+
     MipsReg::MipsReg(unsigned int regNum, int offset)
         : VarLocation(VLID_REG, offset),
         _regNum(regNum),
