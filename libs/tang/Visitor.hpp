@@ -137,6 +137,7 @@ namespace tang {
     private:
         bool isGlobal() { return _symbolTable.isGlobal(); }
 
+        bool noError() { return !_reporter.error(); }
     };
 } // namespace tang
 

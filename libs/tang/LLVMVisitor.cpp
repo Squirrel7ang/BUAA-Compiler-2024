@@ -627,7 +627,7 @@ namespace tang {
 
         // convert Type;
         assert(ptr->getType()->isPointer());
-        auto ptrBType = std::static_pointer_cast<llvm::PointerType>(ptr->getType())->getBasicType();
+        auto ptrBType = std::static_pointer_cast<llvm::PointerType>(ptr->getType())->getPtrBasicType();
         auto convertedVal = convert(value, ptrBType);
         sip = std::make_shared<llvm::StoreInst>(
             context, convertedVal, ptr);
@@ -682,7 +682,7 @@ namespace tang {
 
         // convert Type;
         assert(gepi->getType()->isPointer());
-        auto ptrBType = std::static_pointer_cast<llvm::PointerType>(gepi->getType())->getBasicType();
+        auto ptrBType = std::static_pointer_cast<llvm::PointerType>(gepi->getType())->getPtrBasicType();
         auto convertedVal = convert(value, ptrBType);
         sip = std::make_shared<llvm::StoreInst>(context, convertedVal, gepi);
         _curBlock->addInst(_curBlock, sip);

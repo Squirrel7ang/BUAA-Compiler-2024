@@ -462,7 +462,7 @@ namespace mips {
         auto&& ty = gepip->getType();
         assert(ty->isPointer());
         auto&& ptrTy = std::static_pointer_cast<llvm::PointerType>(ty);
-        auto&& basicTy = ptrTy->getBasicType();
+        auto&& basicTy = ptrTy->getPtrBasicType();
         unsigned int size = basicTy->getSize();
 
         if (size == 4) {

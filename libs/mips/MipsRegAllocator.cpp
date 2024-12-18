@@ -145,7 +145,7 @@ namespace mips {
 
     void MipsRegAllocator::handleGetElePtr(llvm::InstructionPtr inst) {
         auto _usee = inst->getUsee(0);
-        if (_usee->is(llvm::GLOBAL_VARIABLE_T)) {
+        if (_usee->is(llvm::GLOBAL_VARIABLE_T) || _usee->is(llvm::GLOBAL_STRING_T)) {
             return;
         }
         assert(_usee->isInst());

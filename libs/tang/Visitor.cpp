@@ -296,19 +296,25 @@ namespace tang {
             s_ptr<SymbolType> _;
             _visitExp(exp, _);
         }
-        genPrintfStmtIR(node);
+        if (noError()) {
+            genPrintfStmtIR(node);
+        }
     }
 
     void Visitor::_visitGetcharStmt(const u_ptr<GetcharStmt>& node) {
         _visitLVal(node->lVal, true);
 
-        genGetcharStmtIR(node);
+        if (noError()) {
+            genGetcharStmtIR(node);
+        }
     }
 
     void Visitor::_visitGetintStmt(const u_ptr<GetintStmt>& node) {
         _visitLVal(node->lVal, true);
 
-        genGetintStmtIR(node);
+        if (noError()) {
+            genGetintStmtIR(node);
+        }
     }
 
     void Visitor::_visitReturnStmt(const u_ptr<ReturnStmt>& node) {
@@ -319,10 +325,12 @@ namespace tang {
         s_ptr<SymbolType> sty;
         if (node->exp != nullptr) {
             _visitExp(node->exp, sty);
-            auto val = genExpIR(node->exp, _curFuncType->_returnType->toLLVMType(context));
-            returnValue(sty->toLLVMType(_modulePtr->context()), val);
+            if (noError()) {
+                auto val = genExpIR(node->exp, _curFuncType->_returnType->toLLVMType(context));
+                returnValue(sty->toLLVMType(_modulePtr->context()), val);
+            }
         }
-        else {
+        else if (noError()) {
             returnVoid();
         }
     }
@@ -332,12 +340,14 @@ namespace tang {
 
         _loopStack.checkBreakContinue(node->getLin());
 
-        auto updateBlock = _loopStack.getCurrentLoopUpdate();
-        auto jip = std::make_shared<llvm::JumpInst>(context, updateBlock);
-        _curBlock->addInst(_curBlock, jip);
-        auto newBlock = std::make_shared<llvm::BasicBlock>(context);
-        _curFunction->addBasicBlock(newBlock);
-        _curBlock = newBlock;
+        if (noError()) {
+            auto updateBlock = _loopStack.getCurrentLoopUpdate();
+            auto jip = std::make_shared<llvm::JumpInst>(context, updateBlock);
+            _curBlock->addInst(_curBlock, jip);
+            auto newBlock = std::make_shared<llvm::BasicBlock>(context);
+            _curFunction->addBasicBlock(newBlock);
+            _curBlock = newBlock;
+        }
     }
 
     void Visitor::_visitBreakStmt(const u_ptr<BreakStmt>& node) {
@@ -345,12 +355,14 @@ namespace tang {
 
         _loopStack.checkBreakContinue(node->getLin());
 
-        auto outerBlock = _loopStack.getCurrentLoopOuter();
-        auto jip = std::make_shared<llvm::JumpInst>(context, outerBlock);
-        _curBlock->addInst(_curBlock, jip);
-        auto newBlock = std::make_shared<llvm::BasicBlock>(context);
-        _curFunction->addBasicBlock(newBlock);
-        _curBlock = newBlock;
+        if (noError()) {
+            auto outerBlock = _loopStack.getCurrentLoopOuter();
+            auto jip = std::make_shared<llvm::JumpInst>(context, outerBlock);
+            _curBlock->addInst(_curBlock, jip);
+            auto newBlock = std::make_shared<llvm::BasicBlock>(context);
+            _curFunction->addBasicBlock(newBlock);
+            _curBlock = newBlock;
+        }
     }
 
     void Visitor::_visitLVal(const u_ptr<LVal>& node,
@@ -412,13 +424,15 @@ namespace tang {
             _visitExp(node->exp, _);
         }
 
-        if (genLLVM) {
+        if (genLLVM && noError()) {
             // llvm
             Symbol s;
             _symbolTable.findSymbolGlobal(s, node->lVal->ident->str);
 
-            auto val = genExpIR(node->exp, s.getType()->toBasicLLVMType(context));
-            assignLVal(node->lVal, val);
+            if (noError()) {
+                auto val = genExpIR(node->exp, s.getType()->toBasicLLVMType(context));
+                assignLVal(node->lVal, val);
+            }
         }
 
     }
@@ -445,14 +459,18 @@ namespace tang {
         _curBlock = condBlock;
         if (node->cond != nullptr) {
             _visitCond(node->cond, _);
-            genCondIR(node->cond, bodyBlock, outerBlock);
-            // curBlock has already become bodyBlock
+            if (noError()) {
+                genCondIR(node->cond, bodyBlock, outerBlock);
+                // curBlock has already become bodyBlock
+            }
         }
         else {
-            jip = std::make_shared<llvm::JumpInst>(context, bodyBlock);
-            _curBlock->addInst(_curBlock, jip);
-            _curBlock = bodyBlock;
-            _curFunction->addBasicBlock(bodyBlock);
+            if (noError()) {
+                jip = std::make_shared<llvm::JumpInst>(context, bodyBlock);
+                _curBlock->addInst(_curBlock, jip);
+                _curBlock = bodyBlock;
+                _curFunction->addBasicBlock(bodyBlock);
+            }
         }
 
         if (node->update != nullptr) {
@@ -462,18 +480,22 @@ namespace tang {
         _visitStmt(node->stmt);
 
         // generate update llvm
-        jip = std::make_shared<llvm::JumpInst>(context, updateBlock);
-        _curBlock->addInst(_curBlock, jip);
-        _curBlock = updateBlock;
-        _curFunction->addBasicBlock(updateBlock);
+        if (noError()) {
+            jip = std::make_shared<llvm::JumpInst>(context, updateBlock);
+            _curBlock->addInst(_curBlock, jip);
+            _curBlock = updateBlock;
+            _curFunction->addBasicBlock(updateBlock);
+        }
 
         if (node->update != nullptr) {
             _visitAssignment(node->update, false, true);
         }
-        jip = std::make_shared<llvm::JumpInst>(context, condBlock);
-        _curBlock->addInst(_curBlock, jip);
-        _curBlock = outerBlock;
-        _curFunction->addBasicBlock(outerBlock);
+        if (noError()) {
+            jip = std::make_shared<llvm::JumpInst>(context, condBlock);
+            _curBlock->addInst(_curBlock, jip);
+            _curBlock = outerBlock;
+            _curFunction->addBasicBlock(outerBlock);
+        }
 
         _loopStack.popLoop();
     }
@@ -486,40 +508,57 @@ namespace tang {
         _visitCond(node->cond, _);
 
         // llvm
-        llvm::BasicBlockPtr ifBlock = std::make_shared<llvm::BasicBlock>(context);
+        llvm::BasicBlockPtr ifBlock;
         llvm::BasicBlockPtr elseBlock;
-        if (node->elseStmt != nullptr) {
-            elseBlock = std::make_shared<llvm::BasicBlock>(context);
+        llvm::BasicBlockPtr outerBlock;
+
+        if (noError()) {
+            ifBlock = std::make_shared<llvm::BasicBlock>(context);
+            if (node->elseStmt != nullptr) {
+                elseBlock = std::make_shared<llvm::BasicBlock>(context);
+            }
+            outerBlock = std::make_shared<llvm::BasicBlock>(context);
         }
-        llvm::BasicBlockPtr outerBlock = std::make_shared<llvm::BasicBlock>(context);
 
         if (node->elseStmt != nullptr) {
             // llvm
-            genCondIR(node->cond, ifBlock, elseBlock);
+            if (noError()) {
+                genCondIR(node->cond, ifBlock, elseBlock);
+            }
             // afterward genCondIR, curBlock is already set to ifBlock
 
             // visit if
             _visitStmt(node->ifStmt);
-            auto brInst = std::make_shared<llvm::JumpInst>(context, outerBlock);
-            _curBlock->addInst(_curBlock, brInst);
-            _curBlock = elseBlock;
-            _curFunction->addBasicBlock(elseBlock);
+
+            llvm::JumpInstPtr brInst;
+            if (noError()) {
+                brInst = std::make_shared<llvm::JumpInst>(context, outerBlock);
+                _curBlock->addInst(_curBlock, brInst);
+                _curBlock = elseBlock;
+                _curFunction->addBasicBlock(elseBlock);
+            }
 
             // visit else
             _visitStmt(node->elseStmt);
-            brInst = std::make_shared<llvm::JumpInst>(context, outerBlock);
-            _curBlock->addInst(_curBlock, brInst);
-            _curBlock = outerBlock;
-            _curFunction->addBasicBlock(outerBlock);
+            if (noError()) {
+                brInst = std::make_shared<llvm::JumpInst>(context, outerBlock);
+                _curBlock->addInst(_curBlock, brInst);
+                _curBlock = outerBlock;
+                _curFunction->addBasicBlock(outerBlock);
+            }
         }
         else {
-            genCondIR(node->cond, ifBlock, outerBlock);
+            if (noError()) {
+                genCondIR(node->cond, ifBlock, outerBlock);
+            }
             // afterward genCondIR, curBlock is already set to ifBlock
             _visitStmt(node->ifStmt);
-            auto brInst = std::make_shared<llvm::JumpInst>(context, outerBlock);
-            _curBlock->addInst(_curBlock, brInst);
-            _curBlock = outerBlock;
-            _curFunction->addBasicBlock(outerBlock);
+            if (noError()) {
+                auto brInst = std::make_shared<llvm::JumpInst>(context, outerBlock);
+                _curBlock->addInst(_curBlock, brInst);
+                _curBlock = outerBlock;
+                _curFunction->addBasicBlock(outerBlock);
+            }
         }
     }
 
@@ -529,7 +568,7 @@ namespace tang {
         found = _symbolTable.findSymbolGlobal(s, node->ident->str);
         if (!found) {
             _reporter.report(node->ident->getLin(), 'c');
-            return; // TODO
+            return;
         }
         s_ptr<FuncSymbolType> funcSymbolTypePtr = std::dynamic_pointer_cast<FuncSymbolType>(s.getType());
         assert(funcSymbolTypePtr != nullptr);
@@ -539,23 +578,23 @@ namespace tang {
         auto rparamSize = node->funcRParams == nullptr ? 0 : rparamExps.size();
         if (rparamSize != args.size()) {
             _reporter.report(node->ident->getLin(), 'd');
-            // return; // TODO
+            // return;
         }
         for (int i = 0; i < rparamSize; i++) {
             auto& exp = rparamExps.at(i);
             s_ptr<SymbolType> rArgType;
             _visitExp(exp, rArgType);
             if (rArgType == nullptr) {
-                continue; // TODO
+                continue;
             }
             if (i >= funcSymbolTypePtr->_argType.size()) {
-                continue; // TODO
+                continue;
             }
 
             auto& fArgType = funcSymbolTypePtr->_argType.at(i);
             if (fArgType->isArray() != rArgType->isArray()) {
                 _reporter.report(node->ident->getLin(), 'e');
-                // break; // TODO
+                // break;
             }
             else if (fArgType->isArray() && rArgType->isArray()) {
                 // both array but with different array type
@@ -564,12 +603,12 @@ namespace tang {
                 if ((fType == INT_ARRAY_ST || fType == CONST_INT_ARRAY_ST) &&
                     (pType == CHAR_ARRAY_ST || pType == CONST_CHAR_ARRAY_ST)) {
                     _reporter.report(node->ident->getLin(), 'e');
-                    // break; // TODO
+                    // break;
                 }
                 else if ((fType == CHAR_ARRAY_ST || fType == CONST_CHAR_ARRAY_ST) &&
                     (pType == INT_ARRAY_ST || pType == CONST_INT_ARRAY_ST)) {
                     _reporter.report(node->ident->getLin(), 'e');
-                    // break; // TODO
+                    // break;
                 }
             }
         }
@@ -681,8 +720,10 @@ namespace tang {
         Symbol s;
         _symbolTable.findSymbolGlobal(s, node->lVal->ident->str);
 
-        auto val = genExpIR(node->exp, s.getType()->toBasicLLVMType(context));
-        assignLVal(node->lVal, val);
+        if (noError()) {
+            auto val = genExpIR(node->exp, s.getType()->toBasicLLVMType(context));
+            assignLVal(node->lVal, val);
+        }
     }
 
     void Visitor::_visitStmt(const u_ptr<Stmt>& node) {
@@ -694,7 +735,9 @@ namespace tang {
                 _visitAssignStmt(arg);
             else if constexpr (std::is_same_v<T, u_ptr<Exp>>) { // done
                 _visitExp(arg, p);
-                genExpIR(arg, context->I32_TY);
+                if (noError()) {
+                    genExpIR(arg, context->I32_TY);
+                }
             }
             else if constexpr (std::is_same_v<T, u_ptr<Block>>) // nothing to be done
                 _visitBlock(arg, true, 0);

@@ -145,7 +145,7 @@ namespace llvm {
             // add use first, then def
             for (int i = 0; i < inst->getUseeSize(); i++) {
                 auto usee = inst->getUsee(i);
-                if (!usee->is(BASIC_BLOCK_T)) {
+                if (inst->getUsee(i)->isInst()) {
                     auto&& instUsee = std::static_pointer_cast<Instruction>(inst->getUsee(i));
                     addVarUse(instUsee);
                 }

@@ -19,12 +19,18 @@ namespace mips {
         // _dataType
         llvm::IntegerTypePtr ity;
         if (gvp->getType()->isInteger()) {
-            ity = std::static_pointer_cast<llvm::IntegerType>(gvp->getType());
+            assert(0);
         }
         else if (gvp->getType()->isPointer()) {
-            auto&& pty = std::dynamic_pointer_cast<llvm::PointerType>(gvp->getType());
-            auto&& aty = std::dynamic_pointer_cast<llvm::ArrayType>(pty->getBasicType());
-            ity = std::dynamic_pointer_cast<llvm::IntegerType>(aty->getBasicType());
+            auto pty = std::dynamic_pointer_cast<llvm::PointerType>(gvp->getType());
+            if (pty->getPtrBasicType()->isInteger()) {
+                auto tmpTy = pty->getPtrBasicType();
+                ity = std::dynamic_pointer_cast<llvm::IntegerType>(tmpTy);
+            }
+            else if (pty->getPtrBasicType()->isArray()) {
+                auto&& aty = std::dynamic_pointer_cast<llvm::ArrayType>(pty->getPtrBasicType());
+                ity = std::dynamic_pointer_cast<llvm::IntegerType>(aty->getBasicType());
+            }
         }
         else
             assert(0);

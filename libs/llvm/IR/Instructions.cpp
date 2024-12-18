@@ -165,12 +165,12 @@ namespace llvm {
         auto&& usee0 = getUsee(0);
         assert(usee0->getType()->isPointer());
         auto&& pty = std::static_pointer_cast<PointerType>(usee0->getType());
-        pty->getBasicType()->print(out);
+        pty->getPtrBasicType()->print(out);
         out << ", ";
 
         usee0->printRefWithType(out);
         out << ", ";
-        if (pty->getBasicType()->isArray()) {
+        if (pty->getPtrBasicType()->isArray()) {
             out << "i32 0 , ";
         }
         out << "i32 ";

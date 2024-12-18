@@ -54,10 +54,10 @@ int main(int argc, char *argv[]) {
     auto llvmModule = visitor.getLLVMModule();
     llvmModule->print(llvmStream);
 
-    llvmModule->analyzeActiveVariable();
-    auto asmGenerator = mips::MipsAsm(llvmModule);
-    asmGenerator.generateMipsAsm();
-    asmGenerator.print(mipsStream);
+    // llvmModule->analyzeActiveVariable();
+    // auto asmGenerator = mips::MipsAsm(llvmModule);
+    // asmGenerator.generateMipsAsm();
+    // asmGenerator.print(mipsStream);
     // auto translator = asmGenerator.getTranslator();
 
 

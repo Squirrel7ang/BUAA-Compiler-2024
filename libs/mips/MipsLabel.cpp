@@ -26,6 +26,7 @@ namespace mips {
         return std::make_shared<LabelTable>(m);
     }
 
+
     LabelTable::LabelTable(llvm::ModulePtr module) {
         auto&& funcBegin = module->functionBegin();
         auto&& funcEnd = module->functionEnd();

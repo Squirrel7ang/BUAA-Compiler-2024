@@ -26,7 +26,7 @@ namespace llvm {
         void print(std::ostream& out) override {
             out << "@" << _name << " = dso_local";
             out << (_isConst ? " constant " : " global ");
-            auto&& ty = std::static_pointer_cast<PointerType>(_type)->getBasicType();
+            auto&& ty = std::static_pointer_cast<PointerType>(_type)->getPtrBasicType();
             ty->print(out);
             out << " ";
             _initVal->print(out);

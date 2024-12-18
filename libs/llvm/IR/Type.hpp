@@ -20,6 +20,8 @@ namespace llvm {
      */
     class Type {
     public:
+        virtual ~Type() = default;
+
         enum TypeID {
             VOID_TYPE_ID,
             LABEL_TYPE_ID,
@@ -109,18 +111,18 @@ namespace llvm {
     };
 
     class PointerType: public Type {
-        TypePtr _basicType;
+        TypePtr _ptrBasicType;
     public:
         explicit PointerType(TypePtr basicType)
-               : Type(POINTER_TYPE_ID), _basicType(basicType) {}
+               : Type(POINTER_TYPE_ID), _ptrBasicType(basicType) {}
         void print(std::ostream& out ) override {
-            _basicType->print(out);
+            _ptrBasicType->print(out);
             out << '*';
         }
-        TypePtr getBasicType() { return _basicType; }
+        TypePtr getPtrBasicType() { return _ptrBasicType; }
         bool equals(TypePtr type) override {
             return type->isPointer() &&
-                   _basicType->equals(std::static_pointer_cast<PointerType>(type)->getBasicType());
+                   _ptrBasicType->equals(std::static_pointer_cast<PointerType>(type)->getPtrBasicType());
         }
         int getSize() override {
             return 4;

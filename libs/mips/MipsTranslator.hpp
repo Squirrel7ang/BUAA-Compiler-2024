@@ -65,6 +65,7 @@ namespace mips {
         MipsRegPtr readToReg(llvm::GlobalStringPtr str, bool firstOp);
         MipsRegPtr readToReg(llvm::ConstantDataPtr data, bool firstOp);
 
+
         MipsImmPtr readToImm(llvm::ValuePtr vp);
         MipsImmPtr readToImm(llvm::ConstantDataPtr vp);
         MipsImmPtr readToImm(llvm::BasicBlockPtr vp);

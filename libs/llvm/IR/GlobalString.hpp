@@ -32,7 +32,7 @@ namespace llvm {
             out << "unnamed_addr ";
             out << "constant ";
             auto ty = std::static_pointer_cast<PointerType>(_type);
-            ty->getBasicType()->print(out);
+            ty->getPtrBasicType()->print(out);
             out << " ";
             out << "c\"" << asciiString << "\"";
             out << std::endl;

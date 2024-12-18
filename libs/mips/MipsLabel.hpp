@@ -21,6 +21,7 @@ namespace mips {
     };
 
 
+
     class LabelTable {
     private:
         std::map<llvm::BasicBlockPtr, MipsLabelPtr> _basicBlockTable;
