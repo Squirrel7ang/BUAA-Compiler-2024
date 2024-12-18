@@ -38,6 +38,7 @@ namespace llvm {
         explicit Function(LLVMContextPtr& context, TypePtr ty,
                           std::vector<TypePtr>& parameters, std::string name);
         explicit Function(LLVMContextPtr& context, TypePtr ty, std::string name);
+        std::string getName() { return _name; }
 
         // iterator for basicBlocks and arguments inside;
         vector<BasicBlockPtr>::iterator blockBegin();

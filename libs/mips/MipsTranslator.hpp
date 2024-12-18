@@ -71,7 +71,7 @@ namespace mips {
         MipsImmPtr readToImm(llvm::GlobalVariablePtr vp);
         MipsImmPtr readToImm(llvm::GlobalStringPtr vp);
 
-        void writeBackReg(const MipsRegPtr & reg, VariablePtr & var);
+        void writeBackReg(const MipsRegPtr & reg, const VariablePtr & var);
     };
 }
 

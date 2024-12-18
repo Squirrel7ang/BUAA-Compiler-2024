@@ -483,37 +483,81 @@ namespace mips {
 
 
         MipsImmPtr imm;
-        // store ra
-        int offset = 0;
-        imm = MipsImm::New(offset);
-
-        addMipsInst(IInst::New(REG_SP, ))
-
-
+        int offset = -4;
         // store args
+        vector<MipsRegPtr> aRegs = {REG_A0, REG_A1, REG_A2, REG_A3, };
         for (int i = 0; i < 4 && i < cip->getUseeSize(); i++) {
+            auto para = cip->getUsee(i);
+            readToReg(para, true);
 
+            offset += 4;
+            imm = MipsImm::New(offset);
+            addMipsInst(RInst::NewMove(REG_K0, aRegs[i]));
         }
 
         for (int i = 4; i < cip->getUseeSize(); i++) {
+            auto para = cip->getUsee(i);
+            readToReg(para, true);
 
+            offset += 4;
+            imm = MipsImm::New(offset);
+            addMipsInst(IInst::New(REG_SP, REG_K0, imm, MIID_SW));
         }
+        // store ra
+
+        offset += 4;
+        imm = MipsImm::New(offset);
+        addMipsInst(IInst::New(REG_SP, REG_RA, imm, MIID_SW));
 
         // store SaveReg
+        vector<MipsRegPtr> sRegs = {REG_S0, REG_S1, REG_S2, REG_S3, REG_S4, REG_S5, REG_S6, REG_S7, };
+        for (int i = 0; i < 8; i++) {
+            auto reg = sRegs[i];
+            offset += 4;
+            imm = MipsImm::New(offset);
+            addMipsInst(IInst::New(REG_SP, reg, imm, MIID_SW));
+        }
 
         // store TmpReg
-        addMipsInst(IInst::New(REG_SP, MIID_SW));
+        vector<MipsRegPtr> tRegs = {REG_T0, REG_T1, REG_T2, REG_T3, REG_T4, REG_T5, REG_T6, REG_T7, REG_T8, REG_T9, };
+        // const auto tRegs[] = {REG_T0, REG_T1, REG_T2, REG_T3, REG_T4, REG_T5, REG_T6, REG_T7, REG_T8, REG_T9, };
+        for (int i = 0; i < 10; i++) {
+            auto reg = tRegs[i];
+            offset += 4;
+            imm = MipsImm::New(offset);
+            addMipsInst(IInst::New(REG_SP, reg, imm, MIID_SW));
+        }
 
         // call
+        addMipsInst(JInst::New(_labelTable->findLabel(func), MIID_JAL));
 
         // load TmpReg
+        for (int i = 9; i >= 0; i--) {
+            auto reg = tRegs[i];
+            imm = MipsImm::New(offset);
+            addMipsInst(IInst::New(REG_SP, reg, imm, MIID_LW));
+            offset -= 4;
+        }
 
         // load SaveReg
-
+        for (int i = 7; i >= 0; i--) {
+            auto reg = sRegs[i];
+            imm = MipsImm::New(offset);
+            addMipsInst(IInst::New(REG_SP, reg, imm, MIID_LW));
+            offset -= 4;
+        }
         // load ra
+        imm = MipsImm::New(offset);
+        addMipsInst(IInst::New(REG_SP, REG_RA, imm, MIID_SW));
+        offset -= 4;
 
         // move sp
         addMipsInst(IInst::New(REG_SP, REG_SP, stackOffset, MIID_ADDI));
+
+        // load Value
+        if (!func->getType()->isVoidTy()) {
+            writeBackReg(REG_V0, _varTable->findVar(cip));
+        }
     }
 
     void MipsTranslator::translate(llvm::AllocaInstPtr aip) {
@@ -647,7 +691,7 @@ namespace mips {
         return data;
     }
 
-    void MipsTranslator::writeBackReg(const MipsRegPtr & reg, VariablePtr & var) {
+    void MipsTranslator::writeBackReg(const MipsRegPtr & reg, const VariablePtr & var) {
         if (var->getLocation()->is(VLID_REG)) {
             auto loc = std::static_pointer_cast<MipsReg>(var->getLocation());
             if (*reg != *loc) {
