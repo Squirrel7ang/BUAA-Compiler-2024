@@ -1,0 +1,177 @@
+% \author{22371027-汤睿璟}
+% 设置页面边距（word标准页面）
+\documentclass[a4paper]{article}
+\usepackage{cite} % 加在文章最开头，表示你这篇文章要引用别的东西。
+\usepackage{geometry}
+\geometry{a4paper,left=2.7cm,right=2.7cm,top=2.54cm,bottom=2.54cm}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows}
+\usepackage{wrapfig}
+
+
+%导入ctex包
+\usepackage[UTF8,heading=true]{ctex}
+\tikzset{
+	startstop/.style={
+		rectangle,
+		rounded corners,
+		minimum width=3cm,
+		minimum height=1cm,
+		text centered,
+		draw=black,
+		fill=red!30
+	},
+	io/.style={
+		trapezium,
+		trapezium left angle=70,
+		trapezium right angle=110,
+		minimum width=3cm,
+		minimum height=1cm,
+		text centered,
+		draw=black,
+		fill=blue!30
+	},
+	process/.style={
+		rectangle,
+		minimum width=3cm,
+		minimum height=1cm,
+		text centered,
+		draw=black,
+		fill=orange!30
+	},
+	decision/.style={
+		diamond,
+		aspect=2, % 控制菱形的宽高比
+		minimum width=3cm,
+		minimum height=1cm,
+		text centered,
+		draw=black,
+		fill=green!30
+	},
+	arrow/.style={
+		thick,
+		-Stealth % 使用Stealth箭头样式
+	}
+}
+
+%设置摘要格式
+\usepackage{abstract}
+\setlength{\abstitleskip}{0em}
+\setlength{\absleftindent}{0pt}
+\setlength{\absrightindent}{0pt}
+\setlength{\absparsep}{0em}
+\renewcommand{\abstractname}{\textbf{\zihao{4}{摘要}}}
+\renewcommand{\abstracttextfont}{\zihao{-4}} %设置摘要正文字号
+
+%设置页眉和页脚，只显示页脚居中页码
+\usepackage{fancyhdr}
+\pagestyle{plain}
+
+%调用数学公式包
+\usepackage{amssymb}
+\usepackage{amsmath}
+
+%调用浮动包
+\usepackage{float}
+\usepackage{subfig}
+% \captionsetup[figure]{labelsep=space} %去除图标题的冒号
+% \captionsetup[table]{labelsep=space} %去除表格标题的冒号
+%设置标题格式
+\ctexset {
+	%设置一级标题的格式
+	section = {
+		name={,、},
+		number=\chinese{section}, %设置中文版的标题
+		aftername=,
+	},
+	%设置三级标题的格式
+	subsubsection = {
+		format += \zihao{-4} % 设置三级标题的字号
+	}
+}
+
+
+%使得英文字体都为Time NewTown
+%\usepackage{times}
+
+%图片包导入
+\usepackage{graphicx}
+\graphicspath{{figures/}} %图片在当前目录下的figures目录
+
+%参考文献包引入
+\usepackage{cite}
+\usepackage[numbers,sort&compress]{natbib}
+
+%代码格式
+\usepackage{listings}
+\usepackage{graphicx}%写入python代码
+\usepackage{pythonhighlight}%python代码高亮显示
+\lstset{
+	%numbers=left, %设置行号位置
+	%	numberstyle=\tiny, %设置行号大小
+	keywordstyle=\color{blue}, %设置关键字颜色
+	commentstyle=\color[cmyk]{1,0,1,0}, %设置注释颜色
+	escapeinside=``, %逃逸字符(1左面的键)，用于显示中文
+	breaklines, %自动折行
+	extendedchars=false, %解决代码跨页时，章节标题，页眉等汉字不显示的问题
+	xleftmargin=1em,xrightmargin=1em, aboveskip=1em, %设置边距
+	tabsize=4, %设置tab空格数
+	showspaces=false %不显示空格
+}
+
+
+\renewcommand{\refname}{}
+
+%item包
+\usepackage{enumitem}
+
+%表格加粗
+\usepackage{booktabs}
+
+%设置表格间距
+\usepackage{caption}
+
+%允许表格长跨页
+\usepackage{longtable}
+
+%伪代码用到的宏包
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\usepackage{accents}
+
+\title{编译实验 - 实验感想}
+\date{}
+
+\begin{document}
+	\maketitle
+	\vspace{-6em} %设置摘要与标题的间距
+	\zihao{-4} %设置正文字号
+	
+	\begin{center}22371027-汤睿璟\end{center}
+	% \author{22371027-汤睿璟}
+	
+	
+	回顾一学期的编译实验，可谓是充满遗憾。最开始想着要生成 MIPS 并且把自己能够完成的优化都尽可能地给做了，但是不论是时间还是从对编译器的设计理解，都不允许我生成 MIPS。如果还有将来的话，我一定会做的更好。
+	
+	\subsection{生成 MIPS 心得}
+	
+		在生成 MIPS 的时候，或许是理论学习不扎实，或许是别的原因，我在编译器的设计上与目标需求越走越偏。等到意识到不得不重构的时候，正是数据库大作业和编译双重打击的时候。最终，我完成了图着色寄存器分配，基本上都快完成 MIPS 的生成了，这时才发现一直没有考虑函数的形参，也发现了图着色算法也一直没有考虑函数形参，回想起来后悔不已，要是之前考虑上了，或许 MIPS 就已经生成出来了。最终放弃了 MIPS。
+		
+	\subsection{关于代码优化的感悟}
+	
+		代码优化是一件很有意思的事情。理论就摆在哪，实现起来差异却很大。这一点一直让我感到很困惑。拿 mem2reg 来说，看起来耗不起眼的优化，在实现起来的时候却十分复杂，计算支配集和支配边界的算法也是在近几十年才提出的。可能还有相当多的优化算法在教材里面根本就没有出现过，但是却在工业界广泛使用。我想这一点或许也和实际比较接近：之后学到的很多算法或许都会投入到实际使用中，而远远不想之前想象的什么图算法、排序算法这一类这么理论，简洁。实际上拿到的数据格式可能是一种十分复杂的数据格式，而需要进行相当多的加工才能将算法融入到实际应用当中。
+		
+		我在暑假参加龙芯杯的时候，就发现龙芯教育推出了 32 位龙架构编译器编译出来的代码我就发现，编译出来的代码我似乎看不懂。现在回想起来，恐怕是做了循环展开，并且展开地相当大。在使用 Clion 写编译器的时候，Clion 的 clang-tidy 对代码的静态解析也相当强，数据流解析做得相当全面。而且不仅如此，在实现如此复杂的代码静态分析之后还能保持相当高的代码分析速度，这现在看来也是难以想象的事情。或许是我把编译优化想象得太简单了吧，但是编译能够做到的事情细想起来真的非常强大，而且背后蕴含的理论似乎并不简单。
+		
+		就算不说工业界现在采用的编译优化，哪怕是课本上的编译优化，也有相当多的一部分没有涉及；即使是涉及到了也难以想象具体的实现方式。尽管最终没能生成出 MIPS，但是在和同学进行的优化编译优化的讨论中也能学到不少内容。或者说是算法吧。之后如果真的和编译器打交道的话，或许还不一定是和 MIPS 这一类运行在比较老的机器上的机器语言打交道，可能还会有更多的事情发生，比如和 GPU 或协处理器有关的机器语言，或者是和
+		
+	\subsection{关于课程设计的一些思考}
+	
+		课程设计总体来说已经很完美了。只是有一些小地方或许可以做的更好？比如，符号表的输出顺序和作用域的起始位置顺序相同这一点，个人感觉比较不符合“栈式符号表”的意思。尽管我们做的符号表不一定是栈式的，但是作用域构成的结构到底还是呈栈式的，应当在以结束顺序作为输出顺序或许会较为合适？
+		
+	\subsection{写在最后}
+	
+		编译写得确实比较烂，不过成绩烂归成绩烂，学到东西了就好。这学期逼着自己用 C++ 和 CMake 硬着头皮把编译器写下去了，尽管很不符合 Modern C++ 的设计理念，不过到底还是更加熟悉 C++ 了一点。从这个角度来说倒也是足够了。
+	
+\end{document}
