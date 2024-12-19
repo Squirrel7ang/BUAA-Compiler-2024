@@ -5,7 +5,6 @@
 #include <cassert>
 
 #include "VarTable.hpp"
-
 #include "Regs.hpp"
 #include "VarLocation.hpp"
 #include "IR/Instructions.hpp"
