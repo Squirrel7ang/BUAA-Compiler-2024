@@ -8,7 +8,6 @@
 #include <string>
 
 #include "IR/IRPrinter.hpp"
-#include "libs/mips/MipsAsmGen.hpp"
 using namespace tang;
 
 int main(int argc, char *argv[]) {
@@ -53,13 +52,5 @@ int main(int argc, char *argv[]) {
     }
     auto llvmModule = visitor.getLLVMModule();
     llvmModule->print(llvmStream);
-
-    // llvmModule->analyzeActiveVariable();
-    // auto asmGenerator = mips::MipsAsm(llvmModule);
-    // asmGenerator.generateMipsAsm();
-    // asmGenerator.print(mipsStream);
-    // auto translator = asmGenerator.getTranslator();
-
-
     return 0;
 }

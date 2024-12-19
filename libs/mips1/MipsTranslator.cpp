@@ -14,7 +14,6 @@
 
 #include "MipsData.hpp"
 #include "MipsLabel.hpp"
-#include "StackSlot.hpp"
 
 namespace mips {
     MipsTranslator::MipsTranslator(llvm::ModulePtr& module)

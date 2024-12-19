@@ -165,6 +165,9 @@ namespace llvm {
     }
 
     bool BasicBlock::endWithReturn() {
+        if (_insts.empty()) {
+            return false;
+        }
         return _insts.back()->is(RETURN_INST_T);
     }
 

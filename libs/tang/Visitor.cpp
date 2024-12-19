@@ -892,7 +892,7 @@ namespace tang {
             // otherwise this must be a void function
             rip = std::make_shared<llvm::ReturnInst>(context);
         }
-        if (!_curBlock->isEmptyBlock() && !_curBlock->endWithReturn()) {
+        if (!_curBlock->endWithReturn()) {
             _curBlock->addInst(_curBlock, rip);
         }
 
