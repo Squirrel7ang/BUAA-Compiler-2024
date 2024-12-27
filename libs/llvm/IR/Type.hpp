@@ -7,6 +7,7 @@
 
 #include <cassert>
 #include <memory>
+#include <ostream>
 
 #include "Common.hpp"
 

@@ -11,7 +11,7 @@ namespace tang {
 
     void StringConst::calFormat() {
         unsigned int ret = 0;
-        for (int i = 0; i < _str.length()-1; i++) {
+        for (int i = 0; i+1 < _str.length(); i++) {
             char ch1 = _str.at(i);
             char ch2 = _str.at(i+1);
             if (ch1 == '%' && ch2 == 'd') {

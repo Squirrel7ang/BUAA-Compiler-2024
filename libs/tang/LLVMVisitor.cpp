@@ -46,12 +46,14 @@ namespace tang {
     }
 
     void Visitor::defineGlobalVariable(Symbol& s) {
+        if (!noError()) return;
         auto&& context = _modulePtr->context();
         llvm::GlobalVariablePtr gv = s.toGlobalVariable(context);
         _modulePtr->addGlobalVariable(gv);
     }
 
     void Visitor::defineLocalVariable(const u_ptr<ConstDef>& node, Symbol& s) {
+        if (!noError()) return;
         auto&& context = _modulePtr->context();
         llvm::AllocaInstPtr aip = s.toAllocaInst(context);
         _curBlock->addInst(_curBlock, aip);
@@ -98,6 +100,7 @@ namespace tang {
     }
 
     void Visitor::defineLocalVariable(const u_ptr<VarDef>& node, Symbol& s) {
+        if (!noError()) return;
         auto context = _modulePtr->context();
         llvm::AllocaInstPtr aip = s.toAllocaInst(context);
         _curBlock->addInst(_curBlock, aip);
@@ -144,15 +147,18 @@ namespace tang {
     }
 
     llvm::ValuePtr Visitor::genConstExpIR(const u_ptr<ConstExp>& node, const llvm::TypePtr& expectType) {
+        if (!noError()) return nullptr;
         return genAddExpIR(node->addExp, expectType);
     }
 
     llvm::ValuePtr Visitor::genExpIR(const u_ptr<Exp>& node, const llvm::TypePtr& expectType) {
+        if (!noError()) return nullptr;
         auto&& ret = genAddExpIR(node->addExp, _modulePtr->context()->I32_TY);
         return convert(ret, expectType);
     }
 
     llvm::ValuePtr Visitor::genAddExpIR(const u_ptr<AddExp>& node, const llvm::TypePtr& expectType) {
+        if (!noError()) return nullptr;
         auto context = _modulePtr->context();
         llvm::ValuePtr inst0 = genMulExpIR(node->mulExps.at(0), expectType);
         llvm::ValuePtr inst1;
@@ -178,6 +184,7 @@ namespace tang {
     }
 
     llvm::ValuePtr Visitor::genMulExpIR(const u_ptr<MulExp>& node, const llvm::TypePtr& expectType) {
+        if (!noError()) return nullptr;
         auto context = _modulePtr->context();
         llvm::ValuePtr inst0 = genUnaryExpIR(node->unaryExps.at(0), expectType);
         llvm::ValuePtr inst1;
@@ -206,6 +213,7 @@ namespace tang {
     }
 
     llvm::ValuePtr Visitor::genUnaryExpIR(const u_ptr<UnaryExp>& node, const llvm::TypePtr& expectType) {
+        if (!noError()) return nullptr;
         auto context = _modulePtr->context();
         llvm::ValuePtr inst;
 
@@ -242,6 +250,7 @@ namespace tang {
     }
 
     llvm::ValuePtr Visitor::genPrimaryExp(const u_ptr<PrimaryExp>& node, const llvm::TypePtr& expectType) {
+        if (!noError()) return nullptr;
         llvm::ValuePtr inst;
         std::visit([&](auto && arg) {
             using T = std::decay_t<decltype(arg)>;
@@ -263,6 +272,7 @@ namespace tang {
     }
 
     llvm::ValuePtr Visitor::genFuncCallIR(const u_ptr<FuncCall>& node, const llvm::TypePtr& expectType) {
+        if (!noError()) return nullptr;
         auto context = _modulePtr->context();
         llvm::CallInstPtr cip;
         Symbol s;
@@ -291,6 +301,7 @@ namespace tang {
     }
 
     llvm::ValuePtr Visitor::genNumberIR(const u_ptr<Number>& node, const llvm::TypePtr& expectType) {
+        if (!noError()) return nullptr;
         auto context = _modulePtr->context();
         llvm::ConstantDataPtr cdp = std::make_shared<llvm::ConstantData>(
             context, context->I32_TY, node->intConst->val);
@@ -298,6 +309,7 @@ namespace tang {
     }
 
     llvm::ValuePtr Visitor::genCharacterIR(const u_ptr<Character>& node, const llvm::TypePtr& expectType) {
+        if (!noError()) return nullptr;
         auto context = _modulePtr->context();
         llvm::ConstantDataPtr cdp = std::make_shared<llvm::ConstantData>(
             context, context->I8_TY, node->charConst->ch);
@@ -305,6 +317,7 @@ namespace tang {
     }
 
     llvm::ValuePtr Visitor::genLValIR(const u_ptr<LVal>& node, const llvm::TypePtr& expectType) {
+        if (!noError()) return nullptr;
         auto context = _modulePtr->context();
         Symbol s;
         _symbolTable.findSymbolGlobal(s, node->ident->str);
@@ -396,6 +409,7 @@ namespace tang {
     }
 
     void Visitor::genGetcharStmtIR(const u_ptr<GetcharStmt>& node) {
+        if (!noError()) return;
         // llvm
         auto&& context = _modulePtr->context();
 
@@ -424,6 +438,7 @@ namespace tang {
     }
 
     void Visitor::genPrintfStmtIR(const u_ptr<PrintfStmt>& node) {
+        if (!noError()) return ;
         // llvm
         auto&& context = _modulePtr->context();
         auto& rawStr = node->stringConst->_str;
@@ -441,8 +456,10 @@ namespace tang {
         }
         expNum = 0;
 
-        ch0 = rawStr.at(0);
-        tmpStr += ch0;
+        if (rawStr.size() > 0) {
+            ch0 = rawStr.at(0);
+            tmpStr += ch0;
+        }
         for (int i = 1; i < rawStr.size(); i++) {
             ch1 = rawStr.at(i);
             tmpStr += ch1;
@@ -484,6 +501,7 @@ namespace tang {
     }
 
     llvm::ValuePtr Visitor::genPutchIR(llvm::ValuePtr value) {
+        if (!noError()) return nullptr;
         auto&& context = _modulePtr->context();
         auto putch = std::make_shared<llvm::PutInst>(context, value, llvm::PIID_CH);
         _curBlock->addInst(_curBlock, putch);
@@ -491,6 +509,7 @@ namespace tang {
     }
 
     llvm::ValuePtr Visitor::genPutintIR(llvm::ValuePtr value) {
+        if (!noError()) return nullptr;
         auto&& context = _modulePtr->context();
         auto putint = std::make_shared<llvm::PutInst>(context, value, llvm::PIID_INT);
         _curBlock->addInst(_curBlock, putint);
@@ -498,6 +517,7 @@ namespace tang {
     }
 
     llvm::ValuePtr Visitor::genPutstrIR(llvm::GlobalStringPtr value) {
+        if (!noError()) return nullptr;
         auto&& context = _modulePtr->context();
         auto zero = std::make_shared<llvm::ConstantData>(context, context->I32_TY, 0);
         auto geip = std::make_shared<llvm::GetElePtrInst>(
@@ -510,11 +530,13 @@ namespace tang {
 
     void Visitor::genCondIR(const u_ptr<Cond>& node, const llvm::BasicBlockPtr &ifBlock,
                             const llvm::BasicBlockPtr &elseBlock) {
+        if (!noError()) return ;
         genLOrExpIR(node->lOrExp, ifBlock, elseBlock);
     }
 
     void Visitor::genLOrExpIR(const u_ptr<LOrExp>& node,
                               const llvm::BasicBlockPtr &ifBlock, const llvm::BasicBlockPtr &elseBlock) {
+        if (!noError()) return ;
         auto&& context = _modulePtr->context();
 
         int i;
@@ -531,6 +553,7 @@ namespace tang {
 
     void Visitor::genLAndExpIR(const u_ptr<LAndExp>& node,
                                const llvm::BasicBlockPtr& ifBlock, const llvm::BasicBlockPtr& elseBlock) {
+        if (!noError()) return ;
         auto&& context = _modulePtr->context();
         llvm::ValuePtr inst;
 
@@ -551,6 +574,7 @@ namespace tang {
     }
 
     llvm::ValuePtr Visitor::genEqExpIR(const u_ptr<EqExp>& node, const llvm::TypePtr& expectType) {
+        if (!noError()) return nullptr;
         auto context = _modulePtr->context();
         llvm::ValuePtr inst0 = genRelExpIR(node->relExps.at(0), context->I32_TY);
         llvm::ValuePtr inst1;
@@ -586,6 +610,7 @@ namespace tang {
     }
 
     llvm::ValuePtr Visitor::genRelExpIR(const u_ptr<RelExp>& node, const llvm::TypePtr& expectType) {
+        if (!noError()) return nullptr;
         auto context = _modulePtr->context();
         llvm::ValuePtr inst0 = genAddExpIR(node->addExps.at(0), context->I32_TY);
         llvm::ValuePtr inst1;
@@ -620,6 +645,7 @@ namespace tang {
     }
 
     void Visitor::assignLVal(Symbol& s, llvm::ValuePtr value) {
+        if (!noError()) return;
         auto&& context = _modulePtr->context();
 
         llvm::StoreInstPtr sip;
@@ -635,6 +661,7 @@ namespace tang {
     }
 
     void Visitor::assignLVal(Symbol& s, llvm::ValuePtr offset, llvm::ValuePtr value) {
+        if (!noError()) return;
         auto&& context = _modulePtr->context();
         if (offset == nullptr) {
             assignLVal(s, value);
@@ -689,6 +716,7 @@ namespace tang {
     }
 
     void Visitor::assignLVal(u_ptr<LVal>& lVal, llvm::ValuePtr value) {
+        if (!noError()) return;
         auto&& context = _modulePtr->context();
         Symbol s;
         _symbolTable.findSymbolGlobal(s, lVal->ident->str);
@@ -703,6 +731,7 @@ namespace tang {
     }
 
     void Visitor::returnValue(llvm::TypePtr ty, llvm::ValuePtr value) {
+        if (!noError()) return;
         auto context = _modulePtr->context();
         llvm::ReturnInstPtr rip = std::make_shared<llvm::ReturnInst>(
             context, value);
@@ -715,6 +744,7 @@ namespace tang {
     }
 
     void Visitor::returnVoid() {
+        if (!noError()) return;
         auto context = _modulePtr->context();
         llvm::ReturnInstPtr rip = std::make_shared<llvm::ReturnInst>( context);
         _curBlock->addInst(_curBlock, rip);

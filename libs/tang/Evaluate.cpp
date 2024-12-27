@@ -96,6 +96,7 @@ namespace tang {
     }
 
     int Visitor::evaluate(u_ptr<LVal>& node) {
+        if (!noError()) { return 1; }
         Symbol s;
         _symbolTable.findSymbolGlobal(s, node->ident->str);
         int idx = 0;

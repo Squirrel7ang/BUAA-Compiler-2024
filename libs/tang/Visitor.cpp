@@ -141,6 +141,7 @@ namespace tang {
                     s_ptr<SymbolType> _;
                     _visitExp(vardef->initVal->exps.at(0), _);
                     if (isGlobal()) {
+                        _visitExp(vardef->initVal->exps.at(0), _);
                         s.addInitVal(evaluate(vardef->initVal->exps.at(0)));
                     }
                 }
@@ -185,6 +186,7 @@ namespace tang {
                         inits.push_back(0); // push a '\0' inside;
                     }
                     else for (auto& exp: constdef->constInitVal->constExps) {
+                        _visitConstExp(exp);
                         inits.push_back(evaluate(exp));
                     }
                     s.addInitVal(inits);
@@ -203,6 +205,7 @@ namespace tang {
                 Symbol s(st, constdef->ident->str);
                 if (constdef->has_initVal()) {
                     assert(constdef->constInitVal->constExps.size() == 1); // only one initial value
+                    _visitConstExp(constdef->constInitVal->constExps.at(0));
                     s.addInitVal(evaluate(constdef->constInitVal->constExps.at(0)));
                 }
 
@@ -234,6 +237,7 @@ namespace tang {
                         inits.push_back(0); // push a '\0' inside;
                     }
                     else for (auto& exp: constdef->constInitVal->constExps) {
+                        _visitConstExp(exp);
                         inits.push_back(evaluate(exp));
                     }
                     s.addInitVal(inits);
@@ -252,6 +256,7 @@ namespace tang {
                 Symbol s(st, constdef->ident->str);
                 if (constdef->has_initVal()) {
                     assert(constdef->constInitVal->constExps.size() == 1); // only one initial value
+                    _visitConstExp(constdef->constInitVal->constExps.at(0));
                     s.addInitVal(evaluate(constdef->constInitVal->constExps.at(0)));
                 }
 
@@ -401,6 +406,11 @@ namespace tang {
         else {
             type = nullptr;
         }
+
+        if (node->exp != nullptr) {
+            s_ptr<SymbolType> _;
+            _visitExp(node->exp, _);
+        }
     }
 
     void Visitor::_visitLVal(const u_ptr<LVal>& node, bool unAssignable) {
@@ -412,6 +422,10 @@ namespace tang {
         }
         else if (unAssignable && !s.getType()->isFunc() && s.getType()->isConst()) { // TODO: when s is funcSymbol
             _reporter.report(node->getLin(), 'h');
+        }
+        if (node->exp != nullptr) {
+            s_ptr<SymbolType> _;
+            _visitExp(node->exp, _);
         }
     }
 
@@ -452,11 +466,14 @@ namespace tang {
         }
 
         // condition basic block;
-        auto jip = std::make_shared<llvm::JumpInst>(context, condBlock);
-        _curBlock->addInst(_curBlock, jip);
+        llvm::JumpInstPtr jip;
+        if (noError()) {
+            jip = std::make_shared<llvm::JumpInst>(context, condBlock);
+            _curBlock->addInst(_curBlock, jip);
 
-        _curFunction->addBasicBlock(condBlock);
-        _curBlock = condBlock;
+            _curFunction->addBasicBlock(condBlock);
+            _curBlock = condBlock;
+        }
         if (node->cond != nullptr) {
             _visitCond(node->cond, _);
             if (noError()) {
@@ -843,32 +860,39 @@ namespace tang {
         Symbol s = Symbol(ft, node->ident->str);
 
         // llvm
-        auto _returnTypePtr  = rt->toLLVMType(context);
-        std::vector<llvm::TypePtr> argTypes;
-        for (const auto& argSymbol: ft->_argType) {
-            auto llvmType = argSymbol->toLLVMType(context);
-            argTypes.push_back(llvmType);
+        llvm::TypePtr _returnTypePtr;
+        llvm::FunctionPtr func;
+        llvm::BasicBlockPtr block;
+        if (noError()) {
+            _returnTypePtr = rt->toLLVMType(context);
+            std::vector<llvm::TypePtr> argTypes;
+            for (const auto& argSymbol: ft->_argType) {
+                auto llvmType = argSymbol->toLLVMType(context);
+                argTypes.push_back(llvmType);
+            }
+            func = std::make_shared<llvm::Function>(context, _returnTypePtr, argTypes, s.getName());
+            _modulePtr->addFunction(func);
+            _curFunction = func;
+            block = std::make_shared<llvm::BasicBlock>(context);
+            _curBlock = block;
+            _curFunction->addBasicBlock(block);
         }
-        llvm::FunctionPtr func = std::make_shared<llvm::Function>(context, _returnTypePtr, argTypes, s.getName());
-        _modulePtr->addFunction(func);
-        _curFunction = func;
-        llvm::BasicBlockPtr block = std::make_shared<llvm::BasicBlock>(context);
-        _curBlock = block;
-        _curFunction->addBasicBlock(block);
 
         // add function to SymbolTable
         s.setValuePtr(_curFunction); // this symbol is a function
         _symbolTable.addSymbol(node->ident->getLin(), s);
 
-        // create alloca and store insts for every parameters
-        for (int i = 0; i < func->argNum(); i++) {
-            auto&& argPtr = func->getArg(i);
-            llvm::PointerTypePtr ptp = std::make_shared<llvm::PointerType>(argPtr->getType());
-            auto alloca = std::make_shared<llvm::AllocaInst>(context, ptp, argPtr->getType());
-            _curBlock->addInst(_curBlock, alloca);
-            auto store = std::make_shared<llvm::StoreInst>(context, argPtr, alloca);
-            _curBlock->addInst(_curBlock, store);
-            fparams.at(i).setValuePtr(alloca);
+        // create alloca and store insts for every parameter
+        if (noError()) {
+            for (int i = 0; i < func->argNum(); i++) {
+                auto&& argPtr = func->getArg(i);
+                llvm::PointerTypePtr ptp = std::make_shared<llvm::PointerType>(argPtr->getType());
+                auto alloca = std::make_shared<llvm::AllocaInst>(context, ptp, argPtr->getType());
+                _curBlock->addInst(_curBlock, alloca);
+                auto store = std::make_shared<llvm::StoreInst>(context, argPtr, alloca);
+                _curBlock->addInst(_curBlock, store);
+                fparams.at(i).setValuePtr(alloca);
+            }
         }
 
         // afterward, add FParams into symbolTable of a new scope
@@ -882,18 +906,21 @@ namespace tang {
 
         // add ret instruction at end of every function if no returnStmt
         // at the end.
-        llvm::TypePtr _type = _curFunction->getType();
+        llvm::TypePtr _type;
         llvm::ReturnInstPtr rip;
-        if (_type->isInteger()) {
-            auto cdp = std::make_shared<llvm::ConstantData>(context, _type, 0);
-            rip = std::make_shared<llvm::ReturnInst>(context, cdp);
-        }
-        else {
-            // otherwise this must be a void function
-            rip = std::make_shared<llvm::ReturnInst>(context);
-        }
-        if (!_curBlock->endWithReturn()) {
-            _curBlock->addInst(_curBlock, rip);
+        if (noError()) {
+            _type = _curFunction->getType();
+            if (_type->isInteger()) {
+                auto cdp = std::make_shared<llvm::ConstantData>(context, _type, 0);
+                rip = std::make_shared<llvm::ReturnInst>(context, cdp);
+            }
+            else {
+                // otherwise this must be a void function
+                rip = std::make_shared<llvm::ReturnInst>(context);
+            }
+            if (!_curBlock->endWithReturn()) {
+                _curBlock->addInst(_curBlock, rip);
+            }
         }
 
         // check if there is return in the inside;
@@ -916,26 +943,32 @@ namespace tang {
     }
 
     void Visitor::_visitMainFuncDef(const u_ptr<MainFuncDef>& node) {
+        auto context = _modulePtr->context();
         auto rt = std::make_shared<IntSymbolType>();
         auto ft = std::make_shared<FuncSymbolType>(rt);
         _curFuncType = ft;
 
         // llvm
-        auto context = _modulePtr->context();
-        llvm::FunctionPtr fp = std::make_shared<llvm::Function>(context, context->I32_TY, "main");
-        _modulePtr->addFunction(fp);
-        _curFunction = fp;
-        llvm::BasicBlockPtr bbp = std::make_shared<llvm::BasicBlock>(context);
-        _curFunction->addBasicBlock(bbp);
-        _curBlock = bbp;
+        llvm::FunctionPtr fp;
+        llvm::BasicBlockPtr bbp;
+        if (noError()) {
+            fp = std::make_shared<llvm::Function>(context, context->I32_TY, "main");
+            _modulePtr->addFunction(fp);
+            _curFunction = fp;
+            bbp = std::make_shared<llvm::BasicBlock>(context);
+            _curFunction->addBasicBlock(bbp);
+            _curBlock = bbp;
+        }
 
         _visitBlock(node->block, true, 0);
 
         // add ret instruction at end of every function
-        llvm::ConstantDataPtr cdp = std::make_shared<llvm::ConstantData>(context, context->I32_TY, 0);
-        llvm::ReturnInstPtr rip = std::make_shared<llvm::ReturnInst>(context, cdp);
-        if (!_curBlock->isEmptyBlock() && !_curBlock->endWithReturn()) {
-            _curBlock->addInst(_curBlock, rip);
+        if (noError()) {
+            llvm::ConstantDataPtr cdp = std::make_shared<llvm::ConstantData>(context, context->I32_TY, 0);
+            llvm::ReturnInstPtr rip = std::make_shared<llvm::ReturnInst>(context, cdp);
+            if (!_curBlock->isEmptyBlock() && !_curBlock->endWithReturn()) {
+                _curBlock->addInst(_curBlock, rip);
+            }
         }
 
         // check if there is return in the inside;

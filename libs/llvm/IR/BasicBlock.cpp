@@ -7,13 +7,13 @@
 
 namespace llvm {
     void BasicBlock::addVarUse(InstructionPtr vp) {
-        if (!_def.contains(vp)) {
+        if (_def.find(vp) == _def.end()) {
             _use.insert(vp);
         }
     }
 
     void BasicBlock::addVarDef(InstructionPtr vp) {
-        if (!_use.contains(vp)) {
+        if (_use.find(vp) == _use.end()) {
             _def.insert(vp);
         }
     }
@@ -72,7 +72,7 @@ namespace llvm {
 
     bool BasicBlock::addVarIn(InstructionPtr vp) {
         bool changed = false;
-        if (!_in.contains(vp)) {
+        if (_in.find(vp) == _in.end()) {
             _in.insert(vp);
             changed = true;
         }
@@ -82,7 +82,7 @@ namespace llvm {
     bool BasicBlock::addVarIn(const std::set<InstructionPtr> &vps) {
         bool changed = false;
         for (auto& vp: vps) {
-            if (_in.contains(vp))
+            if (_in.find(vp) != _in.end())
                 changed = true;
             else
                 _in.insert(vp);
@@ -92,7 +92,7 @@ namespace llvm {
 
     bool BasicBlock::addVarOut(InstructionPtr vp) {
         bool changed = false;
-        if (!_out.contains(vp)) {
+        if (_out.find(vp) == _out.end()) {
             _out.insert(vp);
             changed = true;
         }
@@ -102,7 +102,7 @@ namespace llvm {
     bool BasicBlock::addVarOut(const std::set<InstructionPtr> &vps) {
         bool changed = false;
         for (auto& vp: vps) {
-            if (_out.contains(vp))
+            if (_out.find(vp) != _out.end())
                 changed = true;
             else
                 _out.insert(vp);
